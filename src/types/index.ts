@@ -73,3 +73,11 @@ export interface UserSettings {
   showFurigana: 'always' | 'hover' | 'never';
   audioSpeed: number;
 }
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  isPremium?: boolean;
+}

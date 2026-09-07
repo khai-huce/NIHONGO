@@ -14,17 +14,37 @@ import { LeaderboardPage } from './pages/LeaderboardPage';
 import { UpgradePage } from './pages/UpgradePage';
 import { JlptRoadmapPage } from './pages/JlptRoadmapPage';
 import { DocHieuPage } from './pages/DocHieuPage';
+import { ShadowingPage } from './pages/ShadowingPage';
 import { KanjiDetailView } from './components/KanjiDetailView';
 import { GrammarDetailView, GrammarDetailItem } from './components/GrammarDetailView';
 import { SettingsModal } from './components/SettingsModal';
 import { MascotAssistant } from './components/MascotAssistant';
-import { KanjiItem, UserSettings } from './types';
+import { AuthModal } from './components/AuthModal';
+import { KanjiItem, UserSettings, UserProfile } from './types';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('kanji');
   const [selectedKanji, setSelectedKanji] = useState<KanjiItem | null>(null);
   const [selectedGrammar, setSelectedGrammar] = useState<GrammarDetailItem | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('nhai_kanji_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('nhai_kanji_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('nhai_kanji_user');
+    }
+  }, [currentUser]);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
@@ -78,10 +98,16 @@ export const App: React.FC = () => {
       
       {/* 1. Full-width Top Header */}
       <TopHeader
+        currentUser={currentUser}
         onUpgradeClick={() => {
           setSelectedKanji(null);
           setActiveTab('upgrade');
         }}
+        onOpenAuthModal={(mode = 'login') => {
+          setAuthModalMode(mode);
+          setIsAuthModalOpen(true);
+        }}
+        onLogout={() => setCurrentUser(null)}
       />
 
       {/* 2. Content Row: Left Sidebar + Main Content */}
@@ -152,8 +178,8 @@ export const App: React.FC = () => {
               {/* 8. Trọn đời & Nâng cấp */}
               {activeTab === 'lifetime-jlpt' && <JlptRoadmapPage />}
               {activeTab === 'lifetime-doc-hieu' && <DocHieuPage />}
+              {activeTab === 'lifetime-shadowing' && <ShadowingPage />}
               {(activeTab === 'lifetime' || 
-                activeTab === 'lifetime-shadowing' || 
                 activeTab === 'lifetime-tao-file' || 
                 activeTab === 'upgrade') && <UpgradePage />}
             </>
@@ -171,6 +197,16 @@ export const App: React.FC = () => {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         setSettings={setSettings}
+      />
+
+      {/* Auth Modal (Login / Register) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+        }}
       />
 
     </div>

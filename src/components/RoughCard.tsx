@@ -39,7 +39,34 @@ export interface RoughNoticeProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 // ---------------------------------------------------------------------------
-// ROUGH CARD (Authentic SVG Hand-Drawn Sketch Box with Corner Overshoots)
+// HELPER: Generate smooth rounded rectangle SVG path
+// ---------------------------------------------------------------------------
+export function createRoundedRectPath(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+): string {
+  const radius = Math.max(0, Math.min(r, (w - 2) / 2, (h - 2) / 2));
+  if (radius <= 0) {
+    return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+  }
+  return (
+    `M ${x + radius} ${y} ` +
+    `L ${x + w - radius} ${y} ` +
+    `A ${radius} ${radius} 0 0 1 ${x + w} ${y + radius} ` +
+    `L ${x + w} ${y + h - radius} ` +
+    `A ${radius} ${radius} 0 0 1 ${x + w - radius} ${y + h} ` +
+    `L ${x + radius} ${y + h} ` +
+    `A ${radius} ${radius} 0 0 1 ${x} ${y + h - radius} ` +
+    `L ${x} ${y + radius} ` +
+    `A ${radius} ${radius} 0 0 1 ${x + radius} ${y} Z`
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ROUGH CARD (Authentic SVG Hand-Drawn Sketch Box with Smooth Rounded Corners)
 // ---------------------------------------------------------------------------
 export const RoughCard: React.FC<RoughCardProps> = ({
   children,
@@ -47,9 +74,9 @@ export const RoughCard: React.FC<RoughCardProps> = ({
   fill = '#ffffff',
   stroke = '#292524',
   strokeWidth = 1.3,
-  roughness = 0.9,
-  bowing = 0.8,
-  borderRadius = 10,
+  roughness = 0.7,
+  bowing = 0.6,
+  borderRadius = 14,
   seed,
   shadow = true,
   active = false,
@@ -87,13 +114,20 @@ export const RoughCard: React.FC<RoughCardProps> = ({
     return (Math.floor(dims.width * 17 + dims.height * 31) % 100000) + 1;
   }, [seed, dims.width, dims.height]);
 
-  // Generate SVG Paths using Rough.js generator
+  // Generate SVG Paths using Rough.js generator with organic rounded path
   const svgPaths = useMemo(() => {
     if (dims.width <= 4 || dims.height <= 4) return [];
     try {
       const gen = rough.generator();
       const pad = 3;
-      const rect = gen.rectangle(pad, pad, dims.width - pad * 2, dims.height - pad * 2, {
+      const pathStr = createRoundedRectPath(
+        pad, 
+        pad, 
+        dims.width - pad * 2, 
+        dims.height - pad * 2, 
+        borderRadius
+      );
+      const shape = gen.path(pathStr, {
         seed: resolvedSeed,
         roughness: roughness,
         bowing: bowing,
@@ -102,11 +136,11 @@ export const RoughCard: React.FC<RoughCardProps> = ({
         fill: fill !== 'transparent' ? fill : undefined,
         fillStyle: 'solid'
       });
-      return gen.toPaths(rect);
+      return gen.toPaths(shape);
     } catch {
       return [];
     }
-  }, [dims.width, dims.height, resolvedSeed, roughness, bowing, stroke, strokeWidth, fill]);
+  }, [dims.width, dims.height, resolvedSeed, roughness, bowing, stroke, strokeWidth, fill, borderRadius]);
 
   return (
     <div
@@ -143,7 +177,7 @@ export const RoughCard: React.FC<RoughCardProps> = ({
               stroke={stroke}
               strokeWidth={strokeWidth * 1.3}
               className="opacity-40"
-              style={{ rx: 6 }}
+              rx={borderRadius}
             />
           )}
         </svg>
@@ -166,7 +200,9 @@ export const RoughButton: React.FC<RoughButtonProps> = ({
   fill = '#ffffff',
   stroke = '#292524',
   strokeWidth = 1.3,
-  roughness = 0.8,
+  roughness = 0.7,
+  bowing = 0.6,
+  borderRadius = 12,
   seed,
   active = false,
   onClick,
@@ -204,20 +240,27 @@ export const RoughButton: React.FC<RoughButtonProps> = ({
     try {
       const gen = rough.generator();
       const pad = 3;
-      const rect = gen.rectangle(pad, pad, dims.width - pad * 2, dims.height - pad * 2, {
+      const pathStr = createRoundedRectPath(
+        pad,
+        pad,
+        dims.width - pad * 2,
+        dims.height - pad * 2,
+        borderRadius
+      );
+      const shape = gen.path(pathStr, {
         seed: resolvedSeed,
         roughness: roughness,
-        bowing: 0.7,
+        bowing: bowing,
         stroke: stroke,
         strokeWidth: strokeWidth,
         fill: fill,
         fillStyle: 'solid'
       });
-      return gen.toPaths(rect);
+      return gen.toPaths(shape);
     } catch {
       return [];
     }
-  }, [dims.width, dims.height, resolvedSeed, roughness, stroke, strokeWidth, fill]);
+  }, [dims.width, dims.height, resolvedSeed, roughness, bowing, stroke, strokeWidth, fill, borderRadius]);
 
   return (
     <button
