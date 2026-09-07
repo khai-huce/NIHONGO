@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sketch: "Itim", "Patrick Hand", "Zen Maru Gothic", "Be Vietnam Pro", sans-serif;
+  }
+}
+
+.font-sketch {
+  font-family: var(--font-sketch);
+}
+
+.font-kanji {
+  font-family: "Zen Maru Gothic", "UD Digi Kyokasho", sans-serif;
+}
+
+/* Delicate Paper Grid Background (Authentic Japanese notebook graph paper) */
+.bg-sketch-paper {
+  background-color: #faf7ee;
+  background-image: 
+    linear-gradient(#78643c16 1px, transparent 1px),
+    linear-gradient(90deg, #78643c16 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dark .bg-sketch-paper {
+  background-color: #181614;
+  background-image: 
+    linear-gradient(#ffffff0a 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff0a 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Standard hand-drawn sketch borders matching nhaikanji */
+.border-sketch {
+  border: 1.4px solid #292524;
+  border-radius: 255px 14px 225px 14px/14px 225px 14px 255px;
+  box-shadow: 2px 2.5px 0px rgba(41, 37, 36, 0.85);
+}
+
+.dark .border-sketch {
+  border: 1.4px solid #a8a29e;
+  box-shadow: 2px 2.5px 0px rgba(0, 0, 0, 0.6);
+}
+
+.border-sketch-subtle {
+  border: 1.2px solid #292524;
+  border-radius: 255px 10px 225px 10px/10px 225px 10px 255px;
+  box-shadow: 1.5px 1.5px 0px rgba(41, 37, 36, 0.7);
+}
+
+.border-sketch-pill {
+  border: 1.2px solid #292524;
+  border-radius: 9999px;
+  box-shadow: 1px 1.5px 0px rgba(41, 37, 36, 0.7);
+}
+
+.border-sketch-blue {
+  border: 1.3px solid #0094ff;
+  border-radius: 255px 12px 225px 12px/12px 225px 12px 255px;
+  box-shadow: 1.5px 2px 0px rgba(2, 132, 199, 0.6);
+}
+
+.border-sketch-green {
+  border: 1.3px solid #16a34a;
+  border-radius: 255px 12px 225px 12px/12px 225px 12px 255px;
+  box-shadow: 1.5px 2px 0px rgba(22, 163, 74, 0.6);
+}
+
+.border-sketch-orange {
+  border: 1.3px solid #f97316;
+  border-radius: 255px 12px 225px 12px/12px 225px 12px 255px;
+  box-shadow: 1.5px 2px 0px rgba(234, 88, 12, 0.6);
+}
+
+/* Subtle hand-drawn shadow */
+.shadow-sketch {
+  box-shadow: 2px 2.5px 0px rgba(41, 37, 36, 0.85);
+}
+
+.dark .shadow-sketch {
+  box-shadow: 2px 2.5px 0px rgba(0, 0, 0, 0.7);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #a8a29e;
+  border-radius: 9999px;
+}
+
+/* Ruby Furigana styling */
+ruby {
+  ruby-align: center;
+}
+rt {
+  font-size: 0.58em;
+  font-weight: 600;
+  color: #0369a1;
+  user-select: none;
+}
