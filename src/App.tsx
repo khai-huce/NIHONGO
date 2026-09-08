@@ -20,31 +20,17 @@ import { GrammarDetailView, GrammarDetailItem } from './components/GrammarDetail
 import { SettingsModal } from './components/SettingsModal';
 import { MascotAssistant } from './components/MascotAssistant';
 import { AuthModal } from './components/AuthModal';
-import { KanjiItem, UserSettings, UserProfile } from './types';
+import { KanjiItem, UserSettings } from './types';
+import { useAuth } from './hooks/useAuth';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('kanji');
   const [selectedKanji, setSelectedKanji] = useState<KanjiItem | null>(null);
   const [selectedGrammar, setSelectedGrammar] = useState<GrammarDetailItem | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
-    try {
-      const saved = localStorage.getItem('nhai_kanji_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const auth = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('nhai_kanji_user', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('nhai_kanji_user');
-    }
-  }, [currentUser]);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
@@ -98,7 +84,8 @@ export const App: React.FC = () => {
       
       {/* 1. Full-width Top Header */}
       <TopHeader
-        currentUser={currentUser}
+        currentUser={auth.currentUser}
+        authBusy={auth.checking || auth.loggingOut}
         onUpgradeClick={() => {
           setSelectedKanji(null);
           setActiveTab('upgrade');
@@ -107,8 +94,12 @@ export const App: React.FC = () => {
           setAuthModalMode(mode);
           setIsAuthModalOpen(true);
         }}
-        onLogout={() => setCurrentUser(null)}
+        onLogout={() => { void auth.logout(); }}
       />
+      {auth.error && <div role="alert" className="px-4 py-2 bg-amber-50 text-amber-900 text-sm border-b border-amber-200">
+        {auth.error}{' '}
+        <button type="button" onClick={() => { void auth.refresh(); }} disabled={auth.checking || auth.loggingOut} className="underline font-bold">Tải lại tài khoản</button>
+      </div>}
 
       {/* 2. Content Row: Left Sidebar + Main Content */}
       <div className="flex flex-1 h-[calc(100vh-48px)] overflow-hidden">
@@ -200,14 +191,11 @@ export const App: React.FC = () => {
       />
 
       {/* Auth Modal (Login / Register) */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
+      {isAuthModalOpen && <AuthModal
         onClose={() => setIsAuthModalOpen(false)}
         initialMode={authModalMode}
-        onLoginSuccess={(user) => {
-          setCurrentUser(user);
-        }}
-      />
+        onLoginSuccess={auth.acceptUser}
+      />}
 
     </div>
   );

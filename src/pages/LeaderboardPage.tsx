@@ -126,7 +126,7 @@ export const LeaderboardPage: React.FC = () => {
       
       {/* 1. Centered Top Filter Tabs */}
       <div className="flex flex-col items-center justify-center space-y-2">
-        <RoughCard fill="#ffffff" stroke="#78716c" borderRadius={12} roughness={0.7} className="p-1 inline-flex shadow-sketch">
+        <RoughCard fill="#ffffff" stroke="#292524" borderRadius={12} className="p-1 inline-flex">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab('xp')}
@@ -183,10 +183,9 @@ export const LeaderboardPage: React.FC = () => {
 
           <RoughCard
             fill="#dbeafe"
-            stroke="#78716c"
+            stroke="#292524"
             borderRadius={14}
-            roughness={0.7}
-            className="p-5 text-center space-y-2.5 shadow-sketch min-h-[190px] flex flex-col justify-between"
+            className="p-5 text-center space-y-2.5 min-h-[190px] flex flex-col justify-between"
           >
             <div className="flex flex-col items-center space-y-1.5 pt-1">
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#78716c]/40 shadow-xs bg-white">
@@ -234,10 +233,9 @@ export const LeaderboardPage: React.FC = () => {
 
           <RoughCard
             fill="#fef3c7"
-            stroke="#b45309"
+            stroke="#292524"
             borderRadius={16}
-            roughness={0.7}
-            className="p-6 text-center space-y-3 shadow-sketch min-h-[210px] flex flex-col justify-between border-2 border-amber-400"
+            className="p-6 text-center space-y-3 min-h-[210px] flex flex-col justify-between"
           >
             <div className="flex flex-col items-center space-y-1.5 pt-1">
               <div className="w-18 h-18 rounded-full overflow-hidden border-2 border-amber-500 shadow-sm bg-white">
@@ -285,10 +283,9 @@ export const LeaderboardPage: React.FC = () => {
 
           <RoughCard
             fill="#d1fae5"
-            stroke="#78716c"
+            stroke="#292524"
             borderRadius={14}
-            roughness={0.7}
-            className="p-5 text-center space-y-2.5 shadow-sketch min-h-[190px] flex flex-col justify-between"
+            className="p-5 text-center space-y-2.5 min-h-[190px] flex flex-col justify-between"
           >
             <div className="flex flex-col items-center space-y-1.5 pt-1">
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#78716c]/40 shadow-xs bg-white">
@@ -335,10 +332,9 @@ export const LeaderboardPage: React.FC = () => {
           <RoughCard
             key={user.rank}
             fill="#ffffff"
-            stroke="#78716c"
+            stroke="#292524"
             borderRadius={12}
-            roughness={0.7}
-            className="p-3 md:p-3.5 flex items-center justify-between shadow-sketch hover:bg-slate-50/70 transition-colors"
+            className="p-3 md:p-3.5 flex items-center justify-between hover:bg-slate-50/70 transition-colors"
           >
             {/* Left: Rank Number + Avatar + Name + Premium Badge */}
             <div className="flex items-center gap-3.5">
@@ -401,10 +397,9 @@ export const LeaderboardPage: React.FC = () => {
         {/* Current User Card */}
         <RoughCard
           fill="#d8b4fe"
-          stroke="#78716c"
+          stroke="#292524"
           borderRadius={12}
-          roughness={0.7}
-          className="p-3 md:p-3.5 flex items-center justify-between shadow-sketch border-2 border-purple-400"
+          className="p-3 md:p-3.5 flex items-center justify-between"
         >
           {/* Left info */}
           <div className="flex items-center gap-3.5">

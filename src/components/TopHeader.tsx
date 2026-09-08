@@ -5,12 +5,14 @@ import { UserProfile } from '../types';
 interface TopHeaderProps {
   onUpgradeClick: () => void;
   currentUser: UserProfile | null;
+  authBusy?: boolean;
   onOpenAuthModal: (mode?: 'login' | 'register') => void;
   onLogout: () => void;
 }
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
   currentUser,
+  authBusy = false,
   onOpenAuthModal,
   onLogout
 }) => {
@@ -85,6 +87,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                   <p className="text-[10px] text-[#78716c] truncate">{currentUser.email}</p>
                 </div>
                 <button
+                  disabled={authBusy}
                   onClick={() => {
                     setIsUserMenuOpen(false);
                     onLogout();
@@ -100,11 +103,12 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         ) : (
           /* Exact [->] Đăng nhập button from media_1788801159505.png */
           <button
+            disabled={authBusy}
             onClick={() => onOpenAuthModal('login')}
-            className="px-3.5 py-1.5 rounded-xl border-2 border-[#292524] bg-white hover:bg-[#f6f2e9] text-[#292524] font-bold text-xs md:text-sm shadow-sketch flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+            className="px-3.5 py-1.5 border-sketch bg-white hover:bg-[#f6f2e9] text-[#292524] font-bold text-xs md:text-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
           >
             <LogIn className="w-4 h-4 stroke-[2.2]" />
-            <span>Đăng nhập</span>
+            <span>{authBusy ? 'Đang kiểm tra…' : 'Đăng nhập'}</span>
           </button>
         )}
       </div>
@@ -112,4 +116,3 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
     </header>
   );
 };
-

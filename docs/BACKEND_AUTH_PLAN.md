@@ -2,7 +2,23 @@
 
 Ngày lập: 08/09/2026.
 
-Trạng thái: Đã chốt phạm vi theo câu trả lời của người dùng. Chưa triển khai backend hoặc thay đổi luồng đăng nhập. Đang xác định người dùng đã có cấu hình Google OAuth hay cần hướng dẫn tạo.
+Trạng thái: Đã triển khai backend, database và đăng nhập email thật. 21/21 kiểm thử tích hợp đạt trên PostgreSQL local; frontend và backend build thành công. Đã cấu hình OAuth Web client ID và đăng nhập Google thật thành công theo xác nhận người dùng; kiểm tra PostgreSQL ghi nhận một tài khoản Google với phiên hoạt động và quyền Premium mặc định false. Người dùng đã xác nhận F5 → logout → đăng nhập Google lại đều đúng; DB vẫn chỉ có một user Google với phiên hoạt động. Hoàn thành T0–T7 trong phạm vi local đã chốt.
+
+**Kết quả triển khai ngày 08/09/2026**
+
+| Task | Kết quả |
+|---|---|
+| T1 | Hoàn thành Express/TypeScript, cấu hình, xử lý lỗi, health và Vite proxy |
+| T2 | Hoàn thành Compose PostgreSQL, migration users/sessions, Prisma và session store; dữ liệu tồn tại sau restart |
+| T3 | Hoàn thành đăng ký, đăng nhập, me và logout bằng email/mật khẩu |
+| T4 | Đã viết Google nonce + xác minh chữ ký/claims + tạo phiên; kiểm thử token ký RSA đạt. Đã cấu hình client ID; người dùng đăng nhập Google thật thành công, DB ghi nhận user và phiên hoạt động |
+| T5 | Đã thay đăng nhập giả trên frontend. Luồng email đã thử trực tiếp; Google thật đã đăng nhập thành công; người dùng xác nhận F5/logout/đăng nhập lại đạt |
+| T6 | 21/21 API tests đạt; hai build đạt; UI email đã thử đăng ký, F5, logout, sai mật khẩu và đăng nhập lại. Google thật, F5/logout/đăng nhập lại đạt theo xác nhận người dùng; DB không tạo trùng user Google |
+| T7 | Hoàn thành README, env examples, lệnh setup:env, migration và hướng dẫn Google local |
+
+Lệnh nghiệm thu: `npm run test:server`, `npm run build:server`, `npm run build`. API test dùng database `nihongo_test` riêng, không dọn database học viên. Vite vẫn có cảnh báo bundle lớn đã xuất hiện trước đợt backend; không mở rộng sang tối ưu bundle trong task này.
+
+Docker từng bị lỗi socket tạm AF_UNIX trên Windows. Đã sao lưu bằng cách đổi tên các thư mục runtime bị kẹt, khởi động lại Engine và xác nhận container PostgreSQL healthy; không dùng factory reset hoặc xóa volume trong quá trình khắc phục.
 
 **Mục tiêu và phạm vi đã chốt**
 
@@ -123,8 +139,8 @@ Cấu hình Google local: OAuth client loại Web application, Authorized JavaSc
 
 Khi triển khai Prisma, cố định phiên bản tương thích Node và dùng workflow migration đúng phiên bản: tạo migration ở môi trường phát triển, áp dụng migration đã lưu khi phát hành. Không dùng lệnh reset hoặc tạo lại DB trên dữ liệu người dùng. Tham khảo [Prisma migration workflow](https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/development-and-production).
 
-**Thông tin còn cần cho task Google**
+**Kết quả nghiệm thu Google**
 
-Đang hỏi người dùng đã có Google Cloud project và OAuth Web client chưa. Nếu chưa có, T4 bao gồm hướng dẫn tạo; nếu đã có, T4 kiểm tra origin và cấu hình client. Thông tin này không cản việc lập plan hoặc dựng phần email/mật khẩu. Để nghiệm thu Google, người dùng tự đăng nhập trong trình duyệt; không cung cấp mật khẩu Google cho ứng dụng hoặc qua chat.
+Đã nhận OAuth Web client ID và cấu hình cùng giá trị trong frontend/backend. Nút GIS hiển thị và endpoint nonce trả 200. Lần thử Google thật báo 400 origin_mismatch; đã hướng dẫn lưu http://localhost và http://localhost:3000 trong Authorized JavaScript origins của đúng client. Sau đó người dùng xác nhận đăng nhập thành công; kiểm tra DB đã có một user Google với phiên còn hiệu lực, Premium mặc định false. Người dùng tiếp tục xác nhận tải lại trang, đăng xuất và đăng nhập lại đều đúng; kiểm tra DB sau đó vẫn có đúng một user Google và phiên hoạt động. Nghiệm thu Google hoàn thành. Người dùng tự chọn tài khoản/đăng nhập trong trình duyệt; không cung cấp mật khẩu Google qua chat.
 
 Những mặc định đề xuất về thời hạn phiên, chính sách mật khẩu và cấu trúc file là quyết định kỹ thuật có thể điều chỉnh khi triển khai; không cần người dùng chọn từng thư viện. Chỉ mở rộng task khi nhu cầu cụ thể đòi hỏi.

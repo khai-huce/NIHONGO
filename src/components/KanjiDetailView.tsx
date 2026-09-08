@@ -239,8 +239,7 @@ export const KanjiDetailView: React.FC<KanjiDetailViewProps> = ({
             fill="#eff6ff" 
             stroke="#3b82f6" 
             borderRadius={10} 
-            roughness={0.7} 
-            className="p-3 text-xs text-[#1e40af] font-bold shadow-xs border-2 border-blue-300 mt-3"
+            className="p-3 text-xs text-[#1e40af] font-bold mt-3"
           >
             <div className="flex items-center justify-between">
               <span>Học Kanji qua từ vựng ngữ cảnh giúp nhớ lâu hơn 3 lần!</span>

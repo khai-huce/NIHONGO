@@ -1,5 +1,4 @@
 import React, { useLayoutEffect, useRef, useState, useMemo } from 'react';
-import rough from 'roughjs';
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -39,7 +38,7 @@ export interface RoughNoticeProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 // ---------------------------------------------------------------------------
-// HELPER: Generate smooth rounded rectangle SVG path
+// HELPER: Generate standard rounded rectangle SVG path (compatibility export)
 // ---------------------------------------------------------------------------
 export function createRoundedRectPath(
   x: number,
@@ -66,7 +65,71 @@ export function createRoundedRectPath(
 }
 
 // ---------------------------------------------------------------------------
-// ROUGH CARD (Authentic SVG Hand-Drawn Sketch Box with Smooth Rounded Corners)
+// HELPER: Single continuous organic hand-drawn rounded path
+// Guaranteed exactly 1 closed loop, smooth rounded corners, zero overlapping lines
+// ---------------------------------------------------------------------------
+export function createOrganicRoundedPath(
+  w: number,
+  h: number,
+  r: number = 14,
+  seed: number = 1
+): string {
+  if (w <= 4 || h <= 4) return '';
+
+  const pad = 2.5;
+  const pw = Math.max(1, w - pad * 2);
+  const ph = Math.max(1, h - pad * 2);
+  const maxR = Math.max(0, Math.min(r, (pw - 2) / 2, (ph - 2) / 2));
+
+  let s = Math.abs(seed) || 1;
+  const rnd = () => {
+    s = (s * 9301 + 49297) % 233280;
+    return (s / 233280) * 2 - 1; // -1 to 1
+  };
+
+  // Subtle organic corner variations
+  const rTL = Math.max(0, maxR + rnd() * 0.5);
+  const rTR = Math.max(0, maxR + rnd() * 0.5);
+  const rBR = Math.max(0, maxR + rnd() * 0.5);
+  const rBL = Math.max(0, maxR + rnd() * 0.5);
+
+  const topJitter = rnd() * 0.4;
+  const rightJitter = rnd() * 0.4;
+  const bottomJitter = rnd() * 0.4;
+  const leftJitter = rnd() * 0.4;
+
+  const x0 = pad;
+  const y0 = pad;
+  const x1 = pad + pw;
+  const y1 = pad + ph;
+
+  if (maxR <= 1) {
+    return [
+      'M', x0.toFixed(1), y0.toFixed(1),
+      'Q', ((x0 + x1) / 2).toFixed(1), (y0 + topJitter).toFixed(1), x1.toFixed(1), y0.toFixed(1),
+      'Q', (x1 + rightJitter).toFixed(1), ((y0 + y1) / 2).toFixed(1), x1.toFixed(1), y1.toFixed(1),
+      'Q', ((x0 + x1) / 2).toFixed(1), (y1 + bottomJitter).toFixed(1), x0.toFixed(1), y1.toFixed(1),
+      'Q', (x0 + leftJitter).toFixed(1), ((y0 + y1) / 2).toFixed(1), x0.toFixed(1), y0.toFixed(1),
+      'Z'
+    ].join(' ');
+  }
+
+  return [
+    'M', (x0 + rTL).toFixed(1), y0.toFixed(1),
+    'Q', ((x0 + x1) / 2).toFixed(1), (y0 + topJitter).toFixed(1), (x1 - rTR).toFixed(1), y0.toFixed(1),
+    'A', rTR.toFixed(1), rTR.toFixed(1), '0 0 1', x1.toFixed(1), (y0 + rTR).toFixed(1),
+    'Q', (x1 + rightJitter).toFixed(1), ((y0 + y1) / 2).toFixed(1), x1.toFixed(1), (y1 - rBR).toFixed(1),
+    'A', rBR.toFixed(1), rBR.toFixed(1), '0 0 1', (x1 - rBR).toFixed(1), y1.toFixed(1),
+    'Q', ((x0 + x1) / 2).toFixed(1), (y1 + bottomJitter).toFixed(1), (x0 + rBL).toFixed(1), y1.toFixed(1),
+    'A', rBL.toFixed(1), rBL.toFixed(1), '0 0 1', x0.toFixed(1), (y1 - rBL).toFixed(1),
+    'Q', (x0 + leftJitter).toFixed(1), ((y0 + y1) / 2).toFixed(1), x0.toFixed(1), (y0 + rTL).toFixed(1),
+    'A', rTL.toFixed(1), rTL.toFixed(1), '0 0 1', (x0 + rTL).toFixed(1), y0.toFixed(1),
+    'Z'
+  ].join(' ');
+}
+
+// ---------------------------------------------------------------------------
+// ROUGH CARD (Clean Organic Hand-Drawn Rounded Card - Single Stroke, No Overlap)
 // ---------------------------------------------------------------------------
 export const RoughCard: React.FC<RoughCardProps> = ({
   children,
@@ -107,79 +170,40 @@ export const RoughCard: React.FC<RoughCardProps> = ({
     };
   }, []);
 
-  // Compute deterministic seed so paths do not flicker or jump
   const resolvedSeed = useMemo(() => {
     if (seed !== undefined) return seed;
     if (dims.width === 0) return 12345;
     return (Math.floor(dims.width * 17 + dims.height * 31) % 100000) + 1;
   }, [seed, dims.width, dims.height]);
 
-  // Generate SVG Paths using Rough.js generator with organic rounded path
-  const svgPaths = useMemo(() => {
-    if (dims.width <= 4 || dims.height <= 4) return [];
-    try {
-      const gen = rough.generator();
-      const pad = 3;
-      const pathStr = createRoundedRectPath(
-        pad, 
-        pad, 
-        dims.width - pad * 2, 
-        dims.height - pad * 2, 
-        borderRadius
-      );
-      const shape = gen.path(pathStr, {
-        seed: resolvedSeed,
-        roughness: roughness,
-        bowing: bowing,
-        stroke: stroke,
-        strokeWidth: strokeWidth,
-        fill: fill !== 'transparent' ? fill : undefined,
-        fillStyle: 'solid'
-      });
-      return gen.toPaths(shape);
-    } catch {
-      return [];
-    }
-  }, [dims.width, dims.height, resolvedSeed, roughness, bowing, stroke, strokeWidth, fill, borderRadius]);
+  const pathD = useMemo(() => {
+    if (dims.width <= 4 || dims.height <= 4) return '';
+    return createOrganicRoundedPath(dims.width, dims.height, borderRadius, resolvedSeed);
+  }, [dims.width, dims.height, borderRadius, resolvedSeed]);
 
   return (
     <div
       ref={containerRef}
-      className={`relative select-none ${shadow ? 'filter drop-shadow-[2px_2.5px_0px_rgba(41,37,36,0.8)]' : ''} ${className}`}
+      className={`relative select-none ${className}`}
       {...props}
     >
       {/* Background Hand-drawn SVG Container */}
-      {dims.width > 0 && dims.height > 0 && (
+      {dims.width > 0 && dims.height > 0 && pathD && (
         <svg
-          className="pointer-events-none absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] z-0 overflow-visible"
+          className="pointer-events-none absolute inset-0 w-full h-full z-0 overflow-visible"
+          style={shadow ? { filter: 'drop-shadow(2px 2.5px 0px rgba(41, 37, 36, 0.85))' } : undefined}
           viewBox={`0 0 ${dims.width} ${dims.height}`}
           preserveAspectRatio="none"
         >
-          {svgPaths.map((p, idx) => (
-            <path
-              key={idx}
-              d={p.d}
-              stroke={p.stroke}
-              strokeWidth={p.strokeWidth}
-              fill={p.fill}
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-
-          {/* Active outline accent */}
-          {active && (
-            <rect
-              x={3}
-              y={3}
-              width={dims.width - 6}
-              height={dims.height - 6}
-              fill="none"
-              stroke={stroke}
-              strokeWidth={strokeWidth * 1.3}
-              className="opacity-40"
-              rx={borderRadius}
-            />
-          )}
+          <path
+            d={pathD}
+            fill={fill !== 'transparent' ? fill : 'none'}
+            stroke={stroke}
+            strokeWidth={active ? strokeWidth * 1.5 : strokeWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
         </svg>
       )}
 
@@ -192,7 +216,7 @@ export const RoughCard: React.FC<RoughCardProps> = ({
 };
 
 // ---------------------------------------------------------------------------
-// ROUGH BUTTON (Authentic Hand-Drawn Sketch Button with Color Fill)
+// ROUGH BUTTON (Clean Organic Hand-Drawn Rounded Button - Single Stroke)
 // ---------------------------------------------------------------------------
 export const RoughButton: React.FC<RoughButtonProps> = ({
   children,
@@ -235,56 +259,34 @@ export const RoughButton: React.FC<RoughButtonProps> = ({
     return (Math.floor(dims.width * 23 + dims.height * 47) % 100000) + 1;
   }, [seed, dims.width, dims.height]);
 
-  const svgPaths = useMemo(() => {
-    if (dims.width <= 4 || dims.height <= 4) return [];
-    try {
-      const gen = rough.generator();
-      const pad = 3;
-      const pathStr = createRoundedRectPath(
-        pad,
-        pad,
-        dims.width - pad * 2,
-        dims.height - pad * 2,
-        borderRadius
-      );
-      const shape = gen.path(pathStr, {
-        seed: resolvedSeed,
-        roughness: roughness,
-        bowing: bowing,
-        stroke: stroke,
-        strokeWidth: strokeWidth,
-        fill: fill,
-        fillStyle: 'solid'
-      });
-      return gen.toPaths(shape);
-    } catch {
-      return [];
-    }
-  }, [dims.width, dims.height, resolvedSeed, roughness, bowing, stroke, strokeWidth, fill, borderRadius]);
+  const pathD = useMemo(() => {
+    if (dims.width <= 4 || dims.height <= 4) return '';
+    return createOrganicRoundedPath(dims.width, dims.height, borderRadius, resolvedSeed);
+  }, [dims.width, dims.height, borderRadius, resolvedSeed]);
 
   return (
     <button
       ref={btnRef}
       onClick={onClick}
-      className={`relative cursor-pointer select-none transition-all active:scale-95 active:translate-y-0.5 filter drop-shadow-[1.5px_2px_0px_rgba(41,37,36,0.85)] ${className}`}
+      className={`relative cursor-pointer select-none transition-all active:scale-95 active:translate-y-0.5 ${className}`}
       {...props}
     >
-      {dims.width > 0 && dims.height > 0 && (
+      {dims.width > 0 && dims.height > 0 && pathD && (
         <svg
-          className="pointer-events-none absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] z-0 overflow-visible"
+          className="pointer-events-none absolute inset-0 w-full h-full z-0 overflow-visible"
+          style={{ filter: 'drop-shadow(1.5px 2px 0px rgba(41, 37, 36, 0.85))' }}
           viewBox={`0 0 ${dims.width} ${dims.height}`}
           preserveAspectRatio="none"
         >
-          {svgPaths.map((p, idx) => (
-            <path
-              key={idx}
-              d={p.d}
-              stroke={p.stroke}
-              strokeWidth={p.strokeWidth}
-              fill={p.fill}
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
+          <path
+            d={pathD}
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={active ? strokeWidth * 1.5 : strokeWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
         </svg>
       )}
 
@@ -310,7 +312,7 @@ export const RoughNotice: React.FC<RoughNoticeProps> = ({
       fill={fill}
       stroke={stroke}
       strokeWidth={1.2}
-      roughness={0.8}
+      borderRadius={12}
       shadow={true}
       className={`p-2.5 md:p-3 text-xs md:text-sm font-bold text-amber-800 flex items-center gap-2 ${className}`}
       {...props}
