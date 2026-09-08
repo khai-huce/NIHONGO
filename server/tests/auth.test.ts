@@ -1,4 +1,6 @@
 import { generateKeyPairSync, sign } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { KANJI_IDS } from '../src/kanji-ids.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import argon2 from 'argon2';
@@ -179,5 +181,78 @@ describe('Google token verification', () => {
     const response = await post('/google/nonce').expect(503);
     expect(response.body.error.code).toBe('GOOGLE_NOT_CONFIGURED');
     await post('/register', userInput).expect(201);
+  });
+});
+
+describe('account Kanji progress', () => {
+  const read = (sid: string) => request(api.app).get('/api/progress/kanji').set('Cookie', sid);
+  const save = (sid: string, expectedUserId: string, extra: Record<string, unknown> = {}) => request(api.app)
+    .post('/api/progress/kanji').set('Origin', config.APP_ORIGIN).set('Cookie', sid)
+    .send({ kanjiId: 'k-1', memorized: true, expectedUserId, ...extra });
+
+  it('keeps the accepted IDs in sync with the frontend catalog', () => {
+    const source = readFileSync(new URL('../../src/data/kanjiData.ts', import.meta.url), 'utf8');
+    const ids = [...source.matchAll(/id:\s*"(k-\d+)"/g)].map(match => match[1]);
+    expect(KANJI_IDS).toEqual(ids);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+  it('requires a live session for reads and writes', async () => {
+    await request(api.app).get('/api/progress/kanji').expect(401);
+    const registered = await post('/register', userInput).expect(201);
+    const sid = cookie(registered);
+    await post('/logout').set('Cookie', sid).expect(204);
+    await read(sid).expect(401);
+    await save(sid, registered.body.user.id).expect(401);
+    expect(await api.db.kanjiProgress.count()).toBe(0);
+  });
+  it('persists ratings across restart and another login, without duplicate rows', async () => {
+    const registered = await post('/register', userInput).expect(201);
+    const sid = cookie(registered), id = registered.body.user.id;
+    expect((await read(sid).expect(200)).body.progress).toEqual([]);
+    await Promise.all([save(sid, id).expect(200), save(sid, id).expect(200)]);
+    expect(await api.db.kanjiProgress.count()).toBe(1);
+    await api.close(); api = createApp(config);
+    const anotherLogin = await post('/login', { email: userInput.email, password }).expect(200);
+    const result = await read(cookie(anotherLogin)).expect(200);
+    expect(result.headers['cache-control']).toBe('no-store');
+    expect(result.body).toMatchObject({ userId: id, progress: [{ kanjiId: 'k-1', memorized: true }] });
+    expect(result.body.progress[0]).not.toHaveProperty('userId');
+    await save(cookie(anotherLogin), id, { memorized: false }).expect(200);
+    expect((await read(sid)).body.progress[0].memorized).toBe(false);
+    expect(await api.db.kanjiProgress.count()).toBe(1);
+  });
+  it('isolates accounts and rejects a stale page after another tab switches accounts', async () => {
+    const first = await post('/register', userInput).expect(201);
+    const second = await post('/register', { ...userInput, email: 'second@example.com' }).expect(201);
+    await save(cookie(first), first.body.user.id).expect(200);
+    expect((await read(cookie(second))).body.progress).toEqual([]);
+    await save(cookie(second), first.body.user.id).expect(409);
+    await save(cookie(second), second.body.user.id, { memorized: false }).expect(200);
+    expect((await read(cookie(first))).body.progress[0].memorized).toBe(true);
+    expect((await read(cookie(second))).body.progress[0].memorized).toBe(false);
+    await api.db.user.delete({ where: { id: first.body.user.id } });
+    await read(cookie(first)).expect(401);
+    expect(await api.db.kanjiProgress.count()).toBe(1);
+  });
+  it('rejects unknown cards, spoofed ownership, invalid ratings and foreign origins', async () => {
+    const registered = await post('/register', userInput).expect(201);
+    const sid = cookie(registered), id = registered.body.user.id;
+    await save(sid, id, { kanjiId: 'k-99999' }).expect(400);
+    await save(sid, id, { memorized: 'true' }).expect(400);
+    await save(sid, id, { userId: id }).expect(400);
+    await request(api.app).post('/api/progress/kanji').set('Cookie', sid)
+      .set('Origin', 'https://example.com').send({ kanjiId: 'k-1', memorized: true, expectedUserId: id }).expect(403);
+    expect(await api.db.kanjiProgress.count()).toBe(0);
+  });
+  it('returns a retryable error when saving fails and leaves progress unchanged', async () => {
+    const registered = await post('/register', userInput).expect(201);
+    vi.spyOn(api.db.kanjiProgress, 'upsert').mockRejectedValueOnce(new Error('private connection details'));
+    const response = await save(cookie(registered), registered.body.user.id).expect(503);
+    expect(JSON.stringify(response.body)).not.toContain('private connection details');
+    expect(await api.db.kanjiProgress.count()).toBe(0);
+    // Reconnect with a real Prisma client after the simulated outage.
+    await api.close(); api = createApp(config);
+    await save(cookie(registered), registered.body.user.id).expect(200);
+    expect(await api.db.kanjiProgress.count()).toBe(1);
   });
 });

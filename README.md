@@ -1,6 +1,6 @@
 **NIHONGO — chạy frontend và Express backend ở local**
 
-Frontend dùng React/Vite. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Đợt này database chỉ lưu tài khoản và phiên đăng nhập; nội dung và tiến độ học vẫn ở trình duyệt/file dữ liệu hiện có.
+Frontend dùng React/Vite. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản, phiên đăng nhập và tiến độ flashcard Kanji. Nội dung Kanji vẫn ở file dữ liệu; các dữ liệu học khác vẫn ở trình duyệt.
 
 **Cài đặt lần đầu**
 
@@ -110,3 +110,13 @@ Prisma được cố định ở 6.19.3 để giữ workflow đơn giản tươn
 - Đăng xuất khi mất mạng: UI báo chưa xác nhận đăng xuất; kết nối lại và bấm đăng xuất lần nữa.
 
 Trạng thái task và phạm vi chi tiết nằm trong `docs/BACKEND_AUTH_PLAN.md`. Xác minh email, quên mật khẩu, đồng bộ học tập và triển khai public là bước tiếp theo, chưa nằm trong phiên bản local này.
+
+**Tiến độ flashcard Kanji theo tài khoản (T8–T12)**
+
+Sau khi cập nhật source, chạy `npm run db:migrate`, dừng backend rồi chạy `npm --prefix server run db:generate` và khởi động lại backend. Không reset database.
+
+Mở Hán tự → Flashcard. Đã đăng nhập: Đã thuộc/Chưa thuộc được lưu sau mỗi lần đánh giá, mở lại trên cùng tài khoản sẽ lấy tiến độ từ server. Chỉ chuyển thẻ sau khi lưu thành công; lỗi thì giữ thẻ để thử lại. Hai nút mũi tên không thay đổi tiến độ. Học thử không ghi database và không tự chuyển vào tài khoản khi đăng nhập.
+
+API mới: `GET /api/progress/kanji`, `POST /api/progress/kanji` với `{ kanjiId, memorized, expectedUserId }`. Quyền sở hữu luôn lấy từ cookie session; expectedUserId chỉ chặn ghi nhầm khi đổi tài khoản ở tab khác. Cùng Kanji/tài khoản chỉ có một bản ghi; lần ghi thành công sau cùng quyết định trạng thái. Mở lại flashcard hoặc tải trang để lấy thay đổi từ thiết bị khác.
+
+Chi tiết rà soát localStorage, schema, API và nghiệm thu: [KANJI_PROGRESS_PLAN.md](docs/KANJI_PROGRESS_PLAN.md). Danh sách yêu thích, bài học chủ động và các lộ trình chưa thuộc phạm vi đồng bộ này. Khi thay catalog Kanji, cập nhật `server/src/kanji-ids.ts`; test kiểm tra danh sách này khớp frontend.

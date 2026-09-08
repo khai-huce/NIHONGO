@@ -137,6 +137,11 @@ export const App: React.FC = () => {
                 <HomePage
                   onSelectKanji={(item) => setSelectedKanji(item)}
                   onOpenWrite={() => setActiveTab('write')}
+                  userId={auth.currentUser?.id ?? null}
+                  authBusy={auth.checking || auth.loggingOut || !!auth.error}
+                  onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+                  favorites={favorites}
+                  onToggleFavorite={toggleFavorite}
                 />
               )}
 

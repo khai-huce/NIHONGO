@@ -17,11 +17,16 @@ import { KanjiItem, JLPTLevel } from '../types';
 interface HomePageProps {
   onSelectKanji: (item: KanjiItem) => void;
   onOpenWrite: () => void;
+  userId: string | null;
+  authBusy: boolean;
+  onLogin: () => void;
+  favorites: string[];
+  onToggleFavorite: (id: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
   onSelectKanji,
-  onOpenWrite
+  onOpenWrite, userId, authBusy, onLogin, favorites, onToggleFavorite
 }) => {
   const [activeLevel, setActiveLevel] = useState<JLPTLevel | 'RADICALS'>('N5');
   const [searchQuery, setSearchQuery] = useState('');
@@ -385,9 +390,9 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* Flashcard Modal */}
       {isFlashcardOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <RoughCard fill="#ffffff" stroke="#78716c" borderRadius={16} roughness={0.7} className="p-6 max-w-2xl w-full shadow-xl">
-            <FlashcardView items={currentKanjiList} onClose={() => setIsFlashcardOpen(false)} />
-          </RoughCard>
+          <div className="w-full max-w-2xl">
+            <FlashcardView key={userId ?? 'guest'} items={currentKanjiList} userId={userId} authBusy={authBusy} onLogin={onLogin} favorites={favorites} onToggleFavorite={onToggleFavorite} onDetail={item => { setIsFlashcardOpen(false); onSelectKanji(item); }} onClose={() => setIsFlashcardOpen(false)} />
+          </div>
         </div>
       )}
 

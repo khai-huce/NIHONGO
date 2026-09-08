@@ -17,8 +17,20 @@ model User {
   isPremium    Boolean  @default(false) @map("is_premium")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  kanjiProgress KanjiProgress[]
 
   @@map("users")
+}
+
+model KanjiProgress {
+  userId     String   @map("user_id") @db.Uuid
+  kanjiId    String   @map("kanji_id") @db.VarChar(32)
+  memorized  Boolean
+  reviewedAt DateTime @default(now()) @map("reviewed_at") @db.Timestamptz(3)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, kanjiId])
+  @@map("kanji_progress")
 }
 
 // Read/written by connect-pg-simple; Prisma only manages the migration.

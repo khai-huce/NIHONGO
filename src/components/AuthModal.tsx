@@ -4,7 +4,6 @@ import { RoughCard } from './RoughCard';
 import { GoogleSignIn } from './GoogleSignIn';
 import { api } from '../utils/api';
 import type { UserProfile } from '../types';
-
 interface AuthModalProps {
   onClose: () => void;
   initialMode?: 'login' | 'register';
@@ -92,7 +91,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
             {mode === 'login' ? 'Nếu chưa có tài khoản thì ' : 'Đã có tài khoản? '}
             <button type="button" disabled={isLoading} onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErrorMsg(''); setPassword(''); setConfirmPassword(''); }} className="font-bold text-[#0091ff] hover:underline">{mode === 'login' ? 'Đăng Ký' : 'Đăng nhập'}</button>
           </div>
-          <p className="mt-4 pt-3 border-t border-[#d6d3d1]/80 text-[11px] text-[#78716c] text-center leading-relaxed">Dữ liệu học hiện được lưu trên trình duyệt này, chưa đồng bộ giữa các thiết bị.</p>
+          <p className="mt-4 pt-3 border-t border-[#d6d3d1]/80 text-[11px] text-[#78716c] text-center leading-relaxed">Đăng nhập để lưu tiến độ flashcard Kanji giữa các thiết bị. Các dữ liệu học khác vẫn ở trình duyệt này.</p>
         </RoughCard>
       </div>
     </div>
