@@ -256,3 +256,144 @@ describe('account Kanji progress', () => {
     expect(await api.db.kanjiProgress.count()).toBe(1);
   });
 });
+
+describe('starred review decks and preserved history', () => {
+  const reset = (sid: string, id: string, category='kanji', expectedCount=1) => request(api.app).post('/api/review/reset').set('Origin',config.APP_ORIGIN).set('Cookie',sid).send({expectedUserId:id,category,expectedCount});
+  const star = (sid: string, id: string, overrides: Record<string, unknown> = {}) => request(api.app).post('/api/review/star').set('Origin', config.APP_ORIGIN).set('Cookie', sid).send({expectedUserId:id,category:'kanji',sourceId:'k-1',front:'一',back:'Một',active:true,...overrides});
+  const rate = (sid: string, id: string, card: {id:string;version:number}, rating='good') => request(api.app).post('/api/review/rate').set('Origin',config.APP_ORIGIN).set('Cookie',sid).send({expectedUserId:id,id:card.id,version:card.version,rating,elapsedMs:2500});
+  const list = (sid: string) => request(api.app).get('/api/review').set('Cookie',sid);
+  it('resets only active cards of the chosen category and owner, preserves history and rejects old review screens', async () => {
+    const user=await post('/register',userInput), other=await post('/register',{...userInput,email:'reset-other@example.com'});
+    const sid=cookie(user),id=user.body.user.id;
+    for (const category of ['kanji','vocab','grammar']) {
+      const card=(await star(sid,id,{category})).body.card;
+      await rate(sid,id,card).expect(200);
+    }
+    const paused=(await star(sid,id,{sourceId:'k-2'})).body.card;
+    await rate(sid,id,paused).expect(200);
+    await star(sid,id,{sourceId:'k-2',active:false});
+    await star(cookie(other),other.body.user.id);
+    const before=await api.db.reviewCard.findMany({orderBy:{id:'asc'}});
+    const events=await api.db.reviewEvent.findMany({orderBy:{id:'asc'}});
+    const old=before.find(c=>c.userId===id && c.category==='kanji' && c.active)!;
+    await reset(sid,id).expect(200,{count:1});
+    const after=await api.db.reviewCard.findMany({orderBy:{id:'asc'}});
+    expect(after.filter(c=>c.id!==old.id)).toEqual(before.filter(c=>c.id!==old.id));
+    expect(after.find(c=>c.id===old.id)).toMatchObject({reviewCount:0,intervalSeconds:0,version:old.version+1});
+    expect(after.find(c=>c.id===old.id)!.dueAt.getTime()).toBeLessThanOrEqual(Date.now());
+    expect(await api.db.reviewEvent.findMany({orderBy:{id:'asc'}})).toEqual(events);
+    await rate(sid,id,old).expect(409);
+    const stats=(await list(sid)).body.stats[0];
+    expect(stats).toMatchObject({total:2,averageMs:2500,averagePerDay:2,distribution:{good:2}});
+    const fresh=after.find(c=>c.id===old.id)!;
+    await rate(sid,id,fresh).expect(200);
+    expect(await api.db.reviewEvent.count()).toBe(5);
+  });
+  it('guards reset session, origin, changed account and confirmation count', async () => {
+    await request(api.app).post('/api/review/reset').set('Origin',config.APP_ORIGIN).send({}).expect(401);
+    const user=await post('/register',userInput),other=await post('/register',{...userInput,email:'reset-other@example.com'});
+    const sid=cookie(user),id=user.body.user.id;
+    const card=(await star(sid,id)).body.card;
+    await reset(sid,other.body.user.id).expect(409);
+    await reset(sid,id,'kanji',2).expect(409);
+    await reset(sid,id,'invalid').expect(400);
+    await request(api.app).post('/api/review/reset').set('Cookie',sid).set('Origin','https://example.com').send({}).expect(403);
+    expect((await list(sid)).body.cards[0]).toEqual(card);
+    await reset(sid,id,'vocab',0).expect(200,{count:0});
+  });
+  it.each(['kanji','vocab','grammar'])('preserves %s history across remove, re-add and reset', async category => {
+    const user=await post('/register',userInput),sid=cookie(user),id=user.body.user.id;
+    const card=(await star(sid,id,{category})).body.card;
+    const rated=(await rate(sid,id,card,'hard').expect(200)).body.card;
+    await star(sid,id,{category,active:false}).expect(200);
+    const resumed=(await star(sid,id,{category})).body.card;
+    expect(resumed).toMatchObject({dueAt:rated.dueAt,intervalSeconds:360,reviewCount:1});
+    await reset(sid,id,category).expect(200);
+    expect((await list(sid)).body.stats.find((s:any)=>s.category===category)).toMatchObject({total:1,distribution:{hard:1}});
+  });
+  it('rolls back a failed save and permits retry without a duplicate event', async () => {
+    const user=await post('/register',userInput),sid=cookie(user),id=user.body.user.id;
+    const card=(await star(sid,id)).body.card;
+    vi.spyOn(api.db,'$transaction').mockRejectedValueOnce(new Error('simulated outage'));
+    await rate(sid,id,card).expect(503);
+    expect((await list(sid)).body.cards[0]).toEqual(card);
+    expect(await api.db.reviewEvent.count()).toBe(0);
+    await api.close(); api=createApp(config);
+    await rate(sid,id,card).expect(200);
+    await rate(sid,id,card).expect(409);
+    expect(await api.db.reviewEvent.count()).toBe(1);
+  });
+  it('requires login and rejects foreign origins and unexpected fields', async () => {
+    await request(api.app).get('/api/review').expect(401);
+    const user=await post('/register',userInput);const sid=cookie(user),id=user.body.user.id;
+    await star(sid,id,{userId:id}).expect(400);
+    await star(sid,id,{category:'admin'}).expect(400);
+    await star(sid,id,{front:''}).expect(400);
+    await request(api.app).post('/api/review/star').set('Cookie',sid).set('Origin','https://example.com').send({}).expect(403);
+    expect(await api.db.reviewCard.count()).toBe(0);
+  });
+  it('creates one due card per source/category/account and separates all three categories', async () => {
+    const user=await post('/register',userInput);const sid=cookie(user),id=user.body.user.id;
+    await Promise.all([star(sid,id).expect(200),star(sid,id).expect(200)]);
+    await star(sid,id,{category:'vocab'}).expect(200);
+    await star(sid,id,{category:'grammar'}).expect(200);
+    const result=await list(sid).expect(200);
+    expect(result.body.cards).toHaveLength(3);
+    expect(result.body.cards.every((c:any)=>c.active && c.reviewCount===0 && new Date(c.dueAt)<=new Date())).toBe(true);
+    expect(result.body.cards[0]).not.toHaveProperty('userId');
+    expect(result.headers['cache-control']).toBe('no-store');
+  });
+  it('preserves history, due date and interval on unstar/re-star, including after restart', async () => {
+    const user=await post('/register',userInput);const sid=cookie(user),id=user.body.user.id;
+    const created=await star(sid,id);
+    const rated=await rate(sid,id,created.body.card).expect(200);
+    const paused=await star(sid,id,{active:false}).expect(200);
+    expect(paused.body.card).toMatchObject({active:false,reviewCount:1,intervalSeconds:86400,dueAt:rated.body.card.dueAt});
+    await rate(sid,id,paused.body.card).expect(409);
+    await api.close();api=createApp(config);
+    const resumed=await star(sid,id).expect(200);
+    expect(resumed.body.card).toMatchObject({active:true,reviewCount:1,dueAt:rated.body.card.dueAt});
+    await rate(sid,id,resumed.body.card).expect(409);
+    expect(await api.db.reviewEvent.count()).toBe(1);
+    expect((await list(sid)).body.stats[0]).toMatchObject({category:'kanji',total:1,today:1,week:1,averageMs:2500});
+  });
+  it('makes an overdue reactivated card available immediately and expands a good interval', async () => {
+    const user=await post('/register',userInput);const sid=cookie(user),id=user.body.user.id;
+    const card=(await star(sid,id)).body.card;
+    await rate(sid,id,card).expect(200);
+    await star(sid,id,{active:false});
+    await api.db.reviewCard.update({where:{id:card.id},data:{dueAt:new Date(Date.now()-1000)}});
+    const resumed=(await star(sid,id)).body.card;
+    expect(new Date(resumed.dueAt).getTime()).toBeLessThan(Date.now());
+    const next=await rate(sid,id,resumed).expect(200);
+    expect(next.body.card.intervalSeconds).toBe(172800);
+    expect(next.body.card.reviewCount).toBe(2);
+  });
+  it('records exactly one event for concurrent repeated ratings', async () => {
+    const user=await post('/register',userInput);const sid=cookie(user),id=user.body.user.id;
+    const card=(await star(sid,id)).body.card;
+    const results=await Promise.all([rate(sid,id,card,'again'),rate(sid,id,card,'again')]);
+    expect(results.map(r=>r.status).sort()).toEqual([200,409]);
+    expect(await api.db.reviewEvent.count()).toBe(1);
+    expect((await list(sid)).body.cards[0].intervalSeconds).toBe(60);
+  });
+  it('blocks access across users and stale account writes', async () => {
+    const first=await post('/register',userInput),second=await post('/register',{...userInput,email:'other-review@example.com'});
+    const sid=cookie(first),otherSid=cookie(second),id=first.body.user.id,otherId=second.body.user.id;
+    const card=(await star(sid,id)).body.card;
+    expect((await list(otherSid)).body.cards).toEqual([]);
+    await rate(otherSid,otherId,card).expect(404);
+    await star(otherSid,id).expect(409);
+    expect(await api.db.reviewEvent.count()).toBe(0);
+  });
+  it('saves the hard and easy schedules and allows removal without erasing events', async () => {
+    const user=await post('/register',userInput);const sid=cookie(user),id=user.body.user.id;
+    for(const [rating,seconds] of [['hard',360],['easy',345600]] as const){
+      const card=(await star(sid,id,{sourceId:rating})).body.card;
+      expect((await rate(sid,id,card,rating).expect(200)).body.card.intervalSeconds).toBe(seconds);
+      await star(sid,id,{sourceId:rating,active:false}).expect(200);
+    }
+    expect(await api.db.reviewEvent.count()).toBe(2);
+    expect((await list(sid)).body.cards.every((c:any)=>!c.active)).toBe(true);
+  });
+});

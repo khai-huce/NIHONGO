@@ -1,7 +1,7 @@
+import { ReviewStar } from './ReviewStar';
 import React, { useState } from 'react';
 import { 
   Volume2, 
-  Star, 
   ArrowLeft, 
   BookOpen, 
   PenTool, 
@@ -15,15 +15,11 @@ import { RoughCard, RoughButton } from './RoughCard';
 interface KanjiDetailViewProps {
   item: KanjiItem;
   onBack: () => void;
-  isFavorite: boolean;
-  onToggleFavorite: (id: string) => void;
 }
 
 export const KanjiDetailView: React.FC<KanjiDetailViewProps> = ({
   item,
-  onBack,
-  isFavorite,
-  onToggleFavorite
+  onBack
 }) => {
   const [showStrokeModal, setShowStrokeModal] = useState(false);
   const [showPhoneticModal, setShowPhoneticModal] = useState(false);
@@ -87,17 +83,7 @@ export const KanjiDetailView: React.FC<KanjiDetailViewProps> = ({
                 </h1>
 
                 {/* Square Star Favorite Button */}
-                <RoughButton
-                  onClick={() => onToggleFavorite(item.id)}
-                  fill="#ffffff"
-                  stroke="#292524"
-                  borderRadius={8}
-                  roughness={0.7}
-                  className="p-1.5 shadow-xs cursor-pointer hover:bg-amber-50 transition-colors"
-                  title="Lưu vào danh sách yêu thích"
-                >
-                  <Star className={`w-4 h-4 ${isFavorite ? 'fill-amber-400 text-amber-500' : 'text-[#78716c]'}`} />
-                </RoughButton>
+                <ReviewStar source={{category:'kanji',sourceId:item.id,front:item.kanji,back:item.meaning,reading:item.hanViet,hint:item.mnemonic}} />
               </div>
 
               {/* Link: → Quy tắc chuyển âm */}

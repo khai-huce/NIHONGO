@@ -1,3 +1,4 @@
+import { ReviewStar } from '../components/ReviewStar';
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -597,6 +598,7 @@ export const BunpoPage: React.FC = () => {
                     {currentData.patterns.map((p, pIdx) => (
                       <div key={pIdx} className="p-3 rounded-xl bg-white border-sketch-subtle flex items-center justify-between gap-4 text-xs font-bold shadow-sketch">
                         <div className="flex items-center gap-2 flex-wrap">
+                          <ReviewStar source={{category:'grammar',sourceId:p.pattern,front:p.pattern,back:p.meaning}} />
                           <span className="font-kanji font-black text-sm text-[#292524]">{p.pattern}</span>
                           <span className="bg-[#0094ff] text-white text-[9px] font-black px-1.5 py-0.2 rounded">
                             {p.level}

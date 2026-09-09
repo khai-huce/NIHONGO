@@ -18,6 +18,7 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   kanjiProgress KanjiProgress[]
+  reviewCards ReviewCard[]
 
   @@map("users")
 }
@@ -41,4 +42,37 @@ model Session {
 
   @@index([expire], map: "sessions_expire_idx")
   @@map("sessions")
+}
+
+model ReviewCard {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  category String @db.VarChar(16)
+  sourceId String @map("source_id") @db.VarChar(300)
+  front String @db.VarChar(500)
+  back String @db.VarChar(2000)
+  reading String @default("") @db.VarChar(500)
+  hint String @default("") @db.VarChar(2000)
+  active Boolean @default(true)
+  dueAt DateTime @default(now()) @map("due_at") @db.Timestamptz(3)
+  intervalSeconds Int @default(0) @map("interval_seconds")
+  reviewCount Int @default(0) @map("review_count")
+  version Int @default(0)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events ReviewEvent[]
+  @@unique([userId, category, sourceId])
+  @@index([userId, active, dueAt])
+  @@map("review_cards")
+}
+
+model ReviewEvent {
+  id String @id @default(uuid()) @db.Uuid
+  cardId String @map("card_id") @db.Uuid
+  rating String @db.VarChar(8)
+  reviewedAt DateTime @default(now()) @map("reviewed_at") @db.Timestamptz(3)
+  dueAt DateTime @map("due_at") @db.Timestamptz(3)
+  elapsedMs Int @map("elapsed_ms")
+  card ReviewCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  @@index([cardId, reviewedAt])
+  @@map("review_events")
 }

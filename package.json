@@ -9,6 +9,7 @@
     "setup:env": "node server/scripts/setup-env.mjs",
     "build:server": "npm --prefix server run build",
     "test:server": "npm --prefix server test",
+    "test:review": "node --experimental-strip-types --test tests/review.test.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:stop": "docker compose stop db",
     "db:migrate": "npm --prefix server run db:migrate",

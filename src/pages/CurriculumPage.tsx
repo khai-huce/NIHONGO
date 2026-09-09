@@ -1,3 +1,4 @@
+import { ReviewStar } from '../components/ReviewStar';
 import React, { useState } from 'react';
 import { 
   Headphones, 
@@ -489,6 +490,7 @@ export const CurriculumPage: React.FC = () => {
                           <div className="flex items-center gap-3">
                             <span className="text-xl font-kanji font-black text-[#292524]">
                               {item.word}
+                              <ReviewStar source={{category:'vocab',sourceId:'word:'+item.word+':'+item.reading,front:item.word,back:item.meaning,reading:item.reading}} />
                             </span>
                             <span className="text-xs font-bold text-[#0094ff]">
                               {item.reading}

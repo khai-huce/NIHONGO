@@ -22,6 +22,7 @@ import { MascotAssistant } from './components/MascotAssistant';
 import { AuthModal } from './components/AuthModal';
 import { KanjiItem, UserSettings } from './types';
 import { useAuth } from './hooks/useAuth';
+import { ReviewProvider } from './hooks/useReview';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('kanji');
@@ -31,15 +32,6 @@ export const App: React.FC = () => {
   const auth = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('nhai_kanji_favorites');
-      return saved ? JSON.parse(saved) : ['k-1', 'k-14', 'k-22'];
-    } catch {
-      return ['k-1', 'k-14', 'k-22'];
-    }
-  });
 
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
@@ -61,10 +53,6 @@ export const App: React.FC = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('nhai_kanji_favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
-  useEffect(() => {
     localStorage.setItem('nhai_kanji_settings', JSON.stringify(settings));
     if (settings.darkMode) {
       document.documentElement.classList.add('dark');
@@ -73,13 +61,8 @@ export const App: React.FC = () => {
     }
   }, [settings]);
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev => 
-      prev.includes(id) ? prev.filter(fId => fId !== id) : [...prev, id]
-    );
-  };
-
   return (
+    <ReviewProvider key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}>
     <div className="h-screen bg-sketch-paper text-[#292524] dark:text-[#f5f5f4] font-sketch transition-colors duration-200 flex flex-col overflow-hidden">
       
       {/* 1. Full-width Top Header */}
@@ -121,8 +104,6 @@ export const App: React.FC = () => {
             <KanjiDetailView
               item={selectedKanji}
               onBack={() => setSelectedKanji(null)}
-              isFavorite={favorites.includes(selectedKanji.id)}
-              onToggleFavorite={toggleFavorite}
             />
           ) : selectedGrammar ? (
             <GrammarDetailView
@@ -140,8 +121,6 @@ export const App: React.FC = () => {
                   userId={auth.currentUser?.id ?? null}
                   authBusy={auth.checking || auth.loggingOut || !!auth.error}
                   onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
-                  favorites={favorites}
-                  onToggleFavorite={toggleFavorite}
                 />
               )}
 
@@ -203,5 +182,6 @@ export const App: React.FC = () => {
       />}
 
     </div>
+    </ReviewProvider>
   );
 };

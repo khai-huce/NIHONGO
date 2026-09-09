@@ -1,8 +1,9 @@
+import { ReviewStar } from '../ReviewStar';
+import { useReview } from '../../hooks/useReview';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   ArrowLeft, 
   Volume2, 
-  Star, 
   ChevronLeft, 
   ChevronRight, 
   RotateCcw, 
@@ -36,14 +37,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   const [deck, setDeck] = useState<VocabWord[]>([...words]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [starredIds, setStarredIds] = useState<Record<string, boolean>>(() => {
-    try {
-      const saved = localStorage.getItem('chu_dong_starred_words');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  const review = useReview();
 
   // Study direction: jp-vi (default) or vi-jp
   const [direction, setDirection] = useState<'jp-vi' | 'vi-jp'>('jp-vi');
@@ -59,17 +53,9 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentWord = deck[currentIndex] || null;
-  const isStarred = currentWord ? !!starredIds[currentWord.id] : false;
-
-  // Save starred words
   const toggleStar = useCallback(() => {
-    if (!currentWord) return;
-    setStarredIds(prev => {
-      const next = { ...prev, [currentWord.id]: !prev[currentWord.id] };
-      localStorage.setItem('chu_dong_starred_words', JSON.stringify(next));
-      return next;
-    });
-  }, [currentWord]);
+    if (currentWord) void review.toggle({category:'vocab',sourceId:'custom:'+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading});
+  }, [currentWord, review]);
 
   // Flip card
   const handleFlip = useCallback(() => {
@@ -225,16 +211,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
         </button>
 
         <div className="flex items-center gap-3">
-          {/* Star favorite */}
-          <button
-            onClick={toggleStar}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-              isStarred ? 'text-amber-400 hover:text-amber-300' : 'text-slate-400 hover:text-white'
-            }`}
-            title="Đánh dấu từ yêu thích (C)"
-          >
-            <Star className={`w-5 h-5 ${isStarred ? 'fill-current' : ''}`} />
-          </button>
+          {currentWord && <ReviewStar source={{category:'vocab',sourceId:'custom:'+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading}} />}
 
           {/* Fullscreen Toggle */}
           <button

@@ -1,3 +1,4 @@
+import { ReviewStar } from './ReviewStar';
 import React, { useState } from 'react';
 import { 
   ArrowLeft, 
@@ -157,6 +158,7 @@ export const GrammarDetailView: React.FC<GrammarDetailViewProps> = ({
             <span>{item.lesson}</span>
           </button>
 
+          <ReviewStar source={{category:'grammar',sourceId:item.pattern,front:item.pattern,back:item.meaning,hint:item.explanation.join(' ').slice(0,2000)}} />
           {/* Pattern Title & Subtitle */}
           <h1 className="text-3xl md:text-4xl font-black text-[#292524] font-kanji tracking-wide">
             {item.pattern}

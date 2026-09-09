@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, ChevronLeft, ChevronRight, ExternalLink, Keyboard, Pause, Play, RotateCw, Settings, Shuffle, Star, Volume2, X, ArrowLeftRight } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ExternalLink, Keyboard, Pause, Play, RotateCw, Settings, Shuffle, Volume2, X, ArrowLeftRight } from 'lucide-react';
 import { KanjiItem } from '../types';
 import { speakJapanese } from '../utils/speech';
 import { useKanjiProgress } from '../hooks/useKanjiProgress';
 import './FlashcardView.css';
+import { useReview } from '../hooks/useReview';
+import { ReviewStar } from './ReviewStar';
 
 interface FlashcardViewProps {
   items: KanjiItem[];
@@ -12,11 +14,10 @@ interface FlashcardViewProps {
   authBusy: boolean;
   onLogin: () => void;
   onDetail: (item: KanjiItem) => void;
-  favorites: string[];
-  onToggleFavorite: (id: string) => void;
 }
 
-export const FlashcardView: React.FC<FlashcardViewProps> = ({ items, onClose, userId, authBusy, onLogin, onDetail, favorites, onToggleFavorite }) => {
+export const FlashcardView: React.FC<FlashcardViewProps> = ({ items, onClose, userId, authBusy, onLogin, onDetail }) => {
+  const review = useReview();
   const [deck, setDeck] = useState(items);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -80,7 +81,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({ items, onClose, us
       else if (key === 'd' || key === 'arrowright') move(1);
       else if (key === 'z' || key === 'arrowup') void rate(true);
       else if (key === 'x' || key === 'arrowdown') void rate(false);
-      else if (key === 'c') onToggleFavorite(current.id);
+      else if (key === 'c') void review.toggle({category:'kanji',sourceId:current.id,front:current.kanji,back:current.meaning,reading:current.hanViet,hint:current.mnemonic});
       else if (key === 'p') setPlaying(value => !value);
     };
     window.addEventListener('keydown', keydown);
@@ -96,7 +97,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({ items, onClose, us
         <button onClick={() => { setPlaying(false); onDetail(current); }} disabled={progress.saving}><ExternalLink size={15} /> Xem chi tiết</button>
         <div className="kf-header-actions">
           <button title="Nghe phát âm" aria-label="Nghe phát âm" onClick={() => speakJapanese(current.kanji)}><Volume2 size={17} /></button>
-          <button title="Yêu thích trên thiết bị này (C)" aria-label="Yêu thích" aria-pressed={favorites.includes(current.id)} onClick={() => onToggleFavorite(current.id)} className={favorites.includes(current.id) ? 'kf-starred' : ''}><Star size={18} fill={favorites.includes(current.id) ? 'currentColor' : 'none'} /></button>
+          <ReviewStar source={{category:'kanji',sourceId:current.id,front:current.kanji,back:current.meaning,reading:current.hanViet,hint:current.mnemonic}} />
           <button title="Đóng (Esc)" aria-label="Đóng flashcard" disabled={progress.saving} onClick={onClose}><X size={18} /></button>
         </div>
       </header>
@@ -113,7 +114,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({ items, onClose, us
       <div className={`kf-status ${progress.error ? 'has-error' : ''}`} aria-live="polite">
         {progress.error ? <><span role="alert">{progress.error}</span>{!progress.loaded && <button onClick={() => void progress.reload()} disabled={progress.loading}>Tải lại</button>}</> : progress.loading ? 'Đang tải tiến độ…' : progress.saving ? 'Đang lưu…' : userId ? `Đã thuộc ${known}/${deck.length} · Tiến độ lưu vào tài khoản` : <><span>Học thử · Tiến độ chỉ giữ trong lần học này.</span><button onClick={() => { setPlaying(false); onClose(); onLogin(); }}>Đăng nhập để lưu</button></>}
       </div>
-      <button className="kf-shortcuts" onClick={() => { setPanel('help'); setPlaying(false); }}><Keyboard size={15} /><span>Phím tắt:</span><kbd>Space</kbd><span>lật</span><kbd>Z</kbd><span>biết</span><kbd>X</kbd><span>chưa biết</span><kbd>C</kbd><span>yêu thích</span></button>
+      <button className="kf-shortcuts" onClick={() => { setPanel('help'); setPlaying(false); }}><Keyboard size={15} /><span>Phím tắt:</span><kbd>Space</kbd><span>lật</span><kbd>Z</kbd><span>biết</span><kbd>X</kbd><span>chưa biết</span><kbd>C</kbd><span>thêm ôn</span></button>
       <footer className="kf-toolbar">
         <div className="kf-ratings">
           <button className="kf-rating kf-unknown" title="Chưa thuộc (X / ↓)" aria-label="Chưa thuộc" disabled={busy} onClick={() => void rate(false)}><X size={25} /></button>
@@ -131,7 +132,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({ items, onClose, us
       <div className="kf-progress" role="progressbar" aria-label="Kanji đã thuộc" aria-valuemin={0} aria-valuemax={deck.length} aria-valuenow={known}><span style={{ width: `${known / deck.length * 100}%` }} /></div>
       {panel && <div className="kf-panel-overlay" onClick={() => setPanel(null)}><section className="kf-panel" role="dialog" aria-modal="true" aria-label={panel === 'help' ? 'Phím tắt bàn phím' : 'Cài đặt flashcard'} onClick={event => event.stopPropagation()}>
         <header><h2>{panel === 'help' ? 'Phím tắt bàn phím' : 'Cài đặt flashcard'}</h2><button autoFocus aria-label="Đóng bảng hướng dẫn" onClick={() => setPanel(null)}><X size={18} /></button></header>
-        {panel === 'help' ? <div className="kf-key-grid">{[['Thẻ trước', '← / A'], ['Thẻ tiếp theo', '→ / D'], ['Lật thẻ', 'Space'], ['Đã thuộc', '↑ / Z'], ['Chưa thuộc', '↓ / X'], ['Yêu thích', 'C'], ['Tự động phát', 'P'], ['Đóng', 'Esc']].map(([label, key]) => <div key={label}><span>{label}</span><kbd>{key}</kbd></div>)}</div> : <label className="kf-setting">Thời gian hiển thị mỗi mặt<select value={seconds} onChange={event => setSeconds(Number(event.target.value))}><option value={3}>3 giây</option><option value={5}>5 giây</option><option value={8}>8 giây</option></select><small>Tự động phát chỉ lật và chuyển thẻ, không đánh dấu đã thuộc.</small></label>}
+        {panel === 'help' ? <div className="kf-key-grid">{[['Thẻ trước', '← / A'], ['Thẻ tiếp theo', '→ / D'], ['Lật thẻ', 'Space'], ['Đã thuộc', '↑ / Z'], ['Chưa thuộc', '↓ / X'], ['Thêm/bỏ ôn tập', 'C'], ['Tự động phát', 'P'], ['Đóng', 'Esc']].map(([label, key]) => <div key={label}><span>{label}</span><kbd>{key}</kbd></div>)}</div> : <label className="kf-setting">Thời gian hiển thị mỗi mặt<select value={seconds} onChange={event => setSeconds(Number(event.target.value))}><option value={3}>3 giây</option><option value={5}>5 giây</option><option value={8}>8 giây</option></select><small>Tự động phát chỉ lật và chuyển thẻ, không đánh dấu đã thuộc.</small></label>}
       </section></div>}
     </div>
   );

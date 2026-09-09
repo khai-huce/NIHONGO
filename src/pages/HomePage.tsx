@@ -20,13 +20,11 @@ interface HomePageProps {
   userId: string | null;
   authBusy: boolean;
   onLogin: () => void;
-  favorites: string[];
-  onToggleFavorite: (id: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
   onSelectKanji,
-  onOpenWrite, userId, authBusy, onLogin, favorites, onToggleFavorite
+  onOpenWrite, userId, authBusy, onLogin
 }) => {
   const [activeLevel, setActiveLevel] = useState<JLPTLevel | 'RADICALS'>('N5');
   const [searchQuery, setSearchQuery] = useState('');
@@ -391,7 +389,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       {isFlashcardOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-2xl">
-            <FlashcardView key={userId ?? 'guest'} items={currentKanjiList} userId={userId} authBusy={authBusy} onLogin={onLogin} favorites={favorites} onToggleFavorite={onToggleFavorite} onDetail={item => { setIsFlashcardOpen(false); onSelectKanji(item); }} onClose={() => setIsFlashcardOpen(false)} />
+            <FlashcardView key={userId ?? 'guest'} items={currentKanjiList} userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={item => { setIsFlashcardOpen(false); onSelectKanji(item); }} onClose={() => setIsFlashcardOpen(false)} />
           </div>
         </div>
       )}
