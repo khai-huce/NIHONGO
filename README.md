@@ -1,6 +1,8 @@
 **NIHONGO — chạy frontend và Express backend ở local**
 
-Frontend dùng React/Vite. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản, phiên đăng nhập và tiến độ flashcard Kanji. Nội dung Kanji vẫn ở file dữ liệu; các dữ liệu học khác vẫn ở trình duyệt.
+Frontend dùng React/Vite/React Router. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản, phiên đăng nhập, tiến độ flashcard Kanji và thẻ/lịch sử Ôn tập. Bài học Chủ động, lộ trình riêng và bài đọc tự tạo hiện vẫn ở thiết bị.
+
+Kế hoạch hoàn thiện chức năng theo từng task: [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Đọc tài liệu này khi cần chọn việc tiếp theo; ưu tiên đã chốt là dữ liệu học cá nhân. Danh sách URL: [ROUTES.md](docs/ROUTES.md); luồng sao và Ôn tập: [REVIEW.md](docs/REVIEW.md).
 
 **Cài đặt lần đầu**
 
@@ -119,4 +121,10 @@ Mở Hán tự → Flashcard. Đã đăng nhập: Đã thuộc/Chưa thuộc đ�
 
 API mới: `GET /api/progress/kanji`, `POST /api/progress/kanji` với `{ kanjiId, memorized, expectedUserId }`. Quyền sở hữu luôn lấy từ cookie session; expectedUserId chỉ chặn ghi nhầm khi đổi tài khoản ở tab khác. Cùng Kanji/tài khoản chỉ có một bản ghi; lần ghi thành công sau cùng quyết định trạng thái. Mở lại flashcard hoặc tải trang để lấy thay đổi từ thiết bị khác.
 
-Chi tiết rà soát localStorage, schema, API và nghiệm thu: [KANJI_PROGRESS_PLAN.md](docs/KANJI_PROGRESS_PLAN.md). Danh sách yêu thích, bài học chủ động và các lộ trình chưa thuộc phạm vi đồng bộ này. Khi thay catalog Kanji, cập nhật `server/src/kanji-ids.ts`; test kiểm tra danh sách này khớp frontend.
+Chi tiết rà soát localStorage, schema, API và nghiệm thu đợt tiến độ Hán tự: [KANJI_PROGRESS_PLAN.md](docs/KANJI_PROGRESS_PLAN.md). Ngôi sao đã được đồng bộ trong đợt Ôn tập; bài học Chủ động đã lưu theo tài khoản ở P01. Tiến độ học Chủ động và lộ trình riêng theo [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Khi thay catalog Kanji, cập nhật `server/src/kanji-ids.ts`; test kiểm tra danh sách này khớp frontend.
+
+**Bài học Chủ động theo tài khoản (P01)**
+
+Mở `/ca-nhan/chu-dong`: tạo/đổi tên/xóa bài, nhập/sửa/xóa từ và dùng demo bằng giao diện hiện có. Khi đăng nhập, bài cùng mảng từ được lưu trong `vocab_lessons`; F5 hoặc đăng nhập lại cùng tài khoản vẫn đọc được. Guest giữ dữ liệu thiết bị riêng, không tự nhập vào tài khoản.
+
+API `/api/vocab/lessons` kiểm tra owner, chống tạo lặp và dùng version để tránh hai tab ghi đè nhau. Lỗi lưu giữ nguyên form; sửa/xóa bài không xóa thẻ sao và lịch sử Ôn tập. Chưa lưu tiến độ flashcard/kết quả quiz Chủ động hoặc tích hợp AI Format. Schema, giới hạn, API và kiểm thử: [VOCAB_LESSONS.md](docs/VOCAB_LESSONS.md).

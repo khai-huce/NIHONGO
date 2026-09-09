@@ -8,6 +8,7 @@ import { createSession } from './session.js';
 import { authRoutes } from './auth.routes.js';
 import { progressRoutes } from './progress.routes.js';
 import { reviewRoutes } from './review.routes.js';
+import { lessonRoutes } from './lessons.routes.js';
 
 export function createApp(config: Config) {
   const db = new PrismaClient({ datasources: { db: { url: config.DATABASE_URL } } });
@@ -32,6 +33,7 @@ export function createApp(config: Config) {
     }
     next();
   });
+  app.use('/api/vocab/lessons', middleware, lessonRoutes(db));
   app.use(express.json({ limit: '16kb' }));
   app.use('/api/auth', middleware, authRoutes(config, db, pool));
   app.use('/api/progress', middleware, progressRoutes(db));

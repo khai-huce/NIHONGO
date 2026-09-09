@@ -117,7 +117,7 @@ export const App: React.FC = () => {
               onSelectKanji={item => openDetail(kanjiPath(item.id))}
               onSelectGrammar={item => openDetail(grammarPath(item.id))}
             />} />
-            <Route path={pagePaths['personal-chu-dong']} element={<ChuDongPage />} />
+            <Route path={pagePaths['personal-chu-dong']} element={<ChuDongPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={pagePaths.accent} element={<AccentPage />} />
             <Route path={pagePaths.leaderboard} element={<LeaderboardPage />} />
             <Route path={pagePaths.write} element={<WritePage />} />

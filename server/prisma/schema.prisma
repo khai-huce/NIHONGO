@@ -19,6 +19,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   kanjiProgress KanjiProgress[]
   reviewCards ReviewCard[]
+  vocabLessons VocabLesson[]
 
   @@map("users")
 }
@@ -75,4 +76,17 @@ model ReviewEvent {
   card ReviewCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
   @@index([cardId, reviewedAt])
   @@map("review_events")
+}
+
+model VocabLesson {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  name String @db.VarChar(100)
+  words Json @default("[]")
+  version Int @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+  @@map("vocab_lessons")
 }

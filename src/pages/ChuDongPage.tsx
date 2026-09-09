@@ -1,3 +1,5 @@
+import { useVocabLessons, type VocabWord, type VocabLesson } from '../hooks/useVocabLessons';
+export type { VocabWord, VocabLesson } from '../hooks/useVocabLessons';
 import React, { useState, useEffect, useRef } from 'react';
 import { FlashcardStudy } from '../components/chudong/FlashcardStudy';
 import { QuizStudy } from '../components/chudong/QuizStudy';
@@ -21,20 +23,6 @@ import {
 } from 'lucide-react';
 import { RoughCard, RoughButton } from '../components/RoughCard';
 
-export interface VocabWord {
-  id: string;
-  word: string;
-  reading: string;
-  hanViet: string;
-  meaning: string;
-}
-
-export interface VocabLesson {
-  id: string;
-  name: string;
-  words: VocabWord[];
-}
-
 const DEMO_WORDS: VocabWord[] = [
   { id: 'w-0', word: '学校', reading: 'がっこう', hanViet: 'HỌC HIỆU', meaning: 'Trường học' },
   { id: 'w-01', word: '先生', reading: 'せんせい', hanViet: 'TIÊN SINH', meaning: 'Giáo viên, thầy/cô' },
@@ -48,25 +36,20 @@ const DEMO_WORDS: VocabWord[] = [
   { id: 'w-8', word: 'いただきます', reading: 'いただきます', hanViet: '', meaning: 'Mời ăn cơm / Xin phép nhận' }
 ];
 
-export const ChuDongPage: React.FC = () => {
-  // Lessons state with localStorage persistence
-  const [lessons, setLessons] = useState<VocabLesson[]>(() => {
-    try {
-      const saved = localStorage.getItem('chu_dong_lessons');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(() => {
-    try {
-      const saved = localStorage.getItem('chu_dong_selected_lesson');
-      return saved || null;
-    } catch {
-      return null;
-    }
-  });
+export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({userId,authBusy}) => {
+  const store=useVocabLessons(userId,authBusy);
+  const {lessons}=store;
+  const selectionKey=userId ? `chu_dong_selected_lesson:${userId}` : 'chu_dong_selected_lesson';
+  const [selectedLessonId,setSelectedLessonId]=useState<string|null>(null);
+  const createId=useRef<string>('');
+  const selectionLoaded=useRef(false);
+  useEffect(()=>{
+    if (!store.loaded || selectionLoaded.current) return;
+    let saved:string|null=null;
+    try { saved=localStorage.getItem(selectionKey); } catch { /* Selection persistence is optional. */ }
+    setSelectedLessonId(lessons.some(l=>l.id===saved)?saved:lessons[0]?.id??null);
+    selectionLoaded.current=true;
+  },[store.loaded,lessons,selectionKey]);
 
   // New lesson creation
   const [isCreatingLesson, setIsCreatingLesson] = useState(false);
@@ -99,16 +82,12 @@ export const ChuDongPage: React.FC = () => {
   const studyAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    localStorage.setItem('chu_dong_lessons', JSON.stringify(lessons));
-  }, [lessons]);
-
-  useEffect(() => {
-    if (selectedLessonId) {
-      localStorage.setItem('chu_dong_selected_lesson', selectedLessonId);
-    } else {
-      localStorage.removeItem('chu_dong_selected_lesson');
-    }
-  }, [selectedLessonId]);
+    if (!selectionLoaded.current) return;
+    try {
+      if (selectedLessonId) localStorage.setItem(selectionKey,selectedLessonId);
+      else localStorage.removeItem(selectionKey);
+    } catch { /* A blocked localStorage must not block account lessons. */ }
+  },[selectedLessonId,selectionKey]);
 
   // Current active lesson
   const currentLesson = lessons.find(l => l.id === selectedLessonId) || null;
@@ -119,81 +98,55 @@ export const ChuDongPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // 1. Create Lesson Handlers
+  // Keep the existing editor open until the server confirms a successful save.
   const handleStartCreateLesson = () => {
+    if (store.busy) return;
+    createId.current=crypto.randomUUID();
     setIsCreatingLesson(true);
-    setNewLessonName(`Bài ${lessons.length + 1}`);
+    setNewLessonName(`Bài ${lessons.length+1}`);
   };
-
-  const handleConfirmCreateLesson = () => {
-    if (!newLessonName.trim()) return;
-    const newLesson: VocabLesson = {
-      id: `lesson-${Date.now()}`,
-      name: newLessonName.trim(),
-      words: []
-    };
-    const updated = [...lessons, newLesson];
-    setLessons(updated);
-    setSelectedLessonId(newLesson.id);
-    setIsCreatingLesson(false);
-    setNewLessonName('');
+  const handleConfirmCreateLesson = async () => {
+    if (store.busy || !newLessonName.trim()) return;
+    const result=await store.create(createId.current,newLessonName.trim());
+    if (!result?.lesson) return;
+    setSelectedLessonId(result.lesson.id);setIsCreatingLesson(false);setNewLessonName('');
   };
-
-  const handleCancelCreateLesson = () => {
-    setIsCreatingLesson(false);
-    setNewLessonName('');
-  };
-
-  // 2. Delete / Rename Lesson
-  const handleDeleteLesson = (id: string, e: React.MouseEvent) => {
+  const handleCancelCreateLesson = () => { if (!store.saving) {setIsCreatingLesson(false);setNewLessonName('');} };
+  const handleDeleteLesson = async (id:string,e:React.MouseEvent) => {
     e.stopPropagation();
-    const updated = lessons.filter(l => l.id !== id);
-    setLessons(updated);
-    if (selectedLessonId === id) {
-      setSelectedLessonId(updated.length > 0 ? updated[0].id : null);
+    const lesson=lessons.find(l=>l.id===id);
+    if (!lesson || store.busy) return;
+    if (await store.remove(lesson)) {
+      if (selectedLessonId===id) {setSelectedLessonId(lessons.find(l=>l.id!==id)?.id??null);setActiveStudyMode(null);setInputContent('');setEditingWordId(null);}
     }
   };
-
-  const handleStartRename = (lesson: VocabLesson, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingLessonId(lesson.id);
-    setEditLessonName(lesson.name);
+  const handleStartRename = (lesson:VocabLesson,e:React.MouseEvent) => {
+    e.stopPropagation();if(store.busy)return;
+    setEditingLessonId(lesson.id);setEditLessonName(lesson.name);
   };
-
-  const handleConfirmRename = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!editLessonName.trim()) return;
-    setLessons(prev => prev.map(l => l.id === id ? { ...l, name: editLessonName.trim() } : l));
-    setEditingLessonId(null);
+  const handleConfirmRename = async (id:string,e:React.MouseEvent) => {
+    e.stopPropagation();const lesson=lessons.find(l=>l.id===id);
+    if (!lesson || store.busy || !editLessonName.trim()) return;
+    if (await store.update(lesson,{name:editLessonName.trim()})) setEditingLessonId(null);
   };
-
-  // 3. Import Demo Words
-  const handleUseDemo = () => {
-    if (!currentLesson) return;
-    const updated = lessons.map(l => {
-      if (l.id === currentLesson.id) {
-        return {
-          ...l,
-          words: [...DEMO_WORDS]
-        };
-      }
-      return l;
-    });
-    setLessons(updated);
-    triggerToast('Đã tải 9 từ vựng demo thành công!');
+  const handleUseDemo = async () => {
+    if (!currentLesson || store.busy) return;
+    const words=DEMO_WORDS.map(w=>({...w,id:crypto.randomUUID()}));
+    if (await store.update(currentLesson,{words})) triggerToast(`Đã tải ${words.length} từ vựng demo thành công!`);
   };
 
   // 4. Import / AI Format Handlers
-  const handleImportData = () => {
-    if (!currentLesson || !inputContent.trim()) return;
+  const handleImportData = async () => {
+    if (!currentLesson || store.busy || !inputContent.trim()) return;
     
     let parsedWords: VocabWord[] = [];
     try {
       // Try parsing JSON first
       const raw = JSON.parse(inputContent);
+      if (!Array.isArray(raw) || raw.some(item=>!item || typeof item!=='object' || Array.isArray(item))) {triggerToast('JSON cần là danh sách các từ vựng hợp lệ.');return;}
       if (Array.isArray(raw)) {
-        parsedWords = raw.map((item, idx) => ({
-          id: `w-${Date.now()}-${idx}`,
+        parsedWords = raw.map(item => ({
+          id: crypto.randomUUID(),
           word: item.word || item.kanji || item.term || '',
           reading: item.reading || item.kana || item.furigana || item.word || '',
           hanViet: item.hanViet || '',
@@ -203,10 +156,10 @@ export const ChuDongPage: React.FC = () => {
     } catch {
       // Fallback to line-by-line parsing: word, reading, hanViet, meaning OR word - meaning
       const lines = inputContent.split('\n').map(l => l.trim()).filter(Boolean);
-      parsedWords = lines.map((line, idx) => {
+      parsedWords = lines.map(line => {
         const parts = line.split(/[,\t|-]/).map(p => p.trim());
         return {
-          id: `w-${Date.now()}-${idx}`,
+          id: crypto.randomUUID(),
           word: parts[0] || '',
           reading: parts[1] || parts[0] || '',
           hanViet: parts[2] && parts[3] ? parts[2] : '',
@@ -216,20 +169,13 @@ export const ChuDongPage: React.FC = () => {
     }
 
     if (parsedWords.length > 0) {
-      setLessons(prev => prev.map(l => {
-        if (l.id === currentLesson.id) {
-          return {
-            ...l,
-            words: [...l.words, ...parsedWords]
-          };
-        }
-        return l;
-      }));
-      setInputContent('');
-      triggerToast(`Đã thêm ${parsedWords.length} từ vựng vào bài!`);
-    } else {
-      triggerToast('Không thể nhận diện định dạng từ vựng. Vui lòng kiểm tra lại!');
-    }
+      if (parsedWords.some(w=>[w.word,w.reading,w.hanViet,w.meaning].some(v=>typeof v!=='string') || !w.word.trim() || !w.meaning.trim())) {
+        triggerToast('Từ vựng và nghĩa phải là chuỗi có nội dung. Vui lòng kiểm tra lại.');return;
+      }
+      if (await store.update(currentLesson,{words:[...currentLesson.words,...parsedWords]})) {
+        setInputContent('');triggerToast(`Đã thêm ${parsedWords.length} từ vựng vào bài!`);
+      }
+    } else triggerToast('Không thể nhận diện định dạng từ vựng. Vui lòng kiểm tra lại!');
   };
 
   const handleAiFormat = () => {
@@ -252,48 +198,27 @@ export const ChuDongPage: React.FC = () => {
     triggerToast('AI đã tự động chuẩn hóa định dạng JSON!');
   };
 
-  // 5. Clear All Words in Lesson
-  const handleClearAllWords = () => {
-    if (!currentLesson) return;
+  const handleClearAllWords = async () => {
+    if (!currentLesson || store.busy) return;
     if (window.confirm('Bạn có chắc chắn muốn xóa tất cả từ vựng trong bài này?')) {
-      setLessons(prev => prev.map(l => l.id === currentLesson.id ? { ...l, words: [] } : l));
-      triggerToast('Đã xóa tất cả từ vựng trong bài!');
+      if (await store.update(currentLesson,{words:[]})) {setEditingWordId(null);triggerToast('Đã xóa tất cả từ vựng trong bài!');}
     }
   };
-
-  // 6. Delete single word
-  const handleDeleteWord = (wordId: string) => {
-    if (!currentLesson) return;
-    setLessons(prev => prev.map(l => {
-      if (l.id === currentLesson.id) {
-        return {
-          ...l,
-          words: l.words.filter(w => w.id !== wordId)
-        };
-      }
-      return l;
-    }));
+  const handleDeleteWord = async (wordId:string) => {
+    if (!currentLesson || store.busy) return;
+    if (await store.update(currentLesson,{words:currentLesson.words.filter(w=>w.id!==wordId)})) {
+      if (editingWordId===wordId) setEditingWordId(null);
+    }
   };
-
-  // 7. Edit single word
-  const handleStartEditWord = (word: VocabWord) => {
-    setEditingWordId(word.id);
-    setEditWordForm({ ...word });
+  const handleStartEditWord = (word:VocabWord) => {
+    if(store.busy)return;setEditingWordId(word.id);setEditWordForm({...word});
   };
-
-  const handleSaveEditWord = () => {
-    if (!currentLesson || !editingWordId) return;
-    setLessons(prev => prev.map(l => {
-      if (l.id === currentLesson.id) {
-        return {
-          ...l,
-          words: l.words.map(w => w.id === editingWordId ? { ...editWordForm } : w)
-        };
-      }
-      return l;
-    }));
-    setEditingWordId(null);
+  const handleSaveEditWord = async () => {
+    if (!currentLesson || !editingWordId || store.busy) return;
+    if (!editWordForm.word.trim() || !editWordForm.meaning.trim()) {triggerToast('Từ vựng và nghĩa không được để trống.');return;}
+    if (await store.update(currentLesson,{words:currentLesson.words.map(w=>w.id===editingWordId?{...editWordForm}:w)})) setEditingWordId(null);
   };
+  const statusMessage=store.error || (store.loading || authBusy ? 'Đang tải bài học…' : store.saving ? 'Đang lưu bài học…' : toastMessage);
 
   const wordCount = currentLesson ? currentLesson.words.length : 0;
 
@@ -301,9 +226,9 @@ export const ChuDongPage: React.FC = () => {
     <div className="w-full min-h-[calc(100vh-48px)] bg-sketch-paper p-4 md:p-8 space-y-6 max-w-5xl mx-auto overflow-y-auto select-none">
       
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#292524] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-2xl border border-stone-600 animate-in fade-in slide-in-from-top-2 duration-150">
-          {toastMessage}
+      {statusMessage && (
+        <div role={store.error ? "alert" : "status"} className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#292524] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-2xl border border-stone-600 animate-in fade-in slide-in-from-top-2 duration-150">
+          {statusMessage}
         </div>
       )}
 
@@ -365,7 +290,7 @@ export const ChuDongPage: React.FC = () => {
           </h2>
 
           {!isCreatingLesson && (
-            <RoughButton
+            <RoughButton disabled={store.busy}
               onClick={handleStartCreateLesson}
               fill="#ffffff"
               stroke="#292524"
@@ -384,7 +309,7 @@ export const ChuDongPage: React.FC = () => {
         {/* Inline Create Input (Image 2) */}
         {isCreatingLesson && (
           <div className="flex items-center gap-2 p-2 border-2 border-[#292524] rounded-xl bg-[#fdfbf7] shadow-inner animate-in fade-in duration-150">
-            <input
+            <input disabled={store.busy}
               type="text"
               value={newLessonName}
               onChange={(e) => setNewLessonName(e.target.value)}
@@ -396,14 +321,14 @@ export const ChuDongPage: React.FC = () => {
               placeholder="Nhập tên bài (VD: Bài 1)..."
               className="flex-1 bg-transparent px-3 py-1 text-sm font-bold text-[#292524] outline-none font-sketch"
             />
-            <button
+            <button disabled={store.busy}
               onClick={handleConfirmCreateLesson}
               className="p-1.5 rounded-lg hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
               title="Xác nhận"
             >
               <Check className="w-4 h-4 stroke-[3]" />
             </button>
-            <button
+            <button disabled={store.busy}
               onClick={handleCancelCreateLesson}
               className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer"
               title="Hủy"
@@ -414,7 +339,7 @@ export const ChuDongPage: React.FC = () => {
         )}
 
         {/* Empty State when no lessons (Image 1) */}
-        {!isCreatingLesson && lessons.length === 0 && (
+        {!isCreatingLesson && store.loaded && lessons.length === 0 && (
           <div className="py-10 flex flex-col items-center justify-center space-y-2 text-[#a8a29e]">
             <Folder className="w-10 h-10 stroke-[1.5] text-stone-300" />
             <p className="text-xs font-bold text-[#78716c]">
@@ -433,21 +358,21 @@ export const ChuDongPage: React.FC = () => {
               if (isEditing) {
                 return (
                   <div key={lesson.id} className="flex items-center gap-1 p-2 border-2 border-[#292524] rounded-xl bg-white shadow-xs">
-                    <input
+                    <input disabled={store.busy}
                       type="text"
                       value={editLessonName}
                       onChange={(e) => setEditLessonName(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleConfirmRename(lesson.id, e as any);
-                        if (e.key === 'Escape') setEditingLessonId(null);
+                        if (e.key === 'Escape' && !store.saving) setEditingLessonId(null);
                       }}
                       autoFocus
                       className="w-28 px-2 py-0.5 text-xs font-bold outline-none"
                     />
-                    <button onClick={(e) => handleConfirmRename(lesson.id, e)} className="p-1 text-emerald-600">
+                    <button disabled={store.busy} onClick={(e) => handleConfirmRename(lesson.id, e)} className="p-1 text-emerald-600">
                       <Check className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => setEditingLessonId(null)} className="p-1 text-rose-600">
+                    <button disabled={store.busy} onClick={() => setEditingLessonId(null)} className="p-1 text-rose-600">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -457,7 +382,7 @@ export const ChuDongPage: React.FC = () => {
               return (
                 <div
                   key={lesson.id}
-                  onClick={() => setSelectedLessonId(lesson.id)}
+                  onClick={() => {if (!store.busy && selectedLessonId!==lesson.id) {setSelectedLessonId(lesson.id);setInputContent('');setEditingWordId(null);}}}
                   className={`min-w-[170px] p-3.5 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 shadow-xs ${
                     isSelected 
                       ? 'border-[#292524] bg-white shadow-sketch' 
@@ -474,14 +399,14 @@ export const ChuDongPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-1.5 text-stone-400">
-                    <button
+                    <button disabled={store.busy}
                       onClick={(e) => handleStartRename(lesson, e)}
                       className="p-1 hover:text-[#292524] transition-colors cursor-pointer"
                       title="Đổi tên"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
-                    <button
+                    <button disabled={store.busy}
                       onClick={(e) => handleDeleteLesson(lesson.id, e)}
                       className="p-1 hover:text-rose-600 transition-colors cursor-pointer"
                       title="Xóa bài"
@@ -513,7 +438,7 @@ export const ChuDongPage: React.FC = () => {
               </button>
             </div>
 
-            <RoughButton
+            <RoughButton disabled={store.busy}
               onClick={handleUseDemo}
               fill="#ffffff"
               stroke="#292524"
@@ -540,7 +465,7 @@ export const ChuDongPage: React.FC = () => {
 
           {/* Textarea */}
           <div className="relative">
-            <textarea
+            <textarea disabled={store.busy}
               value={inputContent}
               onChange={(e) => setInputContent(e.target.value)}
               rows={5}
@@ -552,7 +477,7 @@ export const ChuDongPage: React.FC = () => {
           {/* Actions below textarea */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-2.5">
-              <button
+              <button disabled={store.busy}
                 onClick={handleImportData}
                 className="px-4 py-2 rounded-xl bg-[#0094ff] border-2 border-[#292524] text-white text-xs font-black flex items-center gap-1.5 shadow-xs hover:bg-blue-600 transition-colors cursor-pointer"
               >
@@ -560,7 +485,7 @@ export const ChuDongPage: React.FC = () => {
                 <span>Nhập dữ liệu vào hệ thống</span>
               </button>
 
-              <button
+              <button disabled={store.busy}
                 onClick={handleAiFormat}
                 className="px-4 py-2 rounded-xl bg-[#f3e8ff] border-2 border-[#c084fc] text-[#7e22ce] text-xs font-black flex items-center gap-1.5 shadow-xs hover:bg-purple-100 transition-colors cursor-pointer"
               >
@@ -570,7 +495,7 @@ export const ChuDongPage: React.FC = () => {
             </div>
 
             {inputContent.trim() && (
-              <button
+              <button disabled={store.busy}
                 onClick={() => setInputContent('')}
                 className="text-xs font-bold text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer"
               >
@@ -601,7 +526,7 @@ export const ChuDongPage: React.FC = () => {
                   Danh sách từ vựng ({wordCount})
                 </h3>
 
-                <button
+                <button disabled={store.busy}
                   onClick={handleClearAllWords}
                   className="flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-800 cursor-pointer transition-colors"
                 >
@@ -620,28 +545,28 @@ export const ChuDongPage: React.FC = () => {
                     return (
                       <div key={item.id} className="p-3 border-sketch bg-[#fdfbf7] space-y-2 animate-in fade-in duration-100">
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                          <input
+                          <input disabled={store.busy}
                             type="text"
                             value={editWordForm.word}
                             onChange={(e) => setEditWordForm({ ...editWordForm, word: e.target.value })}
                             placeholder="Từ vựng"
                             className="p-2 text-xs font-bold bg-white border-sketch-subtle outline-none font-kanji"
                           />
-                          <input
+                          <input disabled={store.busy}
                             type="text"
                             value={editWordForm.reading}
                             onChange={(e) => setEditWordForm({ ...editWordForm, reading: e.target.value })}
                             placeholder="Cách đọc (hiragana/katakana)"
                             className="p-2 text-xs font-bold bg-white border-sketch-subtle outline-none font-kanji"
                           />
-                          <input
+                          <input disabled={store.busy}
                             type="text"
                             value={editWordForm.hanViet}
                             onChange={(e) => setEditWordForm({ ...editWordForm, hanViet: e.target.value })}
                             placeholder="Hán Việt (tùy chọn)"
                             className="p-2 text-xs font-bold bg-white border-sketch-subtle outline-none"
                           />
-                          <input
+                          <input disabled={store.busy}
                             type="text"
                             value={editWordForm.meaning}
                             onChange={(e) => setEditWordForm({ ...editWordForm, meaning: e.target.value })}
@@ -651,14 +576,14 @@ export const ChuDongPage: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-2 pt-1">
-                          <button
+                          <button disabled={store.busy}
                             onClick={handleSaveEditWord}
                             className="px-3 py-1 border-sketch-subtle bg-white text-xs font-black text-[#292524] flex items-center gap-1 hover:bg-stone-100 cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5 text-emerald-600" />
                             <span>Lưu</span>
                           </button>
-                          <button
+                          <button disabled={store.busy}
                             onClick={() => setEditingWordId(null)}
                             className="text-xs font-bold text-stone-500 hover:text-stone-800 cursor-pointer"
                           >
@@ -699,14 +624,14 @@ export const ChuDongPage: React.FC = () => {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 text-stone-400 shrink-0">
-                        <button
+                        <button disabled={store.busy}
                           onClick={() => handleStartEditWord(item)}
                           className="p-1 hover:text-[#292524] transition-colors cursor-pointer"
                           title="Chỉnh sửa"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
-                        <button
+                        <button disabled={store.busy}
                           onClick={() => handleDeleteWord(item.id)}
                           className="p-1 hover:text-rose-600 transition-colors cursor-pointer"
                           title="Xoá từ"
@@ -777,7 +702,7 @@ export const ChuDongPage: React.FC = () => {
               </p>
             </div>
 
-            <RoughButton
+            <RoughButton disabled={store.busy}
               onClick={() => {
                 if (wordCount === 0) {
                   triggerToast('Cần ít nhất 1 từ vựng trong bài để bắt đầu học!');
@@ -820,7 +745,7 @@ export const ChuDongPage: React.FC = () => {
               </p>
             </div>
 
-            <RoughButton
+            <RoughButton disabled={store.busy}
               onClick={() => {
                 if (wordCount === 0) {
                   triggerToast('Cần ít nhất 1 từ vựng trong bài để bắt đầu học!');
@@ -863,7 +788,7 @@ export const ChuDongPage: React.FC = () => {
               </p>
             </div>
 
-            <RoughButton
+            <RoughButton disabled={store.busy}
               onClick={() => {
                 if (wordCount === 0) {
                   triggerToast('Cần ít nhất 1 từ vựng trong bài để bắt đầu học!');
