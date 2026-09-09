@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopHeader } from './components/TopHeader';
 import { HomePage } from './pages/HomePage';
@@ -15,19 +15,24 @@ import { UpgradePage } from './pages/UpgradePage';
 import { JlptRoadmapPage } from './pages/JlptRoadmapPage';
 import { DocHieuPage } from './pages/DocHieuPage';
 import { ShadowingPage } from './pages/ShadowingPage';
-import { KanjiDetailView } from './components/KanjiDetailView';
-import { GrammarDetailView, GrammarDetailItem } from './components/GrammarDetailView';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { pagePaths, pathForTab, tabForPath, kanjiPath, grammarPath } from './routes';
+import { KanjiRoute, GrammarRoute } from './pages/DetailRoutes';
+import { NotFoundPage } from './pages/NotFoundPage';
+
 import { SettingsModal } from './components/SettingsModal';
 import { MascotAssistant } from './components/MascotAssistant';
 import { AuthModal } from './components/AuthModal';
-import { KanjiItem, UserSettings } from './types';
+import { UserSettings } from './types';
 import { useAuth } from './hooks/useAuth';
 import { ReviewProvider } from './hooks/useReview';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('kanji');
-  const [selectedKanji, setSelectedKanji] = useState<KanjiItem | null>(null);
-  const [selectedGrammar, setSelectedGrammar] = useState<GrammarDetailItem | null>(null);
+  const navigate = useNavigate(), location = useLocation();
+  const activeTab = tabForPath(location.pathname);
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => { mainRef.current?.scrollTo(0,0); }, [location.pathname]);
+  const openDetail = (path: string) => navigate(path, {state:{from:location.pathname+location.search}});
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const auth = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -69,10 +74,7 @@ export const App: React.FC = () => {
       <TopHeader
         currentUser={auth.currentUser}
         authBusy={auth.checking || auth.loggingOut}
-        onUpgradeClick={() => {
-          setSelectedKanji(null);
-          setActiveTab('upgrade');
-        }}
+        onUpgradeClick={() => navigate(pagePaths.upgrade)}
         onOpenAuthModal={(mode = 'login') => {
           setAuthModalMode(mode);
           setIsAuthModalOpen(true);
@@ -88,77 +90,44 @@ export const App: React.FC = () => {
       <div className="flex flex-1 h-[calc(100vh-48px)] overflow-hidden">
         <Sidebar
           activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setSelectedKanji(null);
-            setSelectedGrammar(null);
-            setActiveTab(tab);
-          }}
+          setActiveTab={tab => navigate(pathForTab(tab))}
           settings={settings}
           setSettings={setSettings}
           setIsSettingsOpen={setIsSettingsOpen}
         />
 
         {/* Main Body */}
-        <main className="flex-1 h-full overflow-y-auto">
-          {selectedKanji ? (
-            <KanjiDetailView
-              item={selectedKanji}
-              onBack={() => setSelectedKanji(null)}
-            />
-          ) : selectedGrammar ? (
-            <GrammarDetailView
-              item={selectedGrammar}
-              onBack={() => setSelectedGrammar(null)}
-              onSelectGrammar={(item) => setSelectedGrammar(item)}
-            />
-          ) : (
-            <>
-              {/* 1. Hán tự */}
-              {activeTab === 'kanji' && (
-                <HomePage
-                  onSelectKanji={(item) => setSelectedKanji(item)}
-                  onOpenWrite={() => setActiveTab('write')}
-                  userId={auth.currentUser?.id ?? null}
-                  authBusy={auth.checking || auth.loggingOut || !!auth.error}
-                  onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
-                />
-              )}
-
-              {/* 2. Từ vựng submenus */}
-              {activeTab === 'vocab-giao-trinh' && <CurriculumPage />}
-              {activeTab === 'vocab-bang-chu-cai' && <AlphabetPage />}
-
-              {/* 3. Ngữ pháp */}
-              {activeTab === 'bunpo' && <BunpoPage />}
-
-              {/* 4. Cá nhân hoá submenus */}
-              {(activeTab === 'personal' || activeTab === 'personal-lo-trinh') && <PersonalRoadmapPage />}
-              {activeTab === 'personal-on-tap' && (
-                <ReviewPage 
-                  onSelectKanji={(item) => setSelectedKanji(item)} 
-                  onSelectGrammar={(item) => setSelectedGrammar(item)} 
-                />
-              )}
-              {activeTab === 'personal-chu-dong' && <ChuDongPage />}
-
-              {/* 5. Trọng âm */}
-              {activeTab === 'accent' && <AccentPage />}
-
-              {/* 6. Xếp hạng */}
-              {activeTab === 'leaderboard' && <LeaderboardPage />}
-
-              {/* 7. Luyện viết */}
-              {activeTab === 'write' && <WritePage />}
-
-              {/* 8. Trọn đời & Nâng cấp */}
-              {activeTab === 'lifetime-jlpt' && <JlptRoadmapPage />}
-              {activeTab === 'lifetime-doc-hieu' && <DocHieuPage />}
-              {activeTab === 'lifetime-shadowing' && <ShadowingPage />}
-              {(activeTab === 'lifetime' || 
-                activeTab === 'lifetime-tao-file' || 
-                activeTab === 'upgrade') && <UpgradePage />}
-            </>
-          )}
+        <main ref={mainRef} className="flex-1 h-full overflow-y-auto">
+          <Routes>
+            <Route path="/" element={<Navigate to="/kanji" replace />} />
+            <Route path={pagePaths.kanji} element={<HomePage
+              onSelectKanji={item => openDetail(kanjiPath(item.id))}
+              onOpenWrite={() => navigate(pagePaths.write)}
+              userId={auth.currentUser?.id ?? null}
+              authBusy={auth.checking || auth.loggingOut || !!auth.error}
+              onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+            />} />
+            <Route path="/kanji/:id" element={<KanjiRoute />} />
+            <Route path="/ngu-phap/:id" element={<GrammarRoute />} />
+            <Route path={pagePaths['vocab-giao-trinh']} element={<CurriculumPage />} />
+            <Route path={pagePaths['vocab-bang-chu-cai']} element={<AlphabetPage />} />
+            <Route path={pagePaths.bunpo} element={<BunpoPage />} />
+            <Route path={pagePaths['personal-lo-trinh']} element={<PersonalRoadmapPage />} />
+            <Route path={pagePaths['personal-on-tap']} element={<ReviewPage
+              onSelectKanji={item => openDetail(kanjiPath(item.id))}
+              onSelectGrammar={item => openDetail(grammarPath(item.id))}
+            />} />
+            <Route path={pagePaths['personal-chu-dong']} element={<ChuDongPage />} />
+            <Route path={pagePaths.accent} element={<AccentPage />} />
+            <Route path={pagePaths.leaderboard} element={<LeaderboardPage />} />
+            <Route path={pagePaths.write} element={<WritePage />} />
+            <Route path={pagePaths['lifetime-jlpt']} element={<JlptRoadmapPage />} />
+            <Route path={pagePaths['lifetime-doc-hieu']} element={<DocHieuPage />} />
+            <Route path={pagePaths['lifetime-shadowing']} element={<ShadowingPage />} />
+            <Route path={pagePaths['lifetime-tao-file']} element={<UpgradePage />} />
+            <Route path={pagePaths.upgrade} element={<UpgradePage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
         </main>
 
       </div>

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useReview, type Rating, type ReviewCard, type ReviewCategory } from '../hooks/useReview';
 import { reviewGroups, StudyTimer } from '../utils/review';
+import { useSearchParams } from 'react-router-dom';
 import { speakJapanese } from '../utils/speech';
 import { RoughCard, RoughButton } from '../components/RoughCard';
 import { KANJI_DATABASE } from '../data/kanjiData';
@@ -36,12 +37,19 @@ interface ReviewPageProps {
 
 export const ReviewPage: React.FC<ReviewPageProps> = ({ onSelectKanji, onSelectGrammar }) => {
   const review = useReview();
-  const [activeCategory, setActiveCategory] = useState<ReviewCategory>('kanji');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryParam = searchParams.get('type');
+  const activeCategory: ReviewCategory = categoryParam === 'vocab' || categoryParam === 'grammar' ? categoryParam : 'kanji';
+  const setActiveCategory = (category: ReviewCategory) => {
+    setSearchParams(previous => { const next = new URLSearchParams(previous); next.set('type',category); return next; });
+    setIsReviewing(false);
+  };
   const [isReviewing, setIsReviewing] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [queue, setQueue] = useState<ReviewCard[]>([]);
   const [index, setIndex] = useState(0);
   const [resetCount, setResetCount] = useState<number | null>(null);
+  useEffect(() => { setIsReviewing(false); setResetCount(null); }, [activeCategory]);
   const [now, setNow] = useState(Date.now());
   const studyTimer = useRef(new StudyTimer()), submitting = useRef(false);
   const clock = now + review.clockOffset;

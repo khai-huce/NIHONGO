@@ -10,6 +10,7 @@
     "build:server": "npm --prefix server run build",
     "test:server": "npm --prefix server test",
     "test:review": "node --experimental-strip-types --test tests/review.test.mjs",
+    "test:routes": "node --experimental-strip-types --test tests/routes.test.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:stop": "docker compose stop db",
     "db:migrate": "npm --prefix server run db:migrate",
@@ -22,6 +23,7 @@
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.3",
     "roughjs": "^4.6.6",
     "tailwind-merge": "^2.6.0"
   },
