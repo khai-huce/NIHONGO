@@ -123,8 +123,8 @@ API mới: `GET /api/progress/kanji`, `POST /api/progress/kanji` với `{ kanjiI
 
 Chi tiết rà soát localStorage, schema, API và nghiệm thu đợt tiến độ Hán tự: [KANJI_PROGRESS_PLAN.md](docs/KANJI_PROGRESS_PLAN.md). Ngôi sao đã được đồng bộ trong đợt Ôn tập; bài học Chủ động đã lưu theo tài khoản ở P01. Tiến độ học Chủ động và lộ trình riêng theo [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Khi thay catalog Kanji, cập nhật `server/src/kanji-ids.ts`; test kiểm tra danh sách này khớp frontend.
 
-**Bài học Chủ động theo tài khoản (P01)**
+**Bài học Chủ động theo tài khoản (P01/P02)**
 
 Mở `/ca-nhan/chu-dong`: tạo/đổi tên/xóa bài, nhập/sửa/xóa từ và dùng demo bằng giao diện hiện có. Khi đăng nhập, bài cùng mảng từ được lưu trong `vocab_lessons`; F5 hoặc đăng nhập lại cùng tài khoản vẫn đọc được. Guest giữ dữ liệu thiết bị riêng, không tự nhập vào tài khoản.
 
-API `/api/vocab/lessons` kiểm tra owner, chống tạo lặp và dùng version để tránh hai tab ghi đè nhau. Lỗi lưu giữ nguyên form; sửa/xóa bài không xóa thẻ sao và lịch sử Ôn tập. Chưa lưu tiến độ flashcard/kết quả quiz Chủ động hoặc tích hợp AI Format. Schema, giới hạn, API và kiểm thử: [VOCAB_LESSONS.md](docs/VOCAB_LESSONS.md).
+API `/api/vocab/lessons` kiểm tra owner, chống tạo lặp và dùng version để tránh hai tab ghi đè nhau. Lỗi lưu giữ nguyên form. P02 đồng bộ từ/cách đọc/nghĩa đã sửa vào thẻ sao trong cùng transaction và giữ lịch/lịch sử. Xóa từ/bài giữ thẻ; nút ⭐ cạnh phát âm trên thẻ Ôn tập cho phép bỏ sao khi nguồn đã xóa. P02 không cần migration mới. Chưa lưu tiến độ flashcard/kết quả quiz Chủ động hoặc tích hợp AI Format. Schema, giới hạn, API và kiểm thử: [VOCAB_LESSONS.md](docs/VOCAB_LESSONS.md).

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { rateLimit } from 'express-rate-limit';
 import { HttpError } from './errors.js';
+import { lockVocabChanges, syncLessonReview } from './vocab-review.js';
 
 const name = z.string().trim().min(1,'Vui lòng nhập tên bài.').max(100,'Tên bài tối đa 100 ký tự.');
 const identity = { id: z.string().uuid(), expectedUserId: z.string().uuid() };
@@ -47,19 +48,24 @@ export function lessonRoutes(db: PrismaClient) {
   router.post('/update',async (req,res)=>{
     const input=updateInput.parse(req.body),userId=req.session.userId!;
     const lesson=await db.$transaction(async tx=>{
-      const before=await tx.vocabLesson.findFirst({where:{id:input.id,userId},select:{id:true}});
+      await lockVocabChanges(tx,userId);
+      const before=await tx.vocabLesson.findFirst({where:{id:input.id,userId},select:{id:true,words:true}});
       if (!before) throw new HttpError(404,'NOT_FOUND','Không tìm thấy bài học.');
       const updated=await tx.vocabLesson.updateMany({where:{id:input.id,userId,version:input.version},
         data:{name:input.name,words:input.words,version:{increment:1}}});
       if (!updated.count) throw changed();
+      if (input.words) await syncLessonReview(tx,userId,input.id,before.words,input.words);
       return tx.vocabLesson.findUniqueOrThrow({where:{id:input.id},select});
     });
     res.json({userId,lesson});
   });
   router.post('/delete',async (req,res)=>{
     const input=deleteInput.parse(req.body),userId=req.session.userId!;
-    const deleted=await db.vocabLesson.deleteMany({where:{id:input.id,userId,version:input.version}});
-    if (!deleted.count && await db.vocabLesson.findFirst({where:{id:input.id,userId},select:{id:true}})) throw changed();
+    await db.$transaction(async tx=>{
+      await lockVocabChanges(tx,userId);
+      const deleted=await tx.vocabLesson.deleteMany({where:{id:input.id,userId,version:input.version}});
+      if (!deleted.count && await tx.vocabLesson.findFirst({where:{id:input.id,userId},select:{id:true}})) throw changed();
+    });
     // Deleting a lesson does not mutate independent starred review snapshots/history.
     res.json({userId,id:input.id});
   });

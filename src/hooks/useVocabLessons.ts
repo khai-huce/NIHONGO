@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../utils/api';
+import { useReview } from './useReview';
 
 export type VocabWord = {
   id: string;
@@ -24,6 +25,7 @@ function readDeviceLessons(): VocabLesson[] {
 }
 
 export function useVocabLessons(userId: string | null, authBusy: boolean) {
+  const { reload: reloadReview } = useReview();
   const [lessons, setLessons] = useState<VocabLesson[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -99,6 +101,7 @@ export function useVocabLessons(userId: string | null, authBusy: boolean) {
       if (!mounted.current || request !== revision.current) return null;
       currentLessons.current = next;
       setLessons(next);
+      if (userId && Array.isArray(body.words)) void reloadReview();
       return { lesson: saved };
     } catch (err) {
       if (mounted.current && request === revision.current) setError(err instanceof Error ? err.message : 'Chưa lưu được bài học.');

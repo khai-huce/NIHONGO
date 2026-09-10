@@ -15,6 +15,7 @@ import { reviewGroups, StudyTimer } from '../utils/review';
 import { useSearchParams } from 'react-router-dom';
 import { speakJapanese } from '../utils/speech';
 import { RoughCard, RoughButton } from '../components/RoughCard';
+import { ReviewStar } from '../components/ReviewStar';
 import { KANJI_DATABASE } from '../data/kanjiData';
 import { KanjiItem } from '../types';
 import { GrammarDetailItem, SAMPLE_GRAMMAR_ITEMS } from '../components/GrammarDetailView';
@@ -77,6 +78,7 @@ export const ReviewPage: React.FC<ReviewPageProps> = ({ onSelectKanji, onSelectG
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()),1000); return () => clearInterval(timer); }, []);
   useEffect(() => { if (lastDay.current !== day && !review.busy) { lastDay.current = day; void review.reload(); } }, [day, review.reload, review.busy]);
   useEffect(() => {
+    void review.reload();
     const refresh = () => { if (document.visibilityState === 'visible') void review.reload(); };
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
@@ -154,15 +156,19 @@ export const ReviewPage: React.FC<ReviewPageProps> = ({ onSelectKanji, onSelectG
                 <span>Xem chi tiết</span>
               </button>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  speakJapanese(currentCard.mainText);
-                }}
-                className="p-1 rounded-full hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
-              >
-                <Volume2 className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <ReviewStar source={{ category: current.category, sourceId: current.sourceId,
+                  front: current.front, back: current.back, reading: current.reading, hint: current.hint }} />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    speakJapanese(currentCard.mainText);
+                  }}
+                  className="p-1 rounded-full hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Center Content: Smooth 3D Flip Animation */}

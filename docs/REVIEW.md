@@ -4,6 +4,8 @@ Trang Ôn tập dùng lại bố cục `ReviewPage.tsx` cũ: ba tab, sáu chỉ 
 
 - Chỉ ngôi sao đưa Kanji / từ vựng / ngữ pháp vào mục ôn tương ứng. Đã thuộc ở flashcard Hán tự không tự thêm thẻ. Không nhập sao localStorage vào tài khoản.
 - Bỏ sao tạm ngừng thẻ. Gắn lại giữ lịch, số lượt và lịch sử; thẻ quá hạn được ôn ngay.
+- P02: từ Chủ động sửa nội dung sẽ cập nhật thẻ đã lưu (cả thẻ bỏ sao), giữ lịch/history; xóa nguồn giữ snapshot mới nhất. Server không nhận nội dung cũ từ tab cũ ghi đè lại. Chi tiết [VOCAB_LESSONS.md](VOCAB_LESSONS.md).
+- Người dùng đã duyệt nút ⭐ cạnh phát âm trên thẻ Ôn tập (10/09/2026). Có thể bỏ sao ngay trong lượt ôn khi từ/bài nguồn đã xóa; lưu thành công trở về thống kê. Không đổi các khối thống kê hoặc nút đánh giá.
 - Quên rồi: 60 giây; Khó: 360 giây; Tốt: tối thiểu một ngày, gấp đôi khoảng trước; Dễ: tối thiểu bốn ngày, gấp ba khoảng trước. Giới hạn 365 ngày.
 - Reset cần xác nhận số thẻ, chỉ đặt lại thẻ đang gắn sao của tab hiện tại. Giữ mọi review event, tăng version để chặn màn ôn cũ.
 - Bốn nhóm tiến độ: chưa đánh giá sau thêm/reset; dưới 6 phút; từ 6 phút đến dưới 21 ngày; từ 21 ngày. Tổng đã học qua là tổng bốn nhóm đang gắn sao.

@@ -4,6 +4,7 @@ import type { PrismaClient } from '@prisma/client';
 import { rateLimit } from 'express-rate-limit';
 import { HttpError } from './errors.js';
 import { reviewStats, type DailyReview } from './review.stats.js';
+import { setCustomReviewStar } from './vocab-review.js';
 
 const category = z.enum(['kanji', 'vocab', 'grammar']);
 const starInput = z.object({ category, sourceId: z.string().trim().min(1).max(300),
@@ -60,7 +61,9 @@ export function reviewRoutes(db: PrismaClient) {
     const userId = req.session.userId!;
     if (userId !== expectedUserId) throw new HttpError(409,'ACCOUNT_CHANGED','Tài khoản đã đổi. Vui lòng tải lại trang.');
     // Atomic upsert keeps existing due date, interval and history when reactivated.
-    const card = await db.reviewCard.upsert({ where: { userId_category_sourceId: { userId, category: input.category, sourceId: input.sourceId } },
+    const card = input.category === 'vocab' && input.sourceId.startsWith('custom:')
+      ? await db.$transaction(tx => setCustomReviewStar(tx,userId,input.sourceId,input.active))
+      : await db.reviewCard.upsert({ where: { userId_category_sourceId: { userId, category: input.category, sourceId: input.sourceId } },
       create: { userId, ...input }, update: { ...input, version: { increment: 1 } },
     });
     const { userId: _owner, ...result } = card;
