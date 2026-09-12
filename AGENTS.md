@@ -5,5 +5,6 @@
 - Giữ giao diện, bố cục, nhãn và thông tin hiện có khi nối chức năng thật. Không tự thiết kế lại trang.
 - Chỉ ⭐ chủ động thêm vào Ôn tập. Bỏ sao giữ lịch/lịch sử; gắn lại tiếp tục lịch cũ. Đã thuộc/hoàn thành bài không tự thêm thẻ.
 - P02 đã chốt: sửa từ Chủ động cập nhật nội dung thẻ ôn hiện có, giữ lịch/lịch sử; xóa từ/bài giữ thẻ. Người dùng đã duyệt nút ⭐ cạnh phát âm trên thẻ Ôn tập để bỏ sao khi nguồn không còn.
+- P03 đã chốt: nhập JSON/text chỉ thêm mới, bỏ trùng đủ bốn trường sau trim; người dùng duyệt hộp thoại xem trước rồi xác nhận lưu. Bài khách giữ riêng, không triển khai chuyển vào tài khoản. AI Format chưa có dịch vụ, không giả kết quả AI.
 - Không tự nhận dữ liệu localStorage dùng chung thiết bị vào tài khoản; không reset DB hoặc xóa dữ liệu để triển khai.
 - Sau task được người dùng yêu cầu làm, cập nhật trạng thái và bằng chứng nghiệm thu trong backlog. Yêu cầu đề xuất/lập plan không tự mở rộng thành triển khai mọi task.

@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FlashcardStudy } from '../components/chudong/FlashcardStudy';
 import { QuizStudy } from '../components/chudong/QuizStudy';
 import { CramStudy } from '../components/chudong/CramStudy';
+import { ImportPreviewDialog } from '../components/chudong/ImportPreviewDialog';
+import { parseVocabImport, type ImportPreview } from '../lib/vocab-import';
 import { 
   Folder, 
   Plus, 
@@ -62,6 +64,7 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
   // Vocabulary JSON/text input
   const [inputContent, setInputContent] = useState('');
   const [showJsonHelp, setShowJsonHelp] = useState(false);
+  const [importDraft, setImportDraft] = useState<{ lesson: VocabLesson; preview: ImportPreview; words: VocabWord[] } | null>(null);
 
   // Edit single vocabulary row
   const [editingWordId, setEditingWordId] = useState<string | null>(null);
@@ -135,67 +138,48 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
     if (await store.update(currentLesson,{words})) triggerToast(`Đã tải ${words.length} từ vựng demo thành công!`);
   };
 
-  // 4. Import / AI Format Handlers
-  const handleImportData = async () => {
-    if (!currentLesson || store.busy || !inputContent.trim()) return;
-    
-    let parsedWords: VocabWord[] = [];
-    try {
-      // Try parsing JSON first
-      const raw = JSON.parse(inputContent);
-      if (!Array.isArray(raw) || raw.some(item=>!item || typeof item!=='object' || Array.isArray(item))) {triggerToast('JSON cần là danh sách các từ vựng hợp lệ.');return;}
-      if (Array.isArray(raw)) {
-        parsedWords = raw.map(item => ({
-          id: crypto.randomUUID(),
-          word: item.word || item.kanji || item.term || '',
-          reading: item.reading || item.kana || item.furigana || item.word || '',
-          hanViet: item.hanViet || '',
-          meaning: item.meaning || item.definition || ''
-        }));
-      }
-    } catch {
-      // Fallback to line-by-line parsing: word, reading, hanViet, meaning OR word - meaning
-      const lines = inputContent.split('\n').map(l => l.trim()).filter(Boolean);
-      parsedWords = lines.map(line => {
-        const parts = line.split(/[,\t|-]/).map(p => p.trim());
-        return {
-          id: crypto.randomUUID(),
-          word: parts[0] || '',
-          reading: parts[1] || parts[0] || '',
-          hanViet: parts[2] && parts[3] ? parts[2] : '',
-          meaning: parts[3] || parts[2] || parts[1] || 'Chưa có nghĩa'
-        };
-      });
+  // Keep the preview and UUIDs until a confirmed save, including network retries.
+  const prepareImport = (lesson: VocabLesson) => {
+    const preview = parseVocabImport(inputContent, lesson.words);
+    // Send duplicates too: another tab may remove them before confirmation.
+    const words = preview.rows.flatMap(row => row.status !== 'error' && row.word
+      ? [{ ...row.word, id: crypto.randomUUID() }] : []);
+    const payload = { id: lesson.id, version: lesson.version ?? 0, expectedUserId: userId, words };
+    if (new TextEncoder().encode(JSON.stringify(payload)).length > 512 * 1024) {
+      preview.errors.push('Dữ liệu sau khi chuẩn hóa vượt 512 KiB. Hãy chia thành đợt nhập nhỏ hơn.');
     }
-
-    if (parsedWords.length > 0) {
-      if (parsedWords.some(w=>[w.word,w.reading,w.hanViet,w.meaning].some(v=>typeof v!=='string') || !w.word.trim() || !w.meaning.trim())) {
-        triggerToast('Từ vựng và nghĩa phải là chuỗi có nội dung. Vui lòng kiểm tra lại.');return;
-      }
-      if (await store.update(currentLesson,{words:[...currentLesson.words,...parsedWords]})) {
-        setInputContent('');triggerToast(`Đã thêm ${parsedWords.length} từ vựng vào bài!`);
-      }
-    } else triggerToast('Không thể nhận diện định dạng từ vựng. Vui lòng kiểm tra lại!');
+    setImportDraft({ lesson, preview, words });
   };
-
-  const handleAiFormat = () => {
-    if (!inputContent.trim()) {
-      triggerToast('Vui lòng nhập hoặc dán nội dung từ vựng trước!');
-      return;
+  const handleImportData = () => {
+    if (currentLesson && !store.busy) prepareImport(currentLesson);
+  };
+  const handleConfirmImport = async () => {
+    if (!importDraft || store.busy || importDraft.preview.errors.length || importDraft.preview.errorCount || !importDraft.preview.validCount) return;
+    const result = await store.importWords(importDraft.lesson, importDraft.words);
+    if (!result) return;
+    const duplicates = result.duplicateCount ?? 0;
+    setImportDraft(null);
+    setInputContent('');
+    triggerToast(`Đã thêm ${result.importedCount ?? 0} từ vựng vào bài!${duplicates ? ` Bỏ qua ${duplicates} từ trùng.` : ''}`);
+  };
+  const handleReloadImport = async () => {
+    if (!importDraft || store.loading || store.saving) return;
+    const refreshed = await store.reload();
+    if (!refreshed) return;
+    const lesson = refreshed.find(item => item.id === importDraft.lesson.id);
+    if (lesson) prepareImport(lesson);
+    else {
+      setImportDraft(null);
+      setSelectedLessonId(refreshed[0]?.id ?? null);
+      setActiveStudyMode(null);
+      setEditingWordId(null);
+      triggerToast(refreshed.length
+        ? 'Bài cũ đã bị xóa. Đã giữ nội dung nhập ở bài đang chọn; hãy xem trước lại.'
+        : 'Bài đã bị xóa. Tạo bài mới để nhập lại; nội dung đang nhập vẫn được giữ.');
     }
-    // Simulate smart AI auto-formatting to clean JSON
-    const lines = inputContent.split('\n').map(l => l.trim()).filter(Boolean);
-    const formatted = lines.map(line => {
-      const parts = line.split(/[,\t|-]/).map(p => p.trim());
-      return {
-        word: parts[0] || '',
-        reading: parts[1] || parts[0] || '',
-        hanViet: parts[2] && parts[3] ? parts[2] : '',
-        meaning: parts[3] || parts[2] || parts[1] || ''
-      };
-    });
-    setInputContent(JSON.stringify(formatted, null, 2));
-    triggerToast('AI đã tự động chuẩn hóa định dạng JSON!');
+  };
+  const handleAiFormat = () => {
+    triggerToast('AI Format chưa kết nối dịch vụ. Bạn vẫn có thể nhập JSON/text và xem trước bằng nút Nhập dữ liệu vào hệ thống.');
   };
 
   const handleClearAllWords = async () => {
@@ -231,6 +215,18 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
           {statusMessage}
         </div>
       )}
+
+      {importDraft && <ImportPreviewDialog
+        lessonName={importDraft.lesson.name}
+        preview={importDraft.preview}
+        saving={store.saving}
+        loading={store.loading}
+        canSave={!store.busy}
+        error={store.error}
+        onClose={() => { if (!store.saving && !store.loading) setImportDraft(null); }}
+        onConfirm={() => { void handleConfirmImport(); }}
+        onReload={() => { void handleReloadImport(); }}
+      />}
 
       {/* ACTIVE STUDY MODE CONTAINER (Images 1, 2, 3, 4, 5) */}
       {activeStudyMode && currentLesson && (

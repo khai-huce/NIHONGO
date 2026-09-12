@@ -1,4 +1,4 @@
-# Bài học Chủ động theo tài khoản (P01/P02)
+# Bài học Chủ động theo tài khoản (P01/P02/P03)
 
 Triển khai local ngày 09/09/2026. Giữ nguyên màn `/ca-nhan/chu-dong`, bố cục, nhãn, khung nét vẽ và ba chế độ học. Chỉ nối dữ liệu và dùng vùng toast hiện có để báo tải/lưu/lỗi; khóa thao tác đang chờ server.
 
@@ -7,7 +7,7 @@ Triển khai local ngày 09/09/2026. Giữ nguyên màn `/ca-nhan/chu-dong`, b�
 - Đã đăng nhập: tạo/danh sách/đổi tên/xóa bài được lưu PostgreSQL theo tài khoản. Từ của bài được lưu cùng bài để nhập/sửa/xóa/demo và học bằng các nút hiện có vẫn hoạt động sau F5. Không chuyển riêng tên bài rồi để mất nội dung từ.
 - Chưa đăng nhập: tiếp tục dùng `chu_dong_lessons` trên thiết bị như trước. Đăng nhập không đọc hoặc tự đưa dữ liệu này vào tài khoản; đăng xuất trở lại dữ liệu khách. Dữ liệu khách hỏng hoặc không ghi được localStorage báo lỗi, không tự thay bản gốc bằng danh sách rỗng.
 - Bài đang chọn chỉ là lựa chọn trên thiết bị, dùng key riêng `chu_dong_selected_lesson:<userId>` cho tài khoản; key khách cũ được giữ.
-- Chưa lưu tiến độ Đã biết/Chưa biết hoặc kết quả quiz/gõ (P04/P05). Nút AI Format vẫn là parser hiện có, chưa tích hợp AI (A02). Preview nhập liệu, báo lỗi từng dòng và chủ động chuyển bài khách thuộc P03.
+- Chưa lưu tiến độ Đã biết/Chưa biết hoặc kết quả quiz/gõ (P04/P05). P03 đã thêm preview JSON/text, báo lỗi từng dòng, bỏ trùng và import nguyên batch; không chuyển bài khách theo lựa chọn của người dùng. Nút AI Format thông báo chưa kết nối dịch vụ (A02). Xem [hướng dẫn nhập từ](VOCAB_IMPORT.md).
 
 Chỉ thêm **một bảng** `vocab_lessons`: UUID, `user_id`, tên, mảng `words` JSONB, `version`, ngày tạo/cập nhật. Đây là lựa chọn vừa đủ với màn hiện tại chỉnh sửa toàn bài; chưa cần `vocab_words` và API từng từ. P01 đã lưu từ; P02 bổ sung đồng bộ thẻ sao mà không thêm bảng/migration.
 
@@ -34,6 +34,7 @@ Tất cả endpoint yêu cầu phiên đăng nhập. POST yêu cầu Origin đú
 | `GET /api/vocab/lessons` | — | `{ userId, lessons }` |
 | `POST /api/vocab/lessons` | `{ id, name, expectedUserId }` | `{ userId, lesson }`; 201 mới, 200 nếu cùng UUID đã tạo |
 | `POST /api/vocab/lessons/update` | `{ id, version, expectedUserId, name?, words? }` | `{ userId, lesson }` với version tăng |
+| `POST /api/vocab/lessons/import` | `{ id, version, expectedUserId, words }` | `{ userId, lesson, importedCount, duplicateCount }`; chỉ thêm mới, bỏ trùng |
 | `POST /api/vocab/lessons/delete` | `{ id, version, expectedUserId }` | `{ userId, id }` |
 
 - Request tạo giữ cùng UUID khi thử lại, không tạo hai bài khi phản hồi bị mất.

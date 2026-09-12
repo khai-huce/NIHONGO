@@ -11,6 +11,7 @@
     "test:server": "npm --prefix server test",
     "test:review": "node --experimental-strip-types --test tests/review.test.mjs",
     "test:routes": "node --experimental-strip-types --test tests/routes.test.mjs",
+    "test:import": "node --experimental-strip-types --test tests/vocab-import.test.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:stop": "docker compose stop db",
     "db:migrate": "npm --prefix server run db:migrate",
