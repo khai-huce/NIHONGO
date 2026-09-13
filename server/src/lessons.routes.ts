@@ -61,7 +61,12 @@ export function lessonRoutes(db: PrismaClient) {
       const updated=await tx.vocabLesson.updateMany({where:{id:input.id,userId,version:input.version},
         data:{name:input.name,words:input.words,version:{increment:1}}});
       if (!updated.count) throw changed();
-      if (input.words) await syncLessonReview(tx,userId,input.id,before.words,input.words);
+      if (input.words) {
+        await syncLessonReview(tx,userId,input.id,before.words,input.words);
+        const removed=await tx.vocabProgress.deleteMany({where:{userId,lessonId:input.id,
+          ...(input.words.length ? {wordId:{notIn:input.words.map(item=>item.id)}} : {})}});
+        if (removed.count) await tx.vocabLesson.update({where:{id:input.id},data:{progressVersion:{increment:1}}});
+      }
       return tx.vocabLesson.findUniqueOrThrow({where:{id:input.id},select});
     });
     res.json({userId,lesson});

@@ -9,6 +9,7 @@ import { authRoutes } from './auth.routes.js';
 import { progressRoutes } from './progress.routes.js';
 import { reviewRoutes } from './review.routes.js';
 import { lessonRoutes } from './lessons.routes.js';
+import { vocabProgressRoutes } from './vocab-progress.routes.js';
 
 export function createApp(config: Config) {
   const db = new PrismaClient({ datasources: { db: { url: config.DATABASE_URL } } });
@@ -37,6 +38,7 @@ export function createApp(config: Config) {
   app.use(express.json({ limit: '16kb' }));
   app.use('/api/auth', middleware, authRoutes(config, db, pool));
   app.use('/api/progress', middleware, progressRoutes(db));
+  app.use('/api/vocab/progress', middleware, vocabProgressRoutes(db));
   app.use('/api/review', middleware, reviewRoutes(db));
   app.use((_req, _res, next) => next(new HttpError(404, 'NOT_FOUND', 'API không tồn tại.')));
   app.use(errorHandler);

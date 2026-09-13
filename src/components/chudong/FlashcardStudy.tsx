@@ -1,6 +1,6 @@
 import { ReviewStar } from '../ReviewStar';
 import { useReview } from '../../hooks/useReview';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   ArrowLeft, 
   Volume2, 
@@ -16,11 +16,17 @@ import {
   Check, 
   X 
 } from 'lucide-react';
-import { VocabWord } from '../../pages/ChuDongPage';
+import type { VocabWord } from '../../hooks/useVocabLessons';
+import { useVocabProgress, type ProgressSnapshot } from '../../hooks/useVocabProgress';
+import { summarizeVocabProgress, nextUnratedIndex } from '../../utils/vocab-progress';
 import { speakJapanese } from '../../utils/speech';
 
 interface FlashcardStudyProps {
   words: VocabWord[];
+  lessonId: string;
+  lessonVersion: number;
+  userId: string | null;
+  authBusy: boolean;
   lessonName: string;
   onExit: () => void;
   isFullscreen: boolean;
@@ -30,11 +36,27 @@ interface FlashcardStudyProps {
 
 export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   words,
+  lessonId,
+  lessonVersion,
+  userId,
+  authBusy,
+  lessonName,
   onExit,
   isFullscreen,
   onToggleFullscreen
 }) => {
-  const [deck, setDeck] = useState<VocabWord[]>([...words]);
+  const progressStore = useVocabProgress({ lessonId, lessonVersion, userId, authBusy, words });
+  const [order, setOrder] = useState(words.map(word => word.id));
+  const deck = useMemo(() => {
+    const byId = new Map(progressStore.words.map(word => [word.id, word]));
+    const ordered = order.flatMap(id => {
+      const word = byId.get(id);
+      if (!word) return [];
+      byId.delete(id);
+      return [word];
+    });
+    return [...ordered, ...byId.values()];
+  }, [order, progressStore.words]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const review = useReview();
@@ -46,113 +68,140 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   const [autoSpeechOnFlip, setAutoSpeechOnFlip] = useState(true);
 
   // Statistics
-  const [knownCount, setKnownCount] = useState(0);
-  const [unknownCount, setUnknownCount] = useState(0);
+  const summary = summarizeVocabProgress(progressStore.words, progressStore.progress);
+  const knownCount = summary.known;
+  const unknownCount = summary.unknown;
   const [isFinished, setIsFinished] = useState(false);
 
-  const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const initialized = useRef(false);
+  const actionPending = useRef(false);
+  const busy = progressStore.busy;
+  const blocked = busy || !!progressStore.error;
+
+  // A fresh load opens the first word with no saved assessment. False is assessed too.
+  useEffect(() => {
+    if (!progressStore.loaded) {
+      initialized.current = false;
+      return;
+    }
+    if (progressStore.loading || initialized.current) return;
+    initialized.current = true;
+    const first = summarizeVocabProgress(progressStore.words, progressStore.progress).firstUnratedIndex;
+    setOrder(progressStore.words.map(word => word.id));
+    setCurrentIndex(first < 0 ? Math.max(0, progressStore.words.length - 1) : first);
+    setIsFinished(first < 0 && progressStore.words.length > 0);
+    setIsFlipped(false);
+    setIsAutoPlay(false);
+  }, [progressStore.loaded, progressStore.loading, progressStore.words, progressStore.progress]);
+
+  const canInteract = () => initialized.current && !actionPending.current && progressStore.canActNow() && !progressStore.error;
+  const resumeSnapshot = (snapshot: ProgressSnapshot) => {
+    const first = summarizeVocabProgress(snapshot.words, snapshot.progress).firstUnratedIndex;
+    setOrder(snapshot.words.map(word => word.id));
+    setCurrentIndex(first < 0 ? Math.max(0, snapshot.words.length - 1) : first);
+    setIsFinished(first < 0 && snapshot.words.length > 0);
+    setIsFlipped(false);
+    setIsAutoPlay(false);
+    initialized.current = true;
+  };
+  const handleReload = async () => {
+    if (actionPending.current || progressStore.loading || progressStore.saving) return;
+    actionPending.current = true;
+    setIsAutoPlay(false);
+    try {
+      const snapshot = await progressStore.reload();
+      if (snapshot) resumeSnapshot(snapshot);
+    } finally { actionPending.current = false; }
+  };
 
   const currentWord = deck[currentIndex] || null;
   const toggleStar = useCallback(() => {
-    if (currentWord) void review.toggle({category:'vocab',sourceId:'custom:'+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading});
-  }, [currentWord, review]);
+    if (canInteract() && !isFinished && currentWord) void review.toggle({category:'vocab',sourceId:'custom:'+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading});
+  }, [currentWord, review, blocked, isFinished, progressStore.canActNow]);
 
-  // Flip card
-  const handleFlip = useCallback(() => {
-    setIsFlipped(prev => {
-      const next = !prev;
-      if (next && autoSpeechOnFlip && currentWord) {
-        speakJapanese(currentWord.reading || currentWord.word);
-      }
-      return next;
-    });
-  }, [autoSpeechOnFlip, currentWord]);
-
-  // Next card
-  const handleNext = useCallback(() => {
+  // Viewing, moving and automatic playback never save an assessment.
+  const handleFlip = () => {
+    if (!canInteract() || isFinished) return;
+    const next = !isFlipped;
+    setIsFlipped(next);
+    if (next && autoSpeechOnFlip && currentWord) speakJapanese(currentWord.reading || currentWord.word);
+  };
+  const handleNext = () => {
+    if (!canInteract() || isFinished) return;
     if (currentIndex < deck.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex(currentIndex + 1);
       setIsFlipped(false);
     } else {
-      setIsFinished(true);
+      setIsAutoPlay(false);
+      // Reaching the end by navigation is not the same as assessing every word.
+      if (summary.rated === deck.length) setIsFinished(true);
     }
-  }, [currentIndex, deck.length]);
-
-  // Previous card
-  const handlePrev = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
+  };
+  const handlePrev = () => {
+    if (!canInteract()) return;
+    if (isFinished) {
+      setIsFinished(false);
+      setCurrentIndex(Math.max(0, deck.length - 1));
+    } else if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+    setIsFlipped(false);
+  };
+  const handleAssessment = async (memorized: boolean) => {
+    if (!canInteract() || isFinished || !currentWord) return;
+    actionPending.current = true;
+    setIsAutoPlay(false);
+    try {
+      const snapshot = await progressStore.rate(currentWord.id, memorized);
+      if (!snapshot) return;
+      const next = nextUnratedIndex(deck, snapshot.progress, currentIndex);
       setIsFlipped(false);
-    }
-  }, [currentIndex]);
-
-  // Mark Known (Z)
-  const handleKnown = useCallback(() => {
-    setKnownCount(prev => prev + 1);
-    handleNext();
-  }, [handleNext]);
-
-  // Mark Unknown (X)
-  const handleUnknown = useCallback(() => {
-    setUnknownCount(prev => prev + 1);
-    handleNext();
-  }, [handleNext]);
-
-  // Play Audio
-  const handleAudio = useCallback(() => {
-    if (currentWord) {
-      speakJapanese(currentWord.reading || currentWord.word);
-    }
-  }, [currentWord]);
-
-  // Restart
-  const handleRestart = () => {
-    setCurrentIndex(0);
-    setIsFlipped(false);
-    setKnownCount(0);
-    setUnknownCount(0);
-    setIsFinished(false);
+      setIsFinished(next < 0);
+      if (next >= 0) setCurrentIndex(next);
+    } finally { actionPending.current = false; }
   };
-
-  // Shuffle deck
+  // The second click of a double-click must not rate the newly displayed word.
+  const handleKnown = (event?: React.MouseEvent) => { if (!event || event.detail <= 1) void handleAssessment(true); };
+  const handleUnknown = (event?: React.MouseEvent) => { if (!event || event.detail <= 1) void handleAssessment(false); };
+  const handleAudio = () => {
+    if (currentWord && canInteract() && !isFinished) speakJapanese(currentWord.reading || currentWord.word);
+  };
+  const handleRestart = async () => {
+    if (!canInteract()) return;
+    setIsAutoPlay(false);
+    actionPending.current = true;
+    try {
+      if (!window.confirm(`Học lại từ đầu bài “${lessonName}”? Đặt lại kết quả của ${summary.rated} từ đã đánh giá. Sao và lịch Ôn tập vẫn được giữ nguyên.`)) return;
+      const snapshot = await progressStore.reset();
+      if (snapshot) resumeSnapshot(snapshot);
+    } finally { actionPending.current = false; }
+  };
   const handleShuffle = () => {
-    const shuffled = [...deck].sort(() => Math.random() - 0.5);
-    setDeck(shuffled);
+    if (!canInteract() || isFinished) return;
+    const shuffled = deck.map(word => word.id);
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setOrder(shuffled);
     setCurrentIndex(0);
     setIsFlipped(false);
   };
-
-  // Auto-play loop
   useEffect(() => {
-    if (!isAutoPlay || isFinished) {
-      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
-      return;
-    }
-
-    autoPlayTimerRef.current = setInterval(() => {
-      setIsFlipped(f => {
-        if (!f) {
-          if (autoSpeechOnFlip && currentWord) {
-            speakJapanese(currentWord.reading || currentWord.word);
-          }
-          return true;
-        } else {
-          handleNext();
-          return false;
-        }
-      });
+    if (!isAutoPlay || isFinished || blocked) return;
+    const timer = window.setTimeout(() => {
+      if (!canInteract()) return;
+      if (isFlipped) handleNext();
+      else handleFlip();
     }, 2800);
-
-    return () => {
-      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
-    };
-  }, [isAutoPlay, isFinished, handleNext, autoSpeechOnFlip, currentWord]);
+    return () => window.clearTimeout(timer);
+  }, [isAutoPlay, isFinished, blocked, isFlipped, currentIndex, deck, autoSpeechOnFlip]);
+  useEffect(() => { if (blocked) setIsAutoPlay(false); }, [blocked]);
+  useEffect(() => () => { window.speechSynthesis?.cancel(); }, []);
 
   // Global Keyboard listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target instanceof HTMLElement && e.target.isContentEditable) || document.querySelector('dialog[open]')) return;
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -182,10 +231,18 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleFlip, handleKnown, handleUnknown, toggleStar, handleAudio, handlePrev, handleNext]);
 
+  const status = progressStore.error || (progressStore.loading ? 'Đang tải tiến độ…' : progressStore.saving ? 'Đang lưu tiến độ…' : '');
+  const statusNotice = status ? <div role={progressStore.error ? 'alert' : 'status'}
+    className="relative z-10 mx-5 my-2 rounded-lg bg-[#182035] px-3 py-2 text-xs text-slate-200">
+    {status}
+    {progressStore.error && <button disabled={progressStore.loading || progressStore.saving || authBusy} onClick={() => { void handleReload(); }} className="ml-3 underline font-bold">Tải lại tiến độ</button>}
+  </div> : null;
+
   if (deck.length === 0) {
     return (
       <div className="w-full p-8 text-center bg-[#232d4b] text-white rounded-2xl">
-        <p className="text-sm">Chưa có từ vựng nào trong bài học này.</p>
+        {statusNotice}
+        {progressStore.loaded && <p className="text-sm">Chưa có từ vựng nào trong bài học này.</p>}
         <button onClick={onExit} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-bold">
           Quay lại
         </button>
@@ -200,6 +257,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
         : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
     }`}>
       
+      {statusNotice}
       {/* 1. TOP BAR */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2 text-slate-300">
         <button
@@ -240,9 +298,9 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
         {/* Previous Button */}
         <button
           onClick={handlePrev}
-          disabled={currentIndex === 0}
+          disabled={blocked || (!isFinished && currentIndex === 0)}
           className={`absolute left-3 md:left-6 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            currentIndex === 0 
+            !isFinished && currentIndex === 0
               ? 'opacity-20 cursor-not-allowed text-slate-500' 
               : 'bg-black/25 text-slate-300 hover:bg-black/50 hover:text-white shadow-lg'
           }`}
@@ -262,7 +320,8 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
             </div>
             <div className="flex items-center justify-center gap-3 pt-4">
               <button
-                onClick={handleRestart}
+                disabled={blocked}
+                onClick={() => { void handleRestart(); }}
                 className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black shadow-md cursor-pointer"
               >
                 Học lại từ đầu
@@ -350,7 +409,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
         {/* Next Button */}
         <button
           onClick={handleNext}
-          disabled={currentIndex === deck.length - 1}
+          disabled={blocked || isFinished || currentIndex === deck.length - 1}
           className={`absolute right-3 md:right-6 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             currentIndex === deck.length - 1 
               ? 'opacity-20 cursor-not-allowed text-slate-500' 
@@ -396,6 +455,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
         <div className="flex items-center gap-4">
           {/* Red X Button (Chưa biết) */}
           <button
+            disabled={blocked || isFinished}
             onClick={handleUnknown}
             className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#ef4444]/90 hover:bg-[#dc2626] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer"
             title="Chưa biết (X)"
@@ -410,6 +470,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
 
           {/* Green Check Button (Biết) */}
           <button
+            disabled={blocked || isFinished}
             onClick={handleKnown}
             className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#10b981]/90 hover:bg-[#059669] text-white flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer"
             title="Đã biết (Z)"
@@ -422,8 +483,9 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
         <div className="flex items-center gap-2 relative">
           
           {/* JP -> VI Toggle Pill */}
-          <button
+          <button disabled={blocked || isFinished}
             onClick={() => {
+              if (!canInteract() || isFinished) return;
               setDirection(prev => prev === 'jp-vi' ? 'vi-jp' : 'jp-vi');
               setIsFlipped(false);
             }}
@@ -436,7 +498,8 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
 
           {/* Restart */}
           <button
-            onClick={handleRestart}
+            disabled={blocked}
+            onClick={() => { void handleRestart(); }}
             className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors cursor-pointer"
             title="Bắt đầu lại từ đầu"
           >
@@ -445,7 +508,8 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
 
           {/* Auto Play Slideshow */}
           <button
-            onClick={() => setIsAutoPlay(prev => !prev)}
+            disabled={blocked || isFinished}
+            onClick={() => { if (canInteract()) setIsAutoPlay(prev => !prev); }}
             className={`p-2 rounded-lg transition-colors cursor-pointer ${
               isAutoPlay ? 'text-amber-400 bg-amber-400/20' : 'text-slate-400 hover:text-white hover:bg-slate-700/60'
             }`}
@@ -456,6 +520,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
 
           {/* Shuffle */}
           <button
+            disabled={blocked || isFinished}
             onClick={handleShuffle}
             className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors cursor-pointer"
             title="Xáo trộn thẻ"

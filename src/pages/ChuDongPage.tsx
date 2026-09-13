@@ -233,9 +233,14 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
         <div ref={studyAreaRef} className="w-full animate-in fade-in duration-200">
           {activeStudyMode === 'flashcard' && (
             <FlashcardStudy
+              key={`${userId ?? 'guest'}:${currentLesson.id}:${currentLesson.version ?? 0}`}
+              lessonId={currentLesson.id}
+              lessonVersion={currentLesson.version ?? 0}
+              userId={userId}
+              authBusy={authBusy || store.busy}
               words={currentLesson.words}
               lessonName={currentLesson.name}
-              onExit={() => setActiveStudyMode(null)}
+              onExit={() => { setActiveStudyMode(null); void store.reload(); }}
               isFullscreen={isStudyFullscreen}
               onToggleFullscreen={() => setIsStudyFullscreen(prev => !prev)}
             />

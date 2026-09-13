@@ -20,6 +20,7 @@ model User {
   kanjiProgress KanjiProgress[]
   reviewCards ReviewCard[]
   vocabLessons VocabLesson[]
+  vocabProgress VocabProgress[]
 
   @@map("users")
 }
@@ -84,9 +85,25 @@ model VocabLesson {
   name String @db.VarChar(100)
   words Json @default("[]")
   version Int @default(0)
+  progressVersion Int @default(0) @map("progress_version")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  progress VocabProgress[]
   @@index([userId, createdAt])
   @@map("vocab_lessons")
+}
+
+model VocabProgress {
+  userId String @map("user_id") @db.Uuid
+  wordId String @map("word_id") @db.Uuid
+  lessonId String @map("lesson_id") @db.Uuid
+  memorized Boolean
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson VocabLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([userId, wordId])
+  @@index([lessonId])
+  @@map("vocab_progress")
 }
