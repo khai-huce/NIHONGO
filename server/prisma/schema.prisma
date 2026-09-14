@@ -21,6 +21,8 @@ model User {
   reviewCards ReviewCard[]
   vocabLessons VocabLesson[]
   vocabProgress VocabProgress[]
+  vocabStudyResults VocabStudyResult[]
+  personalRoadmaps PersonalRoadmap[]
 
   @@map("users")
 }
@@ -106,4 +108,41 @@ model VocabProgress {
   @@id([userId, wordId])
   @@index([lessonId])
   @@map("vocab_progress")
+}
+
+// Completed rounds retain their lesson snapshot even when the source lesson is deleted.
+model VocabStudyResult {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  lessonId String @map("lesson_id") @db.Uuid
+  lessonName String @map("lesson_name") @db.VarChar(100)
+  lessonVersion Int @map("lesson_version")
+  kind String @db.VarChar(8)
+  mode String @db.VarChar(8)
+  total Int
+  correct Int
+  answers Json
+  submissionHash String @map("submission_hash") @db.VarChar(64)
+  completedAt DateTime @default(now()) @map("completed_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lessonId, kind, completedAt])
+  @@map("vocab_study_results")
+}
+
+model PersonalRoadmap {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  name String @db.VarChar(100)
+  rawKanji String @map("raw_kanji") @db.VarChar(2000)
+  kanjiList String[] @map("kanji_list")
+  perDay Int @map("per_day")
+  version Int @default(0)
+  startedAt DateTime? @map("started_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("personal_roadmaps")
 }

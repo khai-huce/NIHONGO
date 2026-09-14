@@ -13,6 +13,8 @@
     "test:routes": "node --experimental-strip-types --test tests/routes.test.mjs",
     "test:import": "node --experimental-strip-types --test tests/vocab-import.test.mjs",
     "test:vocab-progress": "node --experimental-strip-types --test tests/vocab-progress.test.mjs",
+    "test:vocab-study": "node --test tests/vocab-study.test.mjs",
+    "test:roadmap": "node --test tests/roadmap.test.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:stop": "docker compose stop db",
     "db:migrate": "npm --prefix server run db:migrate",

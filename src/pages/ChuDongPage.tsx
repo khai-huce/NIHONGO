@@ -248,6 +248,11 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
 
           {activeStudyMode === 'quiz' && (
             <QuizStudy
+              key={`${userId ?? 'guest'}:${currentLesson.id}:quiz`}
+              lessonId={currentLesson.id}
+              lessonVersion={currentLesson.version ?? 0}
+              userId={userId}
+              authBusy={authBusy || store.busy}
               words={currentLesson.words}
               lessonName={currentLesson.name}
               onExit={() => setActiveStudyMode(null)}
@@ -258,6 +263,11 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
 
           {activeStudyMode === 'cram' && (
             <CramStudy
+              key={`${userId ?? 'guest'}:${currentLesson.id}:cram`}
+              lessonId={currentLesson.id}
+              lessonVersion={currentLesson.version ?? 0}
+              userId={userId}
+              authBusy={authBusy || store.busy}
               words={currentLesson.words}
               lessonName={currentLesson.name}
               onExit={() => setActiveStudyMode(null)}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Calendar, 
   Target, 
@@ -17,85 +17,107 @@ import {
 } from 'lucide-react';
 import { speakJapanese } from '../utils/speech';
 import { RoughCard, RoughButton } from '../components/RoughCard';
+import { usePersonalRoadmaps, type PersonalRoadmap } from '../hooks/usePersonalRoadmaps';
+import { analyzeRoadmapKanji, MAX_ROADMAP_TEXT, ROADMAP_PER_DAY } from '../../shared/roadmap.mjs';
+import { RoadmapDeleteDialog } from '../components/RoadmapDeleteDialog';
 
-interface CustomRoadmap {
-  id: string;
-  name: string;
-  rawKanji: string;
-  kanjiList: string[];
-  perDay: number;
-  totalDays: number;
-  currentDay: number;
-  createdAt: string;
-}
-
-export const PersonalRoadmapPage: React.FC = () => {
+export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean}> = ({userId, authBusy}) => {
   const [activeRoadmap, setActiveRoadmap] = useState<'default' | 'my'>('default');
   const [selectedLevel, setSelectedLevel] = useState<'N5' | 'N4' | 'N3' | 'N2' | 'N1'>('N5');
   const [currentDay, setCurrentDay] = useState(2);
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
 
-  // Custom Roadmaps State
-  const [customRoadmaps, setCustomRoadmaps] = useState<CustomRoadmap[]>(() => {
-    try {
-      const saved = localStorage.getItem('nhai_kanji_custom_roadmaps');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const studyPlans = usePersonalRoadmaps(userId, authBusy);
+  const customRoadmaps = studyPlans.roadmaps;
 
   // Create Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newRoadmapName, setNewRoadmapName] = useState('');
   const [newRoadmapKanjiText, setNewRoadmapKanjiText] = useState('');
   const [newRoadmapPerDay, setNewRoadmapPerDay] = useState<number>(10);
+  const [editingRoadmap, setEditingRoadmap] = useState<PersonalRoadmap|null>(null);
+  const [deletingRoadmap, setDeletingRoadmap] = useState<PersonalRoadmap|null>(null);
+  const [formError, setFormError] = useState('');
+  const draftId = useRef('');
+  const actionPending = useRef(false);
+  const {kanjiList:extractedKanji, unsupported} = analyzeRoadmapKanji(newRoadmapKanjiText);
+  const perDayLocked = !!editingRoadmap && (!!editingRoadmap.startedAt || editingRoadmap.currentDay > 1);
 
-  useEffect(() => {
-    localStorage.setItem('nhai_kanji_custom_roadmaps', JSON.stringify(customRoadmaps));
-  }, [customRoadmaps]);
-
-  // Extract unique Kanji characters from text
-  const extractedKanji = Array.from(
-    new Set(
-      newRoadmapKanjiText.match(/[\u4e00-\u9faf\u3400-\u4dbf]/g) || []
-    )
-  );
-
-  const handleCreateRoadmap = () => {
-    if (!newRoadmapName.trim()) {
-      alert('Vui lòng nhập tên lộ trình!');
-      return;
-    }
-    if (extractedKanji.length === 0) {
-      alert('Vui lòng nhập hoặc dán ít nhất 1 chữ Kanji!');
-      return;
-    }
-
-    const totalDays = Math.ceil(extractedKanji.length / newRoadmapPerDay);
-    const newRoadmap: CustomRoadmap = {
-      id: 'roadmap-' + Date.now(),
-      name: newRoadmapName.trim(),
-      rawKanji: newRoadmapKanjiText,
-      kanjiList: extractedKanji,
-      perDay: newRoadmapPerDay,
-      totalDays: totalDays,
-      currentDay: 1,
-      createdAt: new Date().toLocaleDateString('vi-VN')
-    };
-
-    setCustomRoadmaps(prev => [newRoadmap, ...prev]);
-    setIsCreateModalOpen(false);
+  const openCreate = () => {
+    if (studyPlans.busy || actionPending.current) return;
+    draftId.current = crypto.randomUUID();
+    setEditingRoadmap(null);
+    setFormError('');
     setNewRoadmapName('');
     setNewRoadmapKanjiText('');
     setNewRoadmapPerDay(10);
+    setIsCreateModalOpen(true);
+  };
+  const openEdit = (roadmap:PersonalRoadmap) => {
+    if (studyPlans.busy || actionPending.current) return;
+    setEditingRoadmap(roadmap);
+    setFormError('');
+    setNewRoadmapName(roadmap.name);
+    setNewRoadmapKanjiText(roadmap.rawKanji);
+    setNewRoadmapPerDay(roadmap.perDay);
+    setIsCreateModalOpen(true);
+  };
+  const closeEditor = () => {
+    if (!studyPlans.saving && !actionPending.current) setIsCreateModalOpen(false);
+  };
+  const handleSaveRoadmap = async () => {
+    if (studyPlans.busy || actionPending.current) return;
+    if (!newRoadmapName.trim()) { setFormError('Vui lòng nhập tên lộ trình!'); return; }
+    if (!editingRoadmap && !extractedKanji.length) { setFormError('Vui lòng nhập hoặc dán ít nhất 1 chữ Kanji!'); return; }
+    if (!editingRoadmap && unsupported.length) { setFormError('Hãy loại bỏ các chữ chưa có dữ liệu trước khi lưu.'); return; }
+    actionPending.current = true;
+    setFormError('');
+    try {
+      const saved = editingRoadmap
+        ? await studyPlans.update(editingRoadmap, {name:newRoadmapName, perDay:newRoadmapPerDay})
+        : await studyPlans.create(draftId.current, newRoadmapName, newRoadmapKanjiText, newRoadmapPerDay);
+      if (saved) setIsCreateModalOpen(false);
+    } finally { actionPending.current = false; }
   };
 
-  const handleDeleteRoadmap = (id: string, e: React.MouseEvent) => {
+  const handleDeleteRoadmap = (roadmap: PersonalRoadmap, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Bạn có chắc chắn muốn xóa lộ trình này không?')) {
-      setCustomRoadmaps(prev => prev.filter(r => r.id !== id));
-    }
+    if (e.detail > 1 || studyPlans.busy || actionPending.current) return;
+    setDeletingRoadmap(roadmap);
+  };
+  const confirmDelete = async () => {
+    if (!deletingRoadmap || studyPlans.busy || actionPending.current) return;
+    actionPending.current = true;
+    try { if (await studyPlans.remove(deletingRoadmap)) setDeletingRoadmap(null); }
+    finally { actionPending.current = false; }
+  };
+
+  const openLatest = async () => {
+    if (studyPlans.loading || studyPlans.saving || actionPending.current) return;
+    const latest = await studyPlans.reload();
+    if (!latest || !editingRoadmap) return;
+    const roadmap = latest.find(item => item.id === editingRoadmap.id);
+    if (roadmap) {
+      setEditingRoadmap(roadmap);
+      setNewRoadmapName(roadmap.name);
+      setNewRoadmapKanjiText(roadmap.rawKanji);
+      setNewRoadmapPerDay(roadmap.perDay);
+      setFormError('');
+    } else setFormError('Lộ trình này đã bị xóa. Nội dung đang nhập vẫn được giữ để bạn sao chép.');
+  };
+  const status = (inEditor=false) => {
+    const message = studyPlans.error || (studyPlans.loading ? 'Đang tải lộ trình…' : studyPlans.saving ? 'Đang lưu lộ trình…' : '');
+    if (!message) return null;
+    return <div role={studyPlans.error ? 'alert' : 'status'} className="text-xs text-amber-900 bg-amber-50 rounded-lg px-3 py-2">
+      {message}
+      {studyPlans.error && <>
+        {inEditor && editingRoadmap && <span> Mở bản mới sẽ thay nội dung đang nhập bằng bản đã lưu.</span>}
+        <button type="button" disabled={authBusy || studyPlans.loading || studyPlans.saving} className="ml-2 underline font-bold"
+          onClick={() => { void (inEditor && editingRoadmap ? openLatest() : studyPlans.reload()); }}>
+          {inEditor && editingRoadmap ? 'Mở bản mới' : 'Tải lại lộ trình'}
+        </button>
+      </>}
+    </div>;
   };
 
   const defaultDayKanjiList = [
@@ -156,7 +178,8 @@ export const PersonalRoadmapPage: React.FC = () => {
             </p>
 
             <RoughButton
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={openCreate}
+              disabled={studyPlans.busy}
               fill="#ea580c"
               stroke="#9a3412"
               borderRadius={8}
@@ -170,8 +193,9 @@ export const PersonalRoadmapPage: React.FC = () => {
             </RoughButton>
           </div>
 
+          {!isCreateModalOpen && !deletingRoadmap && status()}
           {/* Main Content Area */}
-          {customRoadmaps.length === 0 ? (
+          {!studyPlans.loaded ? null : customRoadmaps.length === 0 ? (
             /* Empty State Container matching media_1788169823651.png */
             <RoughCard
               fill="#ffffff"
@@ -197,7 +221,8 @@ export const PersonalRoadmapPage: React.FC = () => {
 
                 <div className="pt-2 flex justify-center">
                   <RoughButton
-                    onClick={() => setIsCreateModalOpen(true)}
+                    onClick={openCreate}
+                    disabled={studyPlans.busy}
                     fill="#ea580c"
                     stroke="#9a3412"
                     borderRadius={8}
@@ -234,13 +259,21 @@ export const PersonalRoadmapPage: React.FC = () => {
                       </p>
                     </div>
 
+                    <div className="flex items-center gap-1">
+                    <button type="button" disabled={studyPlans.busy} onClick={() => openEdit(r)}
+                      className="p-1.5 rounded-lg text-[#78716c] hover:bg-slate-100 cursor-pointer"
+                      title="Sửa lộ trình" aria-label={`Sửa lộ trình ${r.name}`}>
+                      <Edit3 className="w-4 h-4" />
+                    </button>
                     <button
-                      onClick={(e) => handleDeleteRoadmap(r.id, e)}
+                      disabled={studyPlans.busy}
+                      onClick={(e) => { void handleDeleteRoadmap(r, e); }}
                       className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 cursor-pointer"
                       title="Xóa lộ trình"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+                    </div>
                   </div>
 
                   {/* Sample Kanji preview */}
@@ -261,7 +294,7 @@ export const PersonalRoadmapPage: React.FC = () => {
                     </span>
 
                     <RoughButton
-                      onClick={() => alert(`Bắt đầu học lộ trình: ${r.name}`)}
+                      onClick={() => alert('Chức năng học theo ngày của lộ trình sẽ được nối ở bước tiếp theo.')}
                       fill="#ea580c"
                       stroke="#9a3412"
                       borderRadius={6}
@@ -516,10 +549,11 @@ export const PersonalRoadmapPage: React.FC = () => {
       {isCreateModalOpen && (
         <div 
           className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={() => setIsCreateModalOpen(false)}
+          onClick={closeEditor}
         >
           <div 
             className="w-full max-w-lg"
+            role="dialog" aria-modal="true" aria-labelledby="roadmap-editor-title"
             onClick={(e) => e.stopPropagation()}
           >
             <RoughCard
@@ -531,17 +565,21 @@ export const PersonalRoadmapPage: React.FC = () => {
             >
               {/* Header */}
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-black text-[#292524] font-sketch">
-                  Tạo lộ trình mới
+                <h3 id="roadmap-editor-title" className="text-base font-black text-[#292524] font-sketch">
+                  {editingRoadmap ? 'Sửa lộ trình' : 'Tạo lộ trình mới'}
                 </h3>
                 <button
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={closeEditor}
+                  disabled={studyPlans.saving}
+                  aria-label="Đóng hộp lộ trình"
                   className="p-1 rounded-lg text-[#78716c] hover:bg-slate-100 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
+              {status(true)}
+              {formError && <p role="alert" className="text-xs text-rose-600">{formError}</p>}
               {/* Field 1: Tên lộ trình */}
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-[#292524]">
@@ -549,6 +587,9 @@ export const PersonalRoadmapPage: React.FC = () => {
                 </label>
                 <input
                   type="text"
+                  aria-label="Tên lộ trình"
+                  maxLength={100}
+                  disabled={studyPlans.busy}
                   value={newRoadmapName}
                   onChange={(e) => setNewRoadmapName(e.target.value)}
                   placeholder="VD: Kanji cần ôn, Luyện N3 sprint..."
@@ -562,6 +603,10 @@ export const PersonalRoadmapPage: React.FC = () => {
                   Danh sách Kanji
                 </label>
                 <textarea
+                  aria-label="Danh sách Kanji"
+                  maxLength={MAX_ROADMAP_TEXT}
+                  readOnly={!!editingRoadmap}
+                  disabled={studyPlans.busy}
                   value={newRoadmapKanjiText}
                   onChange={(e) => setNewRoadmapKanjiText(e.target.value)}
                   placeholder="Nhập hoặc dán kanji vào đây..."
@@ -571,6 +616,9 @@ export const PersonalRoadmapPage: React.FC = () => {
                 <div className="text-[11px] font-bold text-[#78716c]">
                   {extractedKanji.length === 0 ? 'Chưa có kanji' : `Đã nhận diện: ${extractedKanji.length} chữ Kanji`}
                 </div>
+                {!editingRoadmap && unsupported.length > 0 && <p role="alert" className="text-xs text-rose-600 break-words">
+                  Chưa có dữ liệu: {unsupported.join(' ')}. Hãy loại bỏ các chữ này trước khi lưu.
+                </p>}
               </div>
 
               {/* Field 3: Số kanji mỗi ngày */}
@@ -579,12 +627,13 @@ export const PersonalRoadmapPage: React.FC = () => {
                   Số kanji mỗi ngày
                 </label>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {[5, 10, 15, 20, 25, 30].map((num) => {
+                  {ROADMAP_PER_DAY.map((num) => {
                     const isSelected = newRoadmapPerDay === num;
                     return (
                       <button
                         key={num}
                         type="button"
+                        disabled={studyPlans.busy || perDayLocked}
                         onClick={() => setNewRoadmapPerDay(num)}
                         className={`py-1.5 px-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
                           isSelected
@@ -597,12 +646,14 @@ export const PersonalRoadmapPage: React.FC = () => {
                     );
                   })}
                 </div>
+                {perDayLocked && <p className="text-xs text-[#78716c]">Lộ trình đã bắt đầu học nên số chữ/ngày được giữ cố định.</p>}
               </div>
 
               {/* Submit Button */}
               <div className="pt-2">
                 <RoughButton
-                  onClick={handleCreateRoadmap}
+                  onClick={() => { void handleSaveRoadmap(); }}
+                  disabled={studyPlans.busy || (!editingRoadmap && unsupported.length > 0)}
                   fill="#fbbf24"
                   stroke="#d97706"
                   borderRadius={10}
@@ -610,8 +661,8 @@ export const PersonalRoadmapPage: React.FC = () => {
                   className="w-full text-white py-2.5 text-xs font-black shadow-xs cursor-pointer"
                 >
                   <div className="flex items-center justify-center gap-1.5">
-                    <Plus className="w-4 h-4 stroke-[3]" />
-                    <span>Tạo lộ trình</span>
+                    {editingRoadmap ? <Edit3 className="w-4 h-4 stroke-[3]" /> : <Plus className="w-4 h-4 stroke-[3]" />}
+                    <span>{editingRoadmap ? 'Lưu thay đổi' : 'Tạo lộ trình'}</span>
                   </div>
                 </RoughButton>
               </div>
@@ -620,6 +671,9 @@ export const PersonalRoadmapPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {deletingRoadmap && <RoadmapDeleteDialog name={deletingRoadmap.name} busy={studyPlans.busy} error={studyPlans.error}
+        onCancel={() => { if (!actionPending.current) setDeletingRoadmap(null); }} onConfirm={() => { void confirmDelete(); }} />}
 
       {/* Study Modal for Default Roadmap */}
       {isStudyModalOpen && (

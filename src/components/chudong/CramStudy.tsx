@@ -9,19 +9,21 @@ import {
   CheckCircle2, 
   XCircle 
 } from 'lucide-react';
-import { VocabWord } from '../../pages/ChuDongPage';
+import type { VocabWord } from '../../hooks/useVocabLessons';
+import { useVocabStudy } from '../../hooks/useVocabStudy';
+import { getStudyTarget, isStudyAnswerCorrect } from '../../../shared/vocab-study.mjs';
 import { TypingCrowMascot } from './StudyMascots';
-import { 
-  playCorrectSound, 
-  playWrongSound, 
-  romajiToHiragana, 
-  normalizeText, 
-  normalizeVietnamese 
-} from './studyHelpers';
+import { StudyStatus } from './StudyStatus';
+import { StudyModeDialog } from './StudyModeDialog';
+import { playCorrectSound, playWrongSound, romajiToHiragana } from './studyHelpers';
 
 interface CramStudyProps {
   words: VocabWord[];
+  lessonId: string;
   lessonName: string;
+  lessonVersion: number;
+  userId: string | null;
+  authBusy: boolean;
   onExit: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
@@ -31,46 +33,42 @@ type CramMode = 'reading' | 'hanViet';
 
 export const CramStudy: React.FC<CramStudyProps> = ({
   words,
+  lessonId,
+  lessonName,
+  lessonVersion,
+  userId,
+  authBusy,
   onExit,
   isFullscreen,
   onToggleFullscreen
 }) => {
-  const [cramMode, setCramMode] = useState<CramMode>('reading');
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const study = useVocabStudy({
+    lessonId, lessonName, lessonVersion, words, userId, authBusy,
+    kind: 'cram', initialMode: 'reading',
+  });
+  const cramMode = study.mode;
+  const currentIndex = study.index;
+  const currentWord = study.currentWord;
+  const isFinished = study.finished;
+  const score = study.score;
+  const blocked = study.busy || !!study.error;
   const [inputValue, setInputValue] = useState('');
   const [hintCount, setHintCount] = useState(0);
   const [isChecked, setIsChecked] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [autoConvertRomaji, setAutoConvertRomaji] = useState(true);
-  const [isFinished, setIsFinished] = useState(false);
-  const [score, setScore] = useState(0);
+  const [pendingMode, setPendingMode] = useState<CramMode|null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const currentWord = words[currentIndex] || null;
-
-  // Determine target answer string based on mode
-  const targetAnswer = currentWord 
-    ? (cramMode === 'reading' 
-        ? (currentWord.reading || currentWord.word) 
-        : (currentWord.hanViet || ''))
-    : '';
-
-  // Calculate target length for letter dashes and hint button
-  const targetChars = targetAnswer ? targetAnswer.split('') : [];
+  const actionPending = useRef(false);
+  const unlockTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const stopSound = useRef<(() => void) | undefined>(undefined);
+  const composing = useRef(false);
+  const targetAnswer = currentWord ? getStudyTarget(currentWord, 'cram', cramMode) : '';
+  const targetChars = Array.from(targetAnswer);
   const maxHints = targetChars.length;
 
-  // Focus input automatically
-  useEffect(() => {
-    if (!isFinished) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
-  }, [currentIndex, cramMode, isFinished]);
-
-  // Reset question state when moving to next word or changing mode
   const resetWordState = useCallback(() => {
     setInputValue('');
     setHintCount(0);
@@ -78,119 +76,109 @@ export const CramStudy: React.FC<CramStudyProps> = ({
     setIsCorrect(false);
   }, []);
 
-  // Handle mode change
-  const handleModeChange = (mode: CramMode) => {
-    setCramMode(mode);
+  useEffect(() => {
     resetWordState();
+  }, [currentWord?.id, study.roundId, cramMode, resetWordState]);
+
+  useEffect(() => {
+    if (!isFinished && !blocked && currentWord) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentWord?.id, study.roundId, cramMode, isFinished, blocked]);
+
+  useEffect(() => () => {
+    clearTimeout(unlockTimer.current);
+    stopSound.current?.();
+  }, []);
+
+  // React state updates render later; the ref also guards repeated calls in this event turn.
+  const acquireAction = () => {
+    if (actionPending.current || !study.canAct() || isFinished || !currentWord) return false;
+    actionPending.current = true;
+    unlockTimer.current = setTimeout(() => { actionPending.current = false; }, 0);
+    return true;
   };
 
-  // Next Word
-  const handleNext = useCallback(() => {
-    if (currentIndex < words.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      resetWordState();
-    } else {
-      setIsFinished(true);
-    }
-  }, [currentIndex, words.length, resetWordState]);
+  const handleExit = () => {
+    if (!study.requestExit()) return;
+    stopSound.current?.();
+    onExit();
+  };
 
-  // Use Hint
+  const handleModeChange = (mode: CramMode) => {
+    if (mode === cramMode || blocked || actionPending.current) return;
+    actionPending.current = true;
+    setPendingMode(mode);
+  };
+  const confirmModeChange = () => {
+    if (!pendingMode || blocked) return;
+    const mode = pendingMode;
+    setPendingMode(null);
+    stopSound.current?.();
+    void study.start(mode).finally(() => { actionPending.current = false; });
+  };
+
+  const handleNext = () => {
+    if (!currentWord || !Object.prototype.hasOwnProperty.call(study.answers, currentWord.id) || !acquireAction()) return;
+    stopSound.current?.();
+    study.next(currentWord.id);
+  };
+
   const handleUseHint = () => {
-    if (hintCount < maxHints) {
-      const nextHint = hintCount + 1;
-      setHintCount(nextHint);
-      // Auto-fill revealed hint characters into input if empty
-      const revealedSlice = targetChars.slice(0, nextHint).join('');
-      setInputValue(revealedSlice);
-      inputRef.current?.focus();
-    }
+    if (hintCount >= maxHints || (isChecked && isCorrect) || !acquireAction()) return;
+    const nextHint = hintCount + 1;
+    setHintCount(nextHint);
+    setInputValue(targetChars.slice(0, nextHint).join(''));
+    inputRef.current?.focus();
   };
 
-  // Check Answer
-  const handleCheck = useCallback(() => {
-    if (!currentWord || isFinished) return;
-
-    if (isChecked) {
-      // If already checked, pressing Enter proceeds to next question
+  const handleCheck = () => {
+    if (isChecked && isCorrect) {
       handleNext();
       return;
     }
+    if (!currentWord || !inputValue.trim() || !acquireAction()) return;
 
-    if (!inputValue.trim()) return;
-
-    let correct = false;
-
-    if (cramMode === 'reading') {
-      const cleanTarget = targetAnswer.trim();
-      const cleanInput = inputValue.trim();
-      const convertedInput = romajiToHiragana(cleanInput);
-
-      // Match against hiragana, katakana, converted romaji, or normalized romaji
-      correct = (
-        cleanInput === cleanTarget ||
-        convertedInput === cleanTarget ||
-        normalizeText(cleanInput) === normalizeText(cleanTarget) ||
-        cleanInput.toLowerCase() === cleanTarget.toLowerCase()
-      );
-    } else {
-      // Han Viet mode
-      const cleanTarget = normalizeVietnamese(targetAnswer);
-      const cleanInput = normalizeVietnamese(inputValue);
-      correct = (
-        cleanInput === cleanTarget ||
-        normalizeText(cleanInput) === normalizeText(cleanTarget)
-      );
-    }
-
+    // Only the first attempt contributes to the saved result. Retrying remains practice.
+    const correct = Object.prototype.hasOwnProperty.call(study.answers, currentWord.id)
+      ? isStudyAnswerCorrect(currentWord, 'cram', cramMode, inputValue)
+      : study.answer(currentWord.id, inputValue);
+    if (correct === null) return;
     setIsChecked(true);
     setIsCorrect(correct);
-
-    if (correct) {
-      setScore(prev => prev + 1);
-      playCorrectSound();
-    } else {
-      playWrongSound();
-    }
-  }, [currentWord, isFinished, isChecked, inputValue, cramMode, targetAnswer, handleNext]);
-
-  // Handle Input Change with optional on-the-fly Romaji conversion
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (cramMode === 'reading' && autoConvertRomaji) {
-      // Convert romaji syllables to hiragana on the fly if user is typing latin letters
-      const converted = romajiToHiragana(val);
-      setInputValue(converted);
-    } else {
-      setInputValue(val);
-    }
+    stopSound.current?.();
+    stopSound.current = correct ? playCorrectSound() : playWrongSound();
   };
 
-  // Global Enter Key listener
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (blocked || isFinished || (isChecked && isCorrect)) return;
+    const val = e.target.value;
+    // Leave trailing n/nn pending until the next key or answer check resolves ん vs. na/ni/....
+    const pendingN = val.match(/n+$/i)?.[0] ?? '';
+    const converted = pendingN
+      ? romajiToHiragana(val.slice(0, -pendingN.length)) + pendingN
+      : romajiToHiragana(val);
+    setInputValue(cramMode === 'reading' && autoConvertRomaji && !composing.current
+      ? converted
+      : val);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      if (e.nativeEvent.isComposing || composing.current) return;
       e.preventDefault();
+      if (e.repeat) return;
       handleCheck();
     }
   };
 
-  // Restart Cramming
   const handleRestart = () => {
-    setCurrentIndex(0);
-    resetWordState();
-    setScore(0);
-    setIsFinished(false);
+    if (blocked || actionPending.current) return;
+    actionPending.current = true;
+    stopSound.current?.();
+    void study.start().finally(() => { actionPending.current = false; });
   };
-
-  if (words.length === 0) {
-    return (
-      <div className="w-full p-8 text-center bg-[#232d4b] text-white rounded-2xl">
-        <p className="text-sm">Chưa có từ vựng nào để học nhồi nhét.</p>
-        <button onClick={onExit} className="mt-4 px-4 py-2 bg-orange-600 rounded-xl text-xs font-bold">
-          Quay lại
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className={`w-full relative transition-all duration-200 ${
@@ -199,13 +187,17 @@ export const CramStudy: React.FC<CramStudyProps> = ({
         : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
     }`}>
       
+      <StudyStatus study={study} />
+      <StudyModeDialog open={pendingMode !== null} busy={blocked}
+        onCancel={() => { setPendingMode(null); actionPending.current = false; }} onConfirm={confirmModeChange} />
+
       {/* 1. TOP BAR */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2 text-slate-300">
         
         {/* Top-Left: Back button + Typing Crow Mascot (Images 4 & 5) */}
         <div className="flex items-center gap-3">
           <button
-            onClick={onExit}
+            onClick={handleExit}
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             title="Quay lại danh sách từ"
           >
@@ -221,7 +213,8 @@ export const CramStudy: React.FC<CramStudyProps> = ({
           {/* Segmented 2-option control with orange active state (Images 4 & 5) */}
           <div className="flex items-center rounded-xl bg-slate-800/90 p-0.5 border border-slate-700 shadow-inner">
             <button
-              onClick={() => handleModeChange('reading')}
+              onClick={(event) => { if (event.detail <= 1) handleModeChange('reading'); }}
+              disabled={blocked}
               className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 cramMode === 'reading'
                   ? 'bg-[#ea580c] text-white shadow-xs font-black'
@@ -232,7 +225,8 @@ export const CramStudy: React.FC<CramStudyProps> = ({
             </button>
 
             <button
-              onClick={() => handleModeChange('hanViet')}
+              onClick={(event) => { if (event.detail <= 1) handleModeChange('hanViet'); }}
+              disabled={blocked}
               className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 cramMode === 'hanViet'
                   ? 'bg-[#ea580c] text-white shadow-xs font-black'
@@ -294,23 +288,34 @@ export const CramStudy: React.FC<CramStudyProps> = ({
             <span className="text-5xl">⚡</span>
             <h3 className="text-2xl font-black text-white">Đã hoàn thành lượt Nhồi nhét!</h3>
             <p className="text-sm font-bold text-orange-400">
-              Chính xác: {score} / {words.length} từ
+              Chính xác: {score} / {study.total} từ
             </p>
             <div className="flex items-center justify-center gap-3 pt-4">
               <button
-                onClick={handleRestart}
+                onClick={(event) => { if (event.detail <= 1) handleRestart(); }}
+                disabled={blocked}
                 className="px-5 py-2.5 bg-[#ea580c] hover:bg-orange-600 text-white rounded-xl text-xs font-black shadow-md cursor-pointer"
               >
                 Học lại lần nữa
               </button>
               <button
-                onClick={onExit}
+                onClick={handleExit}
                 className="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-black shadow-md cursor-pointer"
               >
                 Quay lại danh sách từ
               </button>
             </div>
           </div>
+        ) : !currentWord ? (
+          <p className="text-sm text-slate-300 text-center">
+            {study.error
+              ? 'Hãy tải lại lượt học để tiếp tục.'
+              : study.loaded && !study.loading
+                ? (cramMode === 'reading'
+                  ? 'Chưa có từ vựng đủ dữ liệu để học cách đọc. Hãy bổ sung từ, nghĩa và cách đọc hoặc chọn chế độ khác.'
+                  : 'Chưa có từ vựng đủ dữ liệu để học âm Hán Việt. Hãy bổ sung từ, nghĩa và âm Hán Việt hoặc chọn chế độ khác.')
+                : 'Đang tải bài học…'}
+          </p>
         ) : (
           <div className="w-full max-w-xl space-y-6 text-center">
             
@@ -360,10 +365,14 @@ export const CramStudy: React.FC<CramStudyProps> = ({
               <input
                 ref={inputRef}
                 type="text"
+                maxLength={500}
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                disabled={isChecked && isCorrect}
+                disabled={blocked}
+                readOnly={isChecked && isCorrect}
+                onCompositionStart={() => { composing.current = true; }}
+                onCompositionEnd={() => { composing.current = false; }}
                 placeholder={
                   cramMode === 'reading'
                     ? 'Gõ romaji (vd: toshokan → としょかん)'
@@ -395,8 +404,8 @@ export const CramStudy: React.FC<CramStudyProps> = ({
               
               {/* Hint button (Gray) */}
               <button
-                onClick={handleUseHint}
-                disabled={hintCount >= maxHints || (isChecked && isCorrect)}
+                onClick={(event) => { if (event.detail <= 1) handleUseHint(); }}
+                disabled={blocked || hintCount >= maxHints || (isChecked && isCorrect)}
                 className="py-2.5 px-3 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
               >
                 <Lightbulb className="w-4 h-4 text-amber-300" />
@@ -405,7 +414,8 @@ export const CramStudy: React.FC<CramStudyProps> = ({
 
               {/* Check button (Orange) */}
               <button
-                onClick={handleCheck}
+                onClick={(event) => { if (event.detail <= 1) handleCheck(); }}
+                disabled={blocked}
                 className={`py-2.5 px-3 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-[0.99] ${
                   isChecked && isCorrect
                     ? 'bg-emerald-600 hover:bg-emerald-500'
@@ -424,7 +434,8 @@ export const CramStudy: React.FC<CramStudyProps> = ({
                 <span>Đáp án đúng: </span>
                 <span className="font-bold text-amber-300">{targetAnswer}</span>
                 <button
-                  onClick={handleNext}
+                  onClick={(event) => { if (event.detail <= 1) handleNext(); }}
+                  disabled={blocked}
                   className="ml-3 underline text-sky-300 hover:text-sky-200 cursor-pointer"
                 >
                   Bỏ qua sang câu tiếp theo
@@ -442,7 +453,7 @@ export const CramStudy: React.FC<CramStudyProps> = ({
         
         {/* Progress Counter */}
         <div className="text-slate-400 font-bold">
-          <span className="text-slate-200">{currentIndex + 1}</span> / {words.length}
+          <span className="text-slate-200">{isFinished ? study.total : (study.total ? currentIndex + 1 : 0)}</span> / {study.total}
         </div>
 
         {/* Shortcuts hint */}
@@ -459,7 +470,7 @@ export const CramStudy: React.FC<CramStudyProps> = ({
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-800">
           <div 
             className="h-full bg-emerald-500 transition-all duration-300"
-            style={{ width: `${((currentIndex + 1) / words.length) * 100}%` }}
+            style={{ width: `${study.total ? ((isFinished ? study.total : currentIndex + 1) / study.total) * 100 : 0}%` }}
           />
         </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   ArrowLeft, 
   Volume2, 
@@ -9,163 +9,137 @@ import {
   CheckCircle2, 
   XCircle 
 } from 'lucide-react';
-import { VocabWord } from '../../pages/ChuDongPage';
+import type { VocabWord } from '../../hooks/useVocabLessons';
+import { useVocabStudy } from '../../hooks/useVocabStudy';
+import { getQuizOptions, type StudyMode } from '../../../shared/vocab-study.mjs';
+import { StudyStatus } from './StudyStatus';
+import { StudyModeDialog } from './StudyModeDialog';
 import { speakJapanese } from '../../utils/speech';
 import { DartboardCrowMascot } from './StudyMascots';
 import { playCorrectSound, playWrongSound } from './studyHelpers';
 
 interface QuizStudyProps {
   words: VocabWord[];
+  lessonId: string;
   lessonName: string;
+  lessonVersion: number;
+  userId: string | null;
+  authBusy: boolean;
   onExit: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
 }
 
-type QuizQuestionMode = 'reading' | 'kanji' | 'meaning';
-
-interface QuizOption {
-  id: string;
-  text: string;
-  isCorrect: boolean;
-}
-
 export const QuizStudy: React.FC<QuizStudyProps> = ({
   words,
+  lessonId,
+  lessonName,
+  lessonVersion,
+  userId,
+  authBusy,
   onExit,
   isFullscreen,
   onToggleFullscreen
 }) => {
-  // Quiz mode: 'reading' (Cách đọc) | 'kanji' (Kanji/Từ vựng) | 'meaning' (Ý nghĩa)
-  const [questionMode, setQuestionMode] = useState<QuizQuestionMode>('meaning');
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const study = useVocabStudy({ lessonId, lessonName, lessonVersion, words, userId, authBusy, kind: 'quiz', initialMode: 'meaning' });
+  const { mode: questionMode, index: currentIndex, currentWord, deck, score, total, finished: isFinished } = study;
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [hasGivenUp, setHasGivenUp] = useState(false);
-  const [score, setScore] = useState(0);
-  const [isFinished, setIsFinished] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [autoAdvance, setAutoAdvance] = useState(true);
+  const [pendingMode, setPendingMode] = useState<StudyMode|null>(null);
+  const autoNextTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const answer = currentWord ? study.answers[currentWord.id] : undefined;
+  const isAnswered = Boolean(answer);
+  const hasGivenUp = answer?.answer === null;
+  const blocked = study.busy || Boolean(study.error) || study.completionPending;
 
-  // Deck of words for this quiz session
-  const [deck, setDeck] = useState<VocabWord[]>(() => {
-    return [...words].sort(() => Math.random() - 0.5);
-  });
+  const currentOptions = useMemo(() => currentWord
+    ? getQuizOptions(currentWord, deck, questionMode)
+    : [], [currentWord?.id, questionMode, study.roundId]);
 
-  const currentWord = deck[currentIndex] || null;
+  const cancelAutoNext = useCallback(() => {
+    if (autoNextTimer.current !== null) clearTimeout(autoNextTimer.current);
+    autoNextTimer.current = null;
+  }, []);
 
-  // Generate 4 options for the current question
-  const currentOptions: QuizOption[] = useMemo(() => {
-    if (!currentWord) return [];
+  useEffect(() => {
+    setSelectedOptionIndex(null);
+    cancelAutoNext();
+  }, [currentWord?.id, questionMode, study.roundId, cancelAutoNext]);
 
-    let correctText = '';
-    if (questionMode === 'meaning') {
-      correctText = currentWord.word;
-    } else if (questionMode === 'kanji') {
-      correctText = currentWord.word;
-    } else {
-      // reading
-      correctText = currentWord.reading || currentWord.word;
-    }
+  useEffect(() => {
+    if (blocked || !autoAdvance || isFinished) cancelAutoNext();
+  }, [blocked, autoAdvance, isFinished, cancelAutoNext]);
 
-    // Pick 3 distractors from all words (or fallback list)
-    const otherWords = words.filter(w => w.id !== currentWord.id);
-    const shuffledOthers = [...otherWords].sort(() => Math.random() - 0.5);
-    
-    const distractors: string[] = [];
-    for (const w of shuffledOthers) {
-      if (distractors.length >= 3) break;
-      const text = questionMode === 'reading' ? (w.reading || w.word) : w.word;
-      if (text && text !== correctText && !distractors.includes(text)) {
-        distractors.push(text);
-      }
-    }
+  useEffect(() => () => {
+    cancelAutoNext();
+    window.speechSynthesis?.cancel();
+  }, [cancelAutoNext]);
 
-    // If not enough distractors (less than 4 words in lesson), add sensible defaults
-    const fallbackDistractors = ['学校', '先生', '学生', '友達', '日本', '本', '車', '水'];
-    for (const fb of fallbackDistractors) {
-      if (distractors.length >= 3) break;
-      if (fb !== correctText && !distractors.includes(fb)) {
-        distractors.push(fb);
-      }
-    }
-
-    const options: QuizOption[] = [
-      { id: `opt-correct`, text: correctText, isCorrect: true },
-      ...distractors.slice(0, 3).map((text, idx) => ({
-        id: `opt-distractor-${idx}`,
-        text,
-        isCorrect: false
-      }))
-    ];
-
-    // Shuffle options so correct answer is at a random index
-    return options.sort(() => Math.random() - 0.5);
-  }, [currentWord, questionMode, words]);
-
-  // Audio helper
   const handlePlayAudio = useCallback(() => {
-    if (currentWord) {
+    if (currentWord && study.canAct() && !isFinished) {
       speakJapanese(currentWord.reading || currentWord.word);
     }
-  }, [currentWord]);
+  }, [currentWord, study, isFinished]);
 
-  // Next question
   const handleNext = useCallback(() => {
-    if (currentIndex < deck.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setSelectedOptionIndex(null);
-      setIsAnswered(false);
-      setHasGivenUp(false);
-    } else {
-      setIsFinished(true);
-    }
-  }, [currentIndex, deck.length]);
+    cancelAutoNext();
+    if (currentWord) study.next(currentWord.id);
+  }, [cancelAutoNext, currentWord, study]);
 
-  // Select an option (1-4)
   const handleSelectOption = useCallback((index: number) => {
-    if (isAnswered || hasGivenUp || index < 0 || index >= currentOptions.length) return;
-
-    setSelectedOptionIndex(index);
-    setIsAnswered(true);
-
+    if (!currentWord || isFinished || isAnswered || index < 0 || index >= currentOptions.length) return;
     const chosen = currentOptions[index];
-    if (chosen.isCorrect) {
-      setScore(prev => prev + 1);
+    const correct = study.answer(currentWord.id, chosen.text);
+    if (correct === null) return;
+    setSelectedOptionIndex(index);
+    if (correct) {
       playCorrectSound();
       if (autoAdvance) {
-        setTimeout(() => {
-          handleNext();
+        cancelAutoNext();
+        const answeredWordId = currentWord.id;
+        autoNextTimer.current = setTimeout(() => {
+          autoNextTimer.current = null;
+          study.next(answeredWordId);
         }, 1100);
       }
     } else {
       playWrongSound();
     }
-  }, [isAnswered, hasGivenUp, currentOptions, autoAdvance, handleNext]);
+  }, [currentWord, isFinished, isAnswered, currentOptions, study, autoAdvance, cancelAutoNext]);
 
-  // "Câu này bó tay" (Give up)
   const handleGiveUp = useCallback(() => {
-    if (isAnswered || hasGivenUp) return;
-    setHasGivenUp(true);
-    setIsAnswered(true);
+    if (!currentWord || isFinished || isAnswered || study.answer(currentWord.id, null) === null) return;
+    cancelAutoNext();
     playWrongSound();
-  }, [isAnswered, hasGivenUp]);
+  }, [currentWord, isFinished, isAnswered, study, cancelAutoNext]);
 
-  // Restart quiz
-  const handleRestart = () => {
-    setDeck([...words].sort(() => Math.random() - 0.5));
-    setCurrentIndex(0);
-    setSelectedOptionIndex(null);
-    setIsAnswered(false);
-    setHasGivenUp(false);
-    setScore(0);
-    setIsFinished(false);
+  const handleRestart = async () => {
+    cancelAutoNext();
+    await study.start();
   };
 
-  // Global keyboard shortcuts: 1, 2, 3, 4, Space, R
+  const handleModeChange = (mode: StudyMode) => {
+    if (mode === questionMode || blocked) return;
+    cancelAutoNext();
+    setPendingMode(mode);
+  };
+  const confirmModeChange = async () => {
+    if (!pendingMode || blocked) return;
+    const mode = pendingMode;
+    setPendingMode(null);
+    await study.start(mode);
+  };
+
+  const handleExit = () => {
+    cancelAutoNext();
+    if (study.requestExit()) onExit();
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.repeat || document.querySelector('dialog[open]') || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+        || (e.target instanceof HTMLElement && e.target.isContentEditable)) return;
 
       if (e.key === '1') {
         e.preventDefault();
@@ -194,17 +168,6 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSelectOption, isAnswered, hasGivenUp, handleNext, handlePlayAudio]);
 
-  if (deck.length === 0) {
-    return (
-      <div className="w-full p-8 text-center bg-[#232d4b] text-white rounded-2xl">
-        <p className="text-sm">Chưa có từ vựng nào để làm trắc nghiệm.</p>
-        <button onClick={onExit} className="mt-4 px-4 py-2 bg-emerald-600 rounded-xl text-xs font-bold">
-          Quay lại
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className={`w-full relative transition-all duration-200 ${
       isFullscreen 
@@ -212,13 +175,16 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
         : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
     }`}>
       
+      <StudyStatus study={study} />
+      <StudyModeDialog open={pendingMode !== null} busy={blocked} onCancel={() => setPendingMode(null)} onConfirm={() => { void confirmModeChange(); }} />
+
       {/* 1. TOP BAR */}
       <div className="flex items-center justify-between px-5 pt-4 pb-3 text-slate-300">
         
         {/* Left: Back button + "Bí quá thì nghe" audio button */}
         <div className="flex items-center gap-3">
           <button
-            onClick={onExit}
+            onClick={handleExit}
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             title="Quay lại danh sách từ"
           >
@@ -228,6 +194,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
 
           <button
             onClick={handlePlayAudio}
+            disabled={blocked || isFinished || !currentWord}
             className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800/60 hover:bg-slate-700/60 px-2.5 py-1 rounded-lg transition-colors cursor-pointer border border-slate-700"
             title="Bí quá thì nghe phát âm (R)"
           >
@@ -242,12 +209,8 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
           {/* Segmented 3-option control (matching Images 2 & 3) */}
           <div className="flex items-center rounded-xl bg-slate-800/80 p-0.5 border border-slate-700 shadow-inner">
             <button
-              onClick={() => {
-                setQuestionMode('reading');
-                setSelectedOptionIndex(null);
-                setIsAnswered(false);
-                setHasGivenUp(false);
-              }}
+              onClick={(event) => { if (event.detail <= 1) void handleModeChange('reading'); }}
+              disabled={blocked}
               className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 questionMode === 'reading'
                   ? 'bg-[#e5e5d8] text-slate-900 shadow-xs'
@@ -258,12 +221,8 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
             </button>
 
             <button
-              onClick={() => {
-                setQuestionMode('kanji');
-                setSelectedOptionIndex(null);
-                setIsAnswered(false);
-                setHasGivenUp(false);
-              }}
+              onClick={(event) => { if (event.detail <= 1) void handleModeChange('kanji'); }}
+              disabled={blocked}
               className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 questionMode === 'kanji'
                   ? 'bg-[#e5e5d8] text-slate-900 shadow-xs'
@@ -274,12 +233,8 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
             </button>
 
             <button
-              onClick={() => {
-                setQuestionMode('meaning');
-                setSelectedOptionIndex(null);
-                setIsAnswered(false);
-                setHasGivenUp(false);
-              }}
+              onClick={(event) => { if (event.detail <= 1) void handleModeChange('meaning'); }}
+              disabled={blocked}
               className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 questionMode === 'meaning'
                   ? 'bg-[#e5e5d8] text-slate-900 shadow-xs'
@@ -326,7 +281,10 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
             <input
               type="checkbox"
               checked={autoAdvance}
-              onChange={(e) => setAutoAdvance(e.target.checked)}
+              onChange={(e) => {
+                cancelAutoNext();
+                setAutoAdvance(e.target.checked);
+              }}
               className="rounded accent-emerald-600 cursor-pointer"
             />
           </label>
@@ -346,23 +304,26 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
             <span className="text-5xl">🎯</span>
             <h3 className="text-2xl font-black text-white">Bạn đã hoàn thành bài Trắc nghiệm!</h3>
             <p className="text-sm font-bold text-emerald-400">
-              Điểm số: {score} / {deck.length} câu đúng
+              Điểm số: {score} / {total} câu đúng
             </p>
             <div className="flex items-center justify-center gap-3 pt-4">
               <button
-                onClick={handleRestart}
+                onClick={(event) => { if (event.detail <= 1) void handleRestart(); }}
+                disabled={blocked}
                 className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-md cursor-pointer"
               >
                 Làm lại bài này
               </button>
               <button
-                onClick={onExit}
+                onClick={handleExit}
                 className="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-black shadow-md cursor-pointer"
               >
                 Quay lại danh sách từ
               </button>
             </div>
           </div>
+        ) : !currentWord ? (
+          <p className="text-sm text-white">{study.loaded ? 'Chưa có từ vựng nào để làm trắc nghiệm.' : ''}</p>
         ) : (
           <div className="w-full max-w-2xl space-y-6 z-10">
             
@@ -377,7 +338,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
               {questionMode === 'kanji' && (
                 <div className="space-y-1">
                   <h2 className="text-3xl md:text-4xl font-black text-white tracking-wide">
-                    {currentWord?.word}
+                    {currentWord?.reading}
                   </h2>
                   <p className="text-xs md:text-sm text-slate-300 font-medium">
                     {currentWord?.meaning}
@@ -419,8 +380,8 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
                 return (
                   <button
                     key={opt.id}
-                    onClick={() => handleSelectOption(idx)}
-                    disabled={isAnswered || hasGivenUp}
+                    onClick={(event) => { if (event.detail <= 1) handleSelectOption(idx); }}
+                    disabled={blocked || isAnswered || hasGivenUp}
                     className={`relative p-3.5 md:p-4 rounded-xl border-2 text-left flex items-center gap-3 transition-all cursor-pointer select-none active:scale-[0.99] ${cardStyle}`}
                   >
                     {/* Key number label (1, 2, 3, 4) */}
@@ -466,7 +427,8 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
                 )}
 
                 <button
-                  onClick={handleNext}
+                  onClick={(event) => { if (event.detail <= 1) handleNext(); }}
+                  disabled={blocked}
                   className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer ml-2 shadow-xs"
                 >
                   Tiếp tục (Space)
@@ -484,7 +446,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
         
         {/* Progress Counter */}
         <div className="text-slate-400 font-bold">
-          <span className="text-slate-200">{currentIndex + 1}</span> / {deck.length}
+          <span className="text-slate-200">{isFinished ? total : currentWord ? currentIndex + 1 : 0}</span> / {total}
         </div>
 
         {/* Center shortcuts hint */}
@@ -500,10 +462,10 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
 
         {/* Right: "Câu này bó tay" button */}
         <button
-          onClick={handleGiveUp}
-          disabled={isAnswered || hasGivenUp}
+          onClick={(event) => { if (event.detail <= 1) handleGiveUp(); }}
+          disabled={blocked || isFinished || !currentWord || isAnswered || hasGivenUp}
           className={`flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer ${
-            isAnswered || hasGivenUp 
+            blocked || isFinished || !currentWord || isAnswered || hasGivenUp
               ? 'text-slate-600 cursor-not-allowed' 
               : 'text-slate-400 hover:text-rose-300'
           }`}
@@ -517,7 +479,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-800">
           <div 
             className="h-full bg-emerald-500 transition-all duration-300"
-            style={{ width: `${((currentIndex + 1) / deck.length) * 100}%` }}
+            style={{ width: `${total ? ((isFinished ? total : currentWord ? currentIndex + 1 : 0) / total) * 100 : 0}%` }}
           />
         </div>
 
