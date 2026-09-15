@@ -112,7 +112,8 @@ export const App: React.FC = () => {
             <Route path={pagePaths['vocab-giao-trinh']} element={<CurriculumPage />} />
             <Route path={pagePaths['vocab-bang-chu-cai']} element={<AlphabetPage />} />
             <Route path={pagePaths.bunpo} element={<BunpoPage />} />
-            <Route path={pagePaths['personal-lo-trinh']} element={<PersonalRoadmapPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
+            <Route path={pagePaths['personal-lo-trinh']} element={<PersonalRoadmapPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error}
+              onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} onDetail={item => openDetail(kanjiPath(item.id))} />} />
             <Route path={pagePaths['personal-on-tap']} element={<ReviewPage
               onSelectKanji={item => openDetail(kanjiPath(item.id))}
               onSelectGrammar={item => openDetail(grammarPath(item.id))}

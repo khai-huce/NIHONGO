@@ -1,5 +1,7 @@
 # P06 — Lộ trình Kanji cá nhân theo tài khoản
 
+**Cập nhật 15/09/2026:** P07 đã hoàn thành luồng học/tiến độ theo ngày; xem [ROADMAP_STUDY.md](ROADMAP_STUDY.md). Các mô tả “chưa nối học” bên dưới ghi nhận phạm vi P06 ở thời điểm bàn giao, không còn là trạng thái hiện tại. Tab mặc định vẫn thuộc P08.
+
 Triển khai từ 14/09/2026, hoàn tất nghiệm thu 15/09/2026. Phạm vi được duyệt: tạo, xem, sửa tên/số chữ mỗi ngày và xóa lộ trình cá nhân. Giữ bố cục hiện có; bổ sung nút bút chì nhỏ cạnh nút xóa và dùng lại hộp nhập lộ trình. Người dùng đã duyệt riêng hộp xác nhận xóa trong trang với câu hỏi cũ và hai nút Hủy/Xóa lộ trình.
 
 ## Quy tắc và giao diện

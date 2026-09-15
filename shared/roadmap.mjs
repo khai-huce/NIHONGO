@@ -154,3 +154,11 @@ export function analyzeRoadmapKanji(raw) {
   const kanjiList = extractRoadmapKanji(raw);
   return { kanjiList, unsupported: kanjiList.filter(character => !supported.has(character)) };
 }
+
+// Days are one-based; navigating outside the plan must never wrap into another day's cards.
+export function roadmapDayKanji(kanjiList, perDay, day) {
+  if (!Number.isSafeInteger(perDay) || perDay < 1 || !Number.isSafeInteger(day) || day < 1 || day > Math.ceil(kanjiList.length / perDay)) {
+    throw new RangeError('Ngày học không tồn tại trong lộ trình.');
+  }
+  return kanjiList.slice((day - 1) * perDay, day * perDay);
+}

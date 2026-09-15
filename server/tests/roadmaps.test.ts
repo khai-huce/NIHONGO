@@ -104,7 +104,7 @@ describe('P06 personal Kanji roadmaps', () => {
     expect(response.headers['cache-control']).toBe('no-store');
     expect(first).toEqual({ id: body.id, name: body.name.trim(), rawKanji: body.rawKanji,
       kanjiList: ['六', '一', '二', '三', '四', '五', '日'], perDay: 5, totalDays: 2, currentDay: 1,
-      version: 0, startedAt: null, createdAt: expect.any(String) });
+      version: 0, assessments: {}, completedDays: [], progressVersion: 0, startedAt: null, createdAt: expect.any(String) });
     expect(Number.isFinite(Date.parse(first.createdAt))).toBe(true);
     const second = await create(user, { name: 'Lộ trình mới hơn' });
     await api.close();

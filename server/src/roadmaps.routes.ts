@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
 import type { PersonalRoadmap, Prisma, PrismaClient } from '@prisma/client';
-import { analyzeRoadmapKanji, MAX_ROADMAP_TEXT, MAX_ROADMAPS, ROADMAP_PER_DAY } from '../../shared/roadmap.mjs';
+import { analyzeRoadmapKanji, MAX_ROADMAP_TEXT, MAX_ROADMAPS, ROADMAP_PER_DAY, ROADMAP_KANJI, roadmapDayKanji } from '../../shared/roadmap.mjs';
+import { assessRoadmapKanji, roadmapProgress } from '../../shared/roadmap-study.mjs';
 import { HttpError } from './errors.js';
 
 const identity = { id: z.string().uuid(), expectedUserId: z.string().uuid() };
@@ -12,13 +13,27 @@ const version = z.number().int().nonnegative().max(2147483647);
 const createInput = z.object({ ...identity, name, rawKanji: z.string().max(MAX_ROADMAP_TEXT, `Danh sách tối đa ${MAX_ROADMAP_TEXT} ký tự.`), perDay }).strict();
 const updateInput = z.object({ ...identity, version, name, perDay }).strict();
 const deleteInput = z.object({ ...identity, version }).strict();
+const day = z.number().int().positive().max(2000);
+const startInput = z.object({ ...identity, version, day }).strict();
+const rateInput = z.object({ ...identity, progressVersion: version, day, kanjiId: z.string().min(1).max(32), memorized: z.boolean() }).strict();
 const changed = () => new HttpError(409, 'ROADMAP_CHANGED', 'Lộ trình đã thay đổi ở phiên khác. Tải lại trước khi sửa tiếp; nội dung bạn đang nhập chưa được lưu.');
+const progressChanged = () => new HttpError(409, 'ROADMAP_PROGRESS_CHANGED', 'Tiến độ đã thay đổi ở phiên khác. Vui lòng tải lại trước khi đánh giá tiếp.');
 const missing = () => new HttpError(404, 'NOT_FOUND', 'Không tìm thấy lộ trình.');
+const idsByCharacter = new Map(ROADMAP_KANJI.map(([id, character]) => [character, id]));
+
+function studyDayIds(roadmap: PersonalRoadmap, day: number) {
+  const unsupported = roadmap.kanjiList.filter(character => !idsByCharacter.has(character));
+  if (unsupported.length) throw new HttpError(400, 'UNSUPPORTED_KANJI', `Chưa có dữ liệu cho các chữ: ${unsupported.join('、')}.`);
+  if (day > Math.ceil(roadmap.kanjiList.length / roadmap.perDay)) throw new HttpError(400, 'INVALID_ROADMAP_DAY', 'Ngày học không tồn tại trong lộ trình.');
+  return roadmapDayKanji(roadmap.kanjiList, roadmap.perDay, day).map(character => idsByCharacter.get(character)!);
+}
 
 function toDto(roadmap: PersonalRoadmap) {
+  const progress = roadmapProgress(roadmap.kanjiList, roadmap.perDay, roadmap.assessments, roadmap.completedDays);
   return {
     id: roadmap.id, name: roadmap.name, rawKanji: roadmap.rawKanji, kanjiList: roadmap.kanjiList,
-    perDay: roadmap.perDay, totalDays: Math.ceil(roadmap.kanjiList.length / roadmap.perDay), currentDay: 1,
+    perDay: roadmap.perDay, totalDays: Math.ceil(roadmap.kanjiList.length / roadmap.perDay), ...progress,
+    progressVersion: roadmap.progressVersion,
     version: roadmap.version, startedAt: roadmap.startedAt, createdAt: roadmap.createdAt,
   };
 }
@@ -103,6 +118,51 @@ export function roadmapRoutes(db: PrismaClient) {
       if (!deleted.count) throw changed();
     });
     res.json({ userId, id: input.id });
+  });
+  router.post('/start', async (req, res) => {
+    const input = startInput.parse(req.body), userId = req.session.userId!;
+    const roadmap = await db.$transaction(async tx => {
+      await lockRoadmaps(tx, userId);
+      const before = await tx.personalRoadmap.findFirst({ where: { id: input.id, userId } });
+      if (!before) throw missing();
+      if (before.version !== input.version) throw changed();
+      studyDayIds(before, input.day);
+      // Merely opening a roadmap or choosing a day performs no write. Explicit study locks its goal.
+      if (before.startedAt) return before;
+      const updated = await tx.personalRoadmap.updateMany({
+        where: { id: input.id, userId, version: input.version, startedAt: null },
+        data: { startedAt: new Date(), progressVersion: { increment: 1 } },
+      });
+      if (!updated.count) throw changed();
+      return tx.personalRoadmap.findUniqueOrThrow({ where: { id: input.id } });
+    });
+    res.json({ userId, roadmap: toDto(roadmap) });
+  });
+  router.post('/rate', async (req, res) => {
+    const input = rateInput.parse(req.body), userId = req.session.userId!;
+    const roadmap = await db.$transaction(async tx => {
+      await lockRoadmaps(tx, userId);
+      const before = await tx.personalRoadmap.findFirst({ where: { id: input.id, userId } });
+      if (!before) throw missing();
+      if (!before.startedAt) throw new HttpError(409, 'ROADMAP_NOT_STARTED', 'Vui lòng bắt đầu ngày học trước khi đánh giá.');
+      if (before.progressVersion !== input.progressVersion) throw progressChanged();
+      if (!studyDayIds(before, input.day).includes(input.kanjiId)) {
+        throw new HttpError(400, 'INVALID_ROADMAP_KANJI', 'Chữ Kanji không thuộc ngày học này.');
+      }
+      const progress = assessRoadmapKanji(before.kanjiList, before.perDay, before.assessments, before.completedDays, input.day, input.kanjiId, input.memorized);
+      const updated = await tx.personalRoadmap.updateMany({
+        where: { id: input.id, userId, progressVersion: input.progressVersion },
+        data: { assessments: progress.assessments, completedDays: progress.completedDays, progressVersion: { increment: 1 } },
+      });
+      if (!updated.count) throw progressChanged();
+      // The existing Kanji status and roadmap assessment succeed together; stars/SRS are independent.
+      await tx.kanjiProgress.upsert({ where: { userId_kanjiId: { userId, kanjiId: input.kanjiId } },
+        create: { userId, kanjiId: input.kanjiId, memorized: input.memorized },
+        update: { memorized: input.memorized, reviewedAt: new Date() },
+      });
+      return tx.personalRoadmap.findUniqueOrThrow({ where: { id: input.id } });
+    });
+    res.json({ userId, roadmap: toDto(roadmap) });
   });
   return router;
 }

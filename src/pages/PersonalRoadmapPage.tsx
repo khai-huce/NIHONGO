@@ -20,15 +20,25 @@ import { RoughCard, RoughButton } from '../components/RoughCard';
 import { usePersonalRoadmaps, type PersonalRoadmap } from '../hooks/usePersonalRoadmaps';
 import { analyzeRoadmapKanji, MAX_ROADMAP_TEXT, ROADMAP_PER_DAY } from '../../shared/roadmap.mjs';
 import { RoadmapDeleteDialog } from '../components/RoadmapDeleteDialog';
+import { PersonalRoadmapStudy } from '../components/PersonalRoadmapStudy';
+import { useSearchParams } from 'react-router-dom';
+import type { KanjiItem } from '../types';
 
-export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean}> = ({userId, authBusy}) => {
-  const [activeRoadmap, setActiveRoadmap] = useState<'default' | 'my'>('default');
+export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean; onLogin:()=>void; onDetail:(item:KanjiItem)=>void}> = ({userId, authBusy, onLogin, onDetail}) => {
+  const [search, setSearch] = useSearchParams();
+  const selectedId = search.get('roadmap');
+  const activeRoadmap = selectedId || search.get('tab') === 'my' ? 'my' : 'default';
+  const setActiveRoadmap = (tab: 'default' | 'my') => setSearch(tab === 'my' ? {tab: 'my'} : {});
   const [selectedLevel, setSelectedLevel] = useState<'N5' | 'N4' | 'N3' | 'N2' | 'N1'>('N5');
   const [currentDay, setCurrentDay] = useState(2);
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
 
   const studyPlans = usePersonalRoadmaps(userId, authBusy);
   const customRoadmaps = studyPlans.roadmaps;
+  const selectedRoadmap = customRoadmaps.find(item => item.id === selectedId);
+  const requestedDay = Number(search.get('day'));
+  const selectedDay = selectedRoadmap && Number.isInteger(requestedDay) && requestedDay >= 1 && requestedDay <= selectedRoadmap.totalDays ? requestedDay : selectedRoadmap?.currentDay ?? 1;
+  const openStudy = (roadmap: PersonalRoadmap) => setSearch({tab: 'my', roadmap: roadmap.id, day: String(roadmap.currentDay)});
 
   // Create Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -168,7 +178,15 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
       {/* ============================================================ */}
       {/* 1. VIEW: LỘ TRÌNH CỦA TÔI (MY CUSTOM ROADMAP - Images 1 & 2) */}
       {/* ============================================================ */}
-      {activeRoadmap === 'my' ? (
+      {activeRoadmap === 'my' && selectedId ? (
+        selectedRoadmap ? <PersonalRoadmapStudy key={selectedRoadmap.id} roadmap={selectedRoadmap} day={selectedDay} plans={studyPlans}
+          userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={onDetail}
+          onBack={() => setActiveRoadmap('my')} onDay={day => setSearch({tab: 'my', roadmap: selectedId, day: String(day)}, {replace: true})} />
+          : <div className="space-y-4">{status()}
+            {studyPlans.loaded && <p role="status" className="text-xs text-[#78716c]">Không tìm thấy lộ trình trong tài khoản hoặc dữ liệu khách hiện tại.</p>}
+            <button type="button" onClick={() => setActiveRoadmap('my')} className="text-xs font-bold text-[#57534e] underline">Quay lại danh sách</button>
+          </div>
+      ) : activeRoadmap === 'my' ? (
         <div className="space-y-4">
           
           {/* Subheader & Action Button */}
@@ -294,7 +312,8 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
                     </span>
 
                     <RoughButton
-                      onClick={() => alert('Chức năng học theo ngày của lộ trình sẽ được nối ở bước tiếp theo.')}
+                      onClick={() => openStudy(r)}
+                      disabled={studyPlans.busy}
                       fill="#ea580c"
                       stroke="#9a3412"
                       borderRadius={6}

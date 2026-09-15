@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../utils/api';
-import { analyzeRoadmapKanji, MAX_ROADMAPS, MAX_ROADMAP_TEXT, ROADMAP_PER_DAY } from '../../shared/roadmap.mjs';
+import { analyzeRoadmapKanji, MAX_ROADMAPS, MAX_ROADMAP_TEXT, ROADMAP_KANJI, ROADMAP_PER_DAY, roadmapDayKanji } from '../../shared/roadmap.mjs';
+import { assessRoadmapKanji, roadmapProgress } from '../../shared/roadmap-study.mjs';
 
 export type PersonalRoadmap = {
   id: string;
@@ -10,6 +11,9 @@ export type PersonalRoadmap = {
   perDay: number;
   totalDays: number;
   currentDay: number;
+  assessments: Record<string, boolean>;
+  completedDays: number[];
+  progressVersion: number;
   version: number;
   startedAt: string | null;
   createdAt: string;
@@ -27,6 +31,7 @@ type DeviceEntry = Record<string, unknown>;
 type DeviceStore = { serialized: string | null; entries: DeviceEntry[]; roadmaps: PersonalRoadmap[] };
 type MutationResult = { roadmaps: PersonalRoadmap[]; roadmap?: PersonalRoadmap; removed?: boolean };
 const DEVICE_KEY = 'nhai_kanji_custom_roadmaps';
+const kanjiIds = new Map(ROADMAP_KANJI.map(([id, character]) => [character, id]));
 
 function fail(code: string, message: string): never { throw new ApiError(0, code, message); }
 function parseRoadmap(value: unknown, legacy: boolean): PersonalRoadmap {
@@ -34,6 +39,10 @@ function parseRoadmap(value: unknown, legacy: boolean): PersonalRoadmap {
   const item = value as Record<string, unknown>;
   const version = legacy && item.version === undefined ? 0 : item.version;
   const startedAt = legacy && item.startedAt === undefined ? null : item.startedAt;
+  const legacyProgress = legacy && item.assessments === undefined && item.completedDays === undefined && item.progressVersion === undefined;
+  const assessments = legacyProgress ? {} : item.assessments;
+  const completedDays = legacyProgress ? [] : item.completedDays;
+  const progressVersion = legacyProgress ? 0 : item.progressVersion;
   if (typeof item.id !== 'string' || !item.id || typeof item.name !== 'string' || !item.name.trim() ||
     typeof item.rawKanji !== 'string' || !Array.isArray(item.kanjiList) || !item.kanjiList.length ||
     item.kanjiList.some(kanji => typeof kanji !== 'string' || [...kanji].length !== 1) ||
@@ -44,8 +53,26 @@ function parseRoadmap(value: unknown, legacy: boolean): PersonalRoadmap {
     item.currentDay > item.totalDays + 1 || typeof version !== 'number' || !Number.isSafeInteger(version) || version < 0 ||
     (startedAt !== null && (typeof startedAt !== 'string' || !Number.isFinite(Date.parse(startedAt)))) ||
     typeof item.createdAt !== 'string' || !item.createdAt) throw new Error('Lộ trình không hợp lệ.');
+  const kanjiList = item.kanjiList as string[], perDay = item.perDay, totalDays = item.totalDays;
+  const memberIds = new Set(kanjiList.map(character => kanjiIds.get(character)));
+  if (!assessments || typeof assessments !== 'object' || Array.isArray(assessments) ||
+    Object.entries(assessments).some(([id, value]) => !memberIds.has(id) || typeof value !== 'boolean') ||
+    !Array.isArray(completedDays) || completedDays.some(day => !Number.isSafeInteger(day) || day < 1 || day > totalDays) ||
+    new Set(completedDays).size !== completedDays.length ||
+    typeof progressVersion !== 'number' || !Number.isSafeInteger(progressVersion) || progressVersion < 0 ||
+    (startedAt === null && (Object.keys(assessments).length > 0 || completedDays.length > 0))) {
+    throw new Error('Tiến độ lộ trình không hợp lệ.');
+  }
+  const progress = roadmapProgress(kanjiList, perDay, assessments as Record<string, boolean>, completedDays as number[]);
+  const assessedDays = Array.from({ length: totalDays }, (_, index) => index + 1).filter(day =>
+    roadmapDayKanji(kanjiList, perDay, day).every(character => {
+      const id = kanjiIds.get(character);
+      return id !== undefined && Object.prototype.hasOwnProperty.call(assessments, id);
+    }));
+  if (assessedDays.length !== completedDays.length || assessedDays.some(day => !completedDays.includes(day)) ||
+    (!legacyProgress && item.currentDay !== progress.currentDay)) throw new Error('Tiến độ lộ trình không hợp lệ.');
   return { id: item.id, name: item.name, rawKanji: item.rawKanji, kanjiList: item.kanjiList as string[],
-    perDay: item.perDay, totalDays: item.totalDays, currentDay: item.currentDay, version,
+    perDay: item.perDay, totalDays: item.totalDays, ...progress, progressVersion, version,
     startedAt, createdAt: item.createdAt };
 }
 function parseList(value: unknown, legacy: boolean) {
@@ -85,6 +112,29 @@ function latestRoadmap(store: DeviceStore, expected: PersonalRoadmap) {
     fail('ROADMAP_CHANGED', 'Lộ trình đã thay đổi hoặc bị xóa ở tab khác. Vui lòng tải lại và xem bản mới trước khi lưu.');
   }
   return latest;
+}
+function validateStudyDay(roadmap: PersonalRoadmap, day: number) {
+  const unsupported = roadmap.kanjiList.filter(character => !kanjiIds.has(character));
+  if (unsupported.length) fail('UNSUPPORTED_KANJI', `Chưa có dữ liệu để học các chữ: ${unsupported.join(' ')}. Danh sách gốc vẫn được giữ.`);
+  try { return roadmapDayKanji(roadmap.kanjiList, roadmap.perDay, day); }
+  catch { return fail('VALIDATION_ERROR', 'Ngày học không tồn tại trong lộ trình.'); }
+}
+function latestStudyRoadmap(store: DeviceStore, expected: PersonalRoadmap, operation: 'start' | 'rate') {
+  const latest = store.roadmaps.find(item => item.id === expected.id);
+  if (!latest || latest.perDay !== expected.perDay || JSON.stringify(latest.kanjiList) !== JSON.stringify(expected.kanjiList) ||
+    (operation === 'start' && latest.version !== expected.version)) {
+    return fail('ROADMAP_CHANGED', 'Lộ trình đã thay đổi hoặc bị xóa ở tab khác. Vui lòng tải lại trước khi học.');
+  }
+  if (operation === 'rate' && (latest.progressVersion !== expected.progressVersion ||
+    JSON.stringify(latest.assessments) !== JSON.stringify(expected.assessments) ||
+    JSON.stringify(latest.completedDays) !== JSON.stringify(expected.completedDays) || latest.startedAt !== expected.startedAt)) {
+    return fail('ROADMAP_PROGRESS_CHANGED', 'Tiến độ đã thay đổi ở tab khác. Vui lòng tải lại trước khi đánh giá tiếp.');
+  }
+  return latest;
+}
+function saveDeviceRoadmap(store: DeviceStore, roadmap: PersonalRoadmap): MutationResult {
+  writeDeviceRoadmaps(store, store.entries.map(item => item.id === roadmap.id ? { ...item, ...roadmap } : item));
+  return { roadmap, roadmaps: store.roadmaps.map(item => item.id === roadmap.id ? roadmap : item) };
 }
 function emptyState(owner: string | null): State {
   return { owner, roadmaps: [], loaded: false, loading: false, saving: false, error: '', errorCode: '' };
@@ -201,7 +251,8 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
       }
       if (store.roadmaps.length >= MAX_ROADMAPS) fail('ROADMAP_LIMIT', 'Bạn có thể lưu tối đa 100 lộ trình.');
       const roadmap: PersonalRoadmap = { id, name: name.trim(), rawKanji, kanjiList, perDay,
-        totalDays: Math.ceil(kanjiList.length / perDay), currentDay: 1, version: 1, startedAt: null, createdAt: new Date().toISOString() };
+        totalDays: Math.ceil(kanjiList.length / perDay), currentDay: 1, assessments: {}, completedDays: [], progressVersion: 0,
+        version: 1, startedAt: null, createdAt: new Date().toISOString() };
       writeDeviceRoadmaps(store, [roadmap, ...store.entries]);
       return { roadmap, roadmaps: [roadmap, ...store.roadmaps] };
     });
@@ -212,13 +263,38 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
     const result = await change('/roadmaps/update', { id: roadmap.id, version: roadmap.version, ...details }, store => {
       validateDetails(details.name, details.perDay);
       const before = latestRoadmap(store, roadmap);
-      if ((before.startedAt || before.currentDay > 1) && before.perDay !== details.perDay) {
+      if (before.startedAt && before.perDay !== details.perDay) {
         fail('ROADMAP_STARTED', 'Lộ trình đã có tiến độ nên không thể đổi số chữ mỗi ngày.');
       }
       const saved = { ...before, name: details.name.trim(), perDay: details.perDay,
         totalDays: Math.ceil(before.kanjiList.length / details.perDay), version: before.version + 1 };
-      writeDeviceRoadmaps(store, store.entries.map(item => item.id === roadmap.id ? { ...item, ...saved } : item));
-      return { roadmap: saved, roadmaps: store.roadmaps.map(item => item.id === roadmap.id ? saved : item) };
+      return saveDeviceRoadmap(store, saved);
+    });
+    return result?.roadmap ?? null;
+  }, [change]);
+
+  const start = useCallback(async (roadmap: PersonalRoadmap, day: number): Promise<PersonalRoadmap | null> => {
+    const result = await change('/roadmaps/start', { id: roadmap.id, version: roadmap.version, day }, store => {
+      const before = latestStudyRoadmap(store, roadmap, 'start');
+      validateStudyDay(before, day);
+      if (before.startedAt) return { roadmap: before, roadmaps: store.roadmaps };
+      const saved = { ...before, startedAt: new Date().toISOString(),
+        progressVersion: before.progressVersion + 1 };
+      return saveDeviceRoadmap(store, saved);
+    });
+    return result?.roadmap ?? null;
+  }, [change]);
+
+  const rate = useCallback(async (roadmap: PersonalRoadmap, day: number, kanjiId: string, memorized: boolean): Promise<PersonalRoadmap | null> => {
+    const result = await change('/roadmaps/rate', { id: roadmap.id, progressVersion: roadmap.progressVersion, day, kanjiId, memorized }, store => {
+      const before = latestStudyRoadmap(store, roadmap, 'rate');
+      const dayKanji = validateStudyDay(before, day);
+      if (!before.startedAt) fail('ROADMAP_NOT_STARTED', 'Hãy bấm Học ngay trước khi đánh giá chữ trong lộ trình.');
+      if (typeof memorized !== 'boolean' || !dayKanji.some(character => kanjiIds.get(character) === kanjiId)) {
+        fail('VALIDATION_ERROR', 'Chữ được đánh giá không thuộc ngày học này.');
+      }
+      const progress = assessRoadmapKanji(before.kanjiList, before.perDay, before.assessments, before.completedDays, day, kanjiId, memorized);
+      return saveDeviceRoadmap(store, { ...before, ...progress, progressVersion: before.progressVersion + 1 });
     });
     return result?.roadmap ?? null;
   }, [change]);
@@ -236,5 +312,5 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
   return { roadmaps: sameOwner ? state.roadmaps : [], loaded: sameOwner && state.loaded,
     loading: sameOwner && state.loading, saving: sameOwner && state.saving,
     busy: authBusy || !sameOwner || !state.loaded || state.loading || state.saving,
-    error: sameOwner ? state.error : '', errorCode: sameOwner ? state.errorCode : '', reload, create, update, remove };
+    error: sameOwner ? state.error : '', errorCode: sameOwner ? state.errorCode : '', reload, create, update, remove, start, rate };
 }
