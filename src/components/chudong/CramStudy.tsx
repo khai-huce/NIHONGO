@@ -321,7 +321,7 @@ export const CramStudy: React.FC<CramStudyProps> = ({
             
             {/* Word & Meaning */}
             <div className="space-y-1">
-              <h2 className="text-4xl md:text-5xl font-black text-white tracking-wide font-sans">
+              <h2 className="text-4xl md:text-5xl font-black text-white tracking-wide font-kanji">
                 {currentWord?.word}
               </h2>
               <p className="text-xs md:text-sm text-slate-300 font-medium pt-1">
@@ -347,7 +347,7 @@ export const CramStudy: React.FC<CramStudyProps> = ({
                   return (
                     <span 
                       key={idx} 
-                      className={`inline-block w-5 md:w-6 border-b-2 text-center pb-0.5 transition-all ${
+                      className={`${cramMode === 'reading' ? 'font-kanji' : ''} inline-block w-5 md:w-6 border-b-2 text-center pb-0.5 transition-all ${
                         isRevealed 
                           ? 'border-amber-400 text-amber-300 font-bold' 
                           : 'border-slate-500 text-transparent'
@@ -378,7 +378,7 @@ export const CramStudy: React.FC<CramStudyProps> = ({
                     ? 'Gõ romaji (vd: toshokan → としょかん)'
                     : 'Nhập âm Hán Việt...'
                 }
-                className={`w-full px-4 py-3 md:py-3.5 rounded-xl bg-[#182238] border-2 text-center text-sm md:text-base text-white placeholder-slate-500 outline-none transition-all ${
+                className={`${cramMode === 'reading' ? 'font-kanji' : ''} w-full px-4 py-3 md:py-3.5 rounded-xl bg-[#182238] border-2 text-center text-sm md:text-base text-white placeholder-slate-500 outline-none transition-all ${
                   isChecked 
                     ? isCorrect
                       ? 'border-emerald-500 bg-emerald-950/40 text-emerald-200'
@@ -432,7 +432,7 @@ export const CramStudy: React.FC<CramStudyProps> = ({
             {isChecked && !isCorrect && (
               <div className="pt-2 text-xs text-rose-300 font-medium animate-in fade-in duration-150">
                 <span>Đáp án đúng: </span>
-                <span className="font-bold text-amber-300">{targetAnswer}</span>
+                <span className={`font-bold text-amber-300 ${cramMode === 'reading' ? 'font-kanji' : ''}`}>{targetAnswer}</span>
                 <button
                   onClick={(event) => { if (event.detail <= 1) handleNext(); }}
                   disabled={blocked}

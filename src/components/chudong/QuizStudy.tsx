@@ -14,7 +14,7 @@ import { useVocabStudy } from '../../hooks/useVocabStudy';
 import { getQuizOptions, type StudyMode } from '../../../shared/vocab-study.mjs';
 import { StudyStatus } from './StudyStatus';
 import { StudyModeDialog } from './StudyModeDialog';
-import { speakJapanese } from '../../utils/speech';
+import { speakJapanese, cancelJapaneseSpeech } from '../../utils/speech';
 import { DartboardCrowMascot } from './StudyMascots';
 import { playCorrectSound, playWrongSound } from './studyHelpers';
 
@@ -73,7 +73,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
 
   useEffect(() => () => {
     cancelAutoNext();
-    window.speechSynthesis?.cancel();
+    cancelJapaneseSpeech();
   }, [cancelAutoNext]);
 
   const handlePlayAudio = useCallback(() => {
@@ -337,7 +337,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
 
               {questionMode === 'kanji' && (
                 <div className="space-y-1">
-                  <h2 className="text-3xl md:text-4xl font-black text-white tracking-wide">
+                  <h2 className="text-3xl md:text-4xl font-black text-white tracking-wide font-kanji">
                     {currentWord?.reading}
                   </h2>
                   <p className="text-xs md:text-sm text-slate-300 font-medium">
@@ -348,7 +348,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
 
               {questionMode === 'reading' && (
                 <div className="space-y-1">
-                  <h2 className="text-3xl md:text-4xl font-black text-white tracking-wide">
+                  <h2 className="text-3xl md:text-4xl font-black text-white tracking-wide font-kanji">
                     {currentWord?.word}
                   </h2>
                   <p className="text-xs md:text-sm text-slate-400">
@@ -390,7 +390,7 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
                     </span>
 
                     {/* Option Text */}
-                    <span className="text-sm md:text-base font-bold flex-1">
+                    <span className="text-sm md:text-base font-bold flex-1 font-kanji">
                       {opt.text}
                     </span>
 

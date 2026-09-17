@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Volume2, 
   RotateCcw, 
@@ -9,288 +9,61 @@ import {
 } from 'lucide-react';
 import { speakJapanese } from '../utils/speech';
 import { RoughCard, RoughButton } from '../components/RoughCard';
+import { useKanaQuiz } from '../hooks/useKanaQuiz';
+import { KANA_LIST, KANA_COUNT, SEION_ROWS as seionRows, DAKUON_ROWS as dakuonRows, YOON_ROWS as yoonRows, type Kana as KanaTileData } from '../../shared/kana-quiz.mjs';
 
-interface KanaTileData {
-  hira: string;
-  kata: string;
-  romaji: string;
-}
+interface AlphabetPageProps { userId: string | null; authBusy: boolean; }
+const kanaById = new Map(KANA_LIST.map(kana => [kana.id, kana]));
 
-export const AlphabetPage: React.FC = () => {
+export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) => {
   const [activeTab, setActiveTab] = useState<'hiragana' | 'katakana'>('hiragana');
   const [selectedKana, setSelectedKana] = useState<KanaTileData | null>(null);
-
-  // 1. Âm trong (Seion) - 5 columns x 11 rows
-  const seionRows: (KanaTileData | null)[][] = [
-    [
-      { hira: 'あ', kata: 'ア', romaji: 'a' },
-      { hira: 'い', kata: 'イ', romaji: 'i' },
-      { hira: 'う', kata: 'ウ', romaji: 'u' },
-      { hira: 'え', kata: 'エ', romaji: 'e' },
-      { hira: 'お', kata: 'オ', romaji: 'o' },
-    ],
-    [
-      { hira: 'か', kata: 'カ', romaji: 'ka' },
-      { hira: 'き', kata: 'キ', romaji: 'ki' },
-      { hira: 'く', kata: 'ク', romaji: 'ku' },
-      { hira: 'け', kata: 'ケ', romaji: 'ke' },
-      { hira: 'こ', kata: 'コ', romaji: 'ko' },
-    ],
-    [
-      { hira: 'さ', kata: 'サ', romaji: 'sa' },
-      { hira: 'し', kata: 'シ', romaji: 'shi' },
-      { hira: 'す', kata: 'ス', romaji: 'su' },
-      { hira: 'せ', kata: 'セ', romaji: 'se' },
-      { hira: 'そ', kata: 'ソ', romaji: 'so' },
-    ],
-    [
-      { hira: 'た', kata: 'タ', romaji: 'ta' },
-      { hira: 'ち', kata: 'チ', romaji: 'chi' },
-      { hira: 'つ', kata: 'ツ', romaji: 'tsu' },
-      { hira: 'て', kata: 'テ', romaji: 'te' },
-      { hira: 'と', kata: 'ト', romaji: 'to' },
-    ],
-    [
-      { hira: 'な', kata: 'ナ', romaji: 'na' },
-      { hira: 'に', kata: 'ニ', romaji: 'ni' },
-      { hira: 'ぬ', kata: 'ヌ', romaji: 'nu' },
-      { hira: 'ね', kata: 'ネ', romaji: 'ne' },
-      { hira: 'の', kata: 'ノ', romaji: 'no' },
-    ],
-    [
-      { hira: 'は', kata: 'ハ', romaji: 'ha' },
-      { hira: 'ひ', kata: 'ヒ', romaji: 'hi' },
-      { hira: 'ふ', kata: 'フ', romaji: 'fu' },
-      { hira: 'へ', kata: 'ヘ', romaji: 'he' },
-      { hira: 'ほ', kata: 'ホ', romaji: 'ho' },
-    ],
-    [
-      { hira: 'ま', kata: 'マ', romaji: 'ma' },
-      { hira: 'み', kata: 'ミ', romaji: 'mi' },
-      { hira: 'む', kata: 'ム', romaji: 'mu' },
-      { hira: 'め', kata: 'メ', romaji: 'me' },
-      { hira: 'も', kata: 'モ', romaji: 'mo' },
-    ],
-    [
-      { hira: 'や', kata: 'ヤ', romaji: 'ya' },
-      null,
-      { hira: 'ゆ', kata: 'ユ', romaji: 'yu' },
-      null,
-      { hira: 'よ', kata: 'ヨ', romaji: 'yo' },
-    ],
-    [
-      { hira: 'ら', kata: 'ラ', romaji: 'ra' },
-      { hira: 'り', kata: 'リ', romaji: 'ri' },
-      { hira: 'る', kata: 'ル', romaji: 'ru' },
-      { hira: 'れ', kata: 'レ', romaji: 're' },
-      { hira: 'ろ', kata: 'ロ', romaji: 'ro' },
-    ],
-    [
-      { hira: 'わ', kata: 'ワ', romaji: 'wa' },
-      null,
-      null,
-      null,
-      { hira: 'を', kata: 'ヲ', romaji: 'wo' },
-    ],
-    [
-      { hira: 'ん', kata: 'ン', romaji: 'n' },
-      null,
-      null,
-      null,
-      null
-    ]
-  ];
-
-  // 2. Âm đục & Bán đục (Dakuon · Handakuon) - 5 columns x 5 rows
-  const dakuonRows: (KanaTileData | null)[][] = [
-    [
-      { hira: 'が', kata: 'ガ', romaji: 'ga' },
-      { hira: 'ぎ', kata: 'ギ', romaji: 'gi' },
-      { hira: 'ぐ', kata: 'グ', romaji: 'gu' },
-      { hira: 'げ', kata: 'ゲ', romaji: 'ge' },
-      { hira: 'ご', kata: 'ゴ', romaji: 'go' },
-    ],
-    [
-      { hira: 'ざ', kata: 'ザ', romaji: 'za' },
-      { hira: 'じ', kata: 'ジ', romaji: 'ji' },
-      { hira: 'ず', kata: 'ズ', romaji: 'zu' },
-      { hira: 'ぜ', kata: 'ゼ', romaji: 'ze' },
-      { hira: 'ぞ', kata: 'ゾ', romaji: 'zo' },
-    ],
-    [
-      { hira: 'だ', kata: 'ダ', romaji: 'da' },
-      { hira: 'ぢ', kata: 'ヂ', romaji: 'ji' },
-      { hira: 'づ', kata: 'ヅ', romaji: 'zu' },
-      { hira: 'で', kata: 'デ', romaji: 'de' },
-      { hira: 'ど', kata: 'ド', romaji: 'do' },
-    ],
-    [
-      { hira: 'ば', kata: 'バ', romaji: 'ba' },
-      { hira: 'び', kata: 'ビ', romaji: 'bi' },
-      { hira: 'ぶ', kata: 'ブ', romaji: 'bu' },
-      { hira: 'べ', kata: 'ベ', romaji: 'be' },
-      { hira: 'ぼ', kata: 'ボ', romaji: 'bo' },
-    ],
-    [
-      { hira: 'ぱ', kata: 'パ', romaji: 'pa' },
-      { hira: 'ぴ', kata: 'ピ', romaji: 'pi' },
-      { hira: 'ぷ', kata: 'プ', romaji: 'pu' },
-      { hira: 'ぺ', kata: 'ペ', romaji: 'pe' },
-      { hira: 'ぽ', kata: 'ポ', romaji: 'po' },
-    ]
-  ];
-
-  // 3. Âm ghép (Yoon) - 9 columns x 4 rows
-  const yoonRows: (KanaTileData | null)[][] = [
-    [
-      { hira: 'きゃ', kata: 'キャ', romaji: 'kya' },
-      { hira: 'きゅ', kata: 'キュ', romaji: 'kyu' },
-      { hira: 'きょ', kata: 'キョ', romaji: 'kyo' },
-      { hira: 'しゃ', kata: 'シャ', romaji: 'sha' },
-      { hira: 'しゅ', kata: 'シュ', romaji: 'shu' },
-      { hira: 'しょ', kata: 'ショ', romaji: 'sho' },
-      { hira: 'ちゃ', kata: 'チャ', romaji: 'cha' },
-      { hira: 'ちゅ', kata: 'チュ', romaji: 'chu' },
-      { hira: 'ちょ', kata: 'チョ', romaji: 'cho' },
-    ],
-    [
-      { hira: 'にゃ', kata: 'ニャ', romaji: 'nya' },
-      { hira: 'にゅ', kata: 'ニュ', romaji: 'nyu' },
-      { hira: 'にょ', kata: 'ニョ', romaji: 'nyo' },
-      { hira: 'ひゃ', kata: 'ヒャ', romaji: 'hya' },
-      { hira: 'ひゅ', kata: 'ヒュ', romaji: 'hyu' },
-      { hira: 'ひょ', kata: 'ヒョ', romaji: 'hyo' },
-      { hira: 'みゃ', kata: 'ミャ', romaji: 'mya' },
-      { hira: 'みゅ', kata: 'ミュ', romaji: 'myu' },
-      { hira: 'みょ', kata: 'ミョ', romaji: 'myo' },
-    ],
-    [
-      { hira: 'りゃ', kata: 'リャ', romaji: 'rya' },
-      { hira: 'りゅ', kata: 'リュ', romaji: 'ryu' },
-      { hira: 'りょ', kata: 'リョ', romaji: 'ryo' },
-      { hira: 'ぎゃ', kata: 'ギャ', romaji: 'gya' },
-      { hira: 'ぎゅ', kata: 'ギュ', romaji: 'gyu' },
-      { hira: 'ぎょ', kata: 'ギョ', romaji: 'gyo' },
-      { hira: 'じゃ', kata: 'ジャ', romaji: 'ja' },
-      { hira: 'じゅ', kata: 'ジュ', romaji: 'ju' },
-      { hira: 'じょ', kata: 'ジョ', romaji: 'jo' },
-    ],
-    [
-      { hira: 'びゃ', kata: 'ビャ', romaji: 'bya' },
-      { hira: 'びゅ', kata: 'ビュ', romaji: 'byu' },
-      { hira: 'びょ', kata: 'ビョ', romaji: 'byo' },
-      { hira: 'ぴゃ', kata: 'ピャ', romaji: 'pya' },
-      { hira: 'ぴゅ', kata: 'ピュ', romaji: 'pyu' },
-      { hira: 'ぴょ', kata: 'ピョ', romaji: 'pyo' },
-      null,
-      null,
-      null
-    ]
-  ];
-
-  // All flat kana items for the quiz
-  const allKanaList: KanaTileData[] = [
-    ...seionRows.flat().filter((x): x is KanaTileData => x !== null),
-    ...dakuonRows.flat().filter((x): x is KanaTileData => x !== null),
-    ...yoonRows.flat().filter((x): x is KanaTileData => x !== null),
-  ];
-
-  // ============================================================
-  // Audio Quiz Game State
-  // ============================================================
-  const [isQuizStarted, setIsQuizStarted] = useState(false);
-  const [selectedQuizMode, setSelectedQuizMode] = useState<'hiragana' | 'katakana' | 'both'>('hiragana');
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [targetKana, setTargetKana] = useState<KanaTileData>(allKanaList[0]);
-  const [quizOptions, setQuizOptions] = useState<KanaTileData[]>([]);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<KanaTileData | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-
-  const generateQuestion = (idx: number, autoSpeak: boolean = false) => {
-    const target = allKanaList[idx % allKanaList.length];
-    setTargetKana(target);
-
-    // Pick 3 random distractor items
-    const distractors: KanaTileData[] = [];
-    const pool = allKanaList.filter(item => item.romaji !== target.romaji);
-    while (distractors.length < 3) {
-      const rand = pool[Math.floor(Math.random() * pool.length)];
-      if (!distractors.some(d => d.romaji === rand.romaji)) {
-        distractors.push(rand);
-      }
-    }
-
-    const options = [target, ...distractors].sort(() => Math.random() - 0.5);
-    setQuizOptions(options);
-    setSelectedAnswer(null);
-    setIsAnswered(false);
-
-    // Only speak if explicitly requested (e.g. user clicked Start or Next question)
-    if (autoSpeak) {
-      const activeKanaType = selectedQuizMode === 'both' 
-        ? (Math.random() > 0.5 ? 'hiragana' : 'katakana')
-        : selectedQuizMode;
-      const char = activeKanaType === 'hiragana' ? target.hira : target.kata;
-      speakJapanese(char);
-    }
-  };
-
-  const handleStartQuiz = () => {
-    setIsQuizStarted(true);
-    setCurrentQuestionIdx(0);
-    setCorrectCount(0);
-    setWrongCount(0);
-    generateQuestion(0, true);
-  };
+  const quiz = useKanaQuiz(userId, authBusy);
+  const { mode: selectedQuizMode, index: currentQuestionIdx, started: isQuizStarted } = quiz;
+  const targetKana = kanaById.get(quiz.question?.kanaId ?? '') ?? KANA_LIST[0];
+  const quizOptions = (quiz.question?.options ?? []).map(id => kanaById.get(id)!);
+  const selectedAnswer = kanaById.get(quiz.selectedAnswer?.answerId ?? '');
+  const isAnswered = !!quiz.selectedAnswer;
+  const correctCount = quiz.score, wrongCount = quiz.answered - quiz.score;
+  const blocked = quiz.busy || !!quiz.error;
+  const speechCancel = useRef<() => void>(() => {});
 
   const handlePlayQuizAudio = () => {
-    const activeKanaType = selectedQuizMode === 'both' ? activeTab : selectedQuizMode;
-    const char = activeKanaType === 'hiragana' ? targetKana.hira : targetKana.kata;
-    speakJapanese(char);
+    if (!quiz.canAct() || !quiz.question || quiz.result) return;
+    speechCancel.current();
+    const char = quiz.question.script === 'hiragana' ? targetKana.hira : targetKana.kata;
+    speechCancel.current = speakJapanese(char);
   };
-
-  const handleAnswer = (option: KanaTileData) => {
-    if (isAnswered) return;
-    setSelectedAnswer(option);
-    setIsAnswered(true);
-
-    if (option.romaji === targetKana.romaji) {
-      setCorrectCount(c => c + 1);
-    } else {
-      setWrongCount(w => w + 1);
-    }
-  };
-
-  const handleNextQuestion = () => {
-    const nextIdx = currentQuestionIdx + 1;
-    setCurrentQuestionIdx(nextIdx);
-    generateQuestion(nextIdx, true);
-  };
-
-  // Keyboard shortcut support: 1-4 to answer, Enter for next question, R to replay sound
   useEffect(() => {
-    if (!isQuizStarted) return;
+    if (quiz.question) {
+      const kana = kanaById.get(quiz.question.kanaId)!;
+      speechCancel.current = speakJapanese(quiz.question.script === 'hiragana' ? kana.hira : kana.kata);
+    }
+    return () => speechCancel.current();
+  }, [quiz.question, quiz.roundId]);
 
+  const handleAnswer = (option: KanaTileData) => quiz.answer(targetKana.id, option.id);
+  const handleNextQuestion = () => quiz.next(targetKana.id);
+
+  // Ignore held keys, inputs, dialogs and native button activation.
+  useEffect(() => {
+    if (!isQuizStarted || quiz.result || blocked) return;
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], dialog')
+        || document.querySelector('[role="dialog"], dialog[open]')) return;
       if (e.key >= '1' && e.key <= '4') {
-        const idx = parseInt(e.key, 10) - 1;
-        if (quizOptions[idx] && !isAnswered) {
-          handleAnswer(quizOptions[idx]);
-        }
-      } else if (e.key === 'Enter') {
-        if (isAnswered) {
-          handleNextQuestion();
-        }
-      } else if (e.key === 'r' || e.key === 'R') {
-        handlePlayQuizAudio();
+        const option = quizOptions[Number(e.key) - 1];
+        if (option && !isAnswered) { e.preventDefault(); handleAnswer(option); }
+      } else if (e.key === 'Enter' && isAnswered && !target.closest('button')) {
+        e.preventDefault(); handleNextQuestion();
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault(); handlePlayQuizAudio();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isQuizStarted, isAnswered, quizOptions, targetKana, currentQuestionIdx]);
+  }, [quiz.question, quiz.selectedAnswer, quiz.result, quiz.mode, isQuizStarted, blocked]);
 
   const handleTileClick = (item: KanaTileData) => {
     setSelectedKana(item);
@@ -304,7 +77,7 @@ export const AlphabetPage: React.FC = () => {
     }
 
     const char = activeTab === 'hiragana' ? item.hira : item.kata;
-    const isSelected = selectedKana?.romaji === item.romaji;
+    const isSelected = selectedKana?.id === item.id;
 
     return (
       <div
@@ -467,6 +240,15 @@ export const AlphabetPage: React.FC = () => {
       {/* ============================================================ */}
       <RoughCard fill="#ffffff" stroke="#78716c" borderRadius={14} roughness={0.7} className="p-5 md:p-6 space-y-4">
         
+        {(quiz.error || quiz.loading || quiz.saving || authBusy) && <div role={quiz.error ? 'alert' : 'status'} className="text-xs text-[#57534e] py-2">
+          {quiz.error || (quiz.saving ? 'Đang lưu kết quả…' : authBusy ? 'Đang kiểm tra tài khoản…' : 'Đang tải kết quả…')}
+          {quiz.error && <button type="button" disabled={quiz.loading || quiz.saving || authBusy} className="ml-2 underline font-bold text-[#0094ff]"
+            onClick={() => { void (quiz.errorCode === 'RESULT_CONFLICT' ? quiz.load() : quiz.retry()); }}>
+            {quiz.errorCode === 'RESULT_CONFLICT' ? 'Tải lại kết quả' : quiz.completionPending ? 'Thử lưu lại' : 'Tải lại'}
+          </button>}
+        </div>}
+        {!userId && !authBusy && <p className="text-xs text-[#78716c]">Bạn đang luyện thử. Kết quả không lưu vào tài khoản.</p>}
+
         {!isQuizStarted ? (
           /* Initial State matching media_1788112666497.png */
           <div className="space-y-4">
@@ -476,14 +258,15 @@ export const AlphabetPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-[#57534e] leading-relaxed">
-              Mỗi vòng đi hết 104 âm (xáo thứ tự): nghe âm đọc rồi chọn chữ cái đúng. Bấm đáp án là chấm ngay, tiến độ tự lưu — thoát ra vào lại làm tiếp. Mỗi câu chỉ hỏi trong 1 bảng chữ (không trộn Hiragana với Katakana vì hai bảng cùng âm đọc).
+              Mỗi vòng đi hết 104 âm (xáo thứ tự): nghe âm đọc rồi chọn chữ cái đúng. Chỉ lưu kết quả khi hoàn thành đủ 104 câu; rời bài đang dở sẽ làm lại từ đầu. Mỗi câu chỉ hỏi trong 1 bảng chữ (không trộn Hiragana với Katakana vì hai bảng cùng âm đọc).
             </p>
 
             <div className="space-y-2">
               <div className="text-xs font-black text-[#292524]">Bảng chữ</div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setSelectedQuizMode('hiragana')}
+                  disabled={blocked}
+                  onClick={() => quiz.chooseMode('hiragana')}
                   className={`px-4 py-1.5 rounded-lg border border-[#78716c] font-bold text-xs transition-all cursor-pointer ${
                     selectedQuizMode === 'hiragana'
                       ? 'bg-[#0094ff] text-white border-[#0094ff] shadow-xs'
@@ -494,7 +277,8 @@ export const AlphabetPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setSelectedQuizMode('katakana')}
+                  disabled={blocked}
+                  onClick={() => quiz.chooseMode('katakana')}
                   className={`px-4 py-1.5 rounded-lg border border-[#78716c] font-bold text-xs transition-all cursor-pointer ${
                     selectedQuizMode === 'katakana'
                       ? 'bg-[#0094ff] text-white border-[#0094ff] shadow-xs'
@@ -505,7 +289,8 @@ export const AlphabetPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setSelectedQuizMode('both')}
+                  disabled={blocked}
+                  onClick={() => quiz.chooseMode('both')}
                   className={`px-4 py-1.5 rounded-lg border border-[#78716c] font-bold text-xs transition-all cursor-pointer ${
                     selectedQuizMode === 'both'
                       ? 'bg-[#0094ff] text-white border-[#0094ff] shadow-xs'
@@ -519,7 +304,8 @@ export const AlphabetPage: React.FC = () => {
 
             <div className="pt-1">
               <RoughButton
-                onClick={handleStartQuiz}
+                disabled={blocked}
+                onClick={event => { if (event.detail <= 1) quiz.start(); }}
                 fill="#0094ff"
                 stroke="#0369a1"
                 borderRadius={8}
@@ -544,7 +330,7 @@ export const AlphabetPage: React.FC = () => {
                   <span>BÀI TẬP NGHE CHỌN CHỮ</span>
                 </div>
                 <div className="text-xs font-bold text-[#78716c]">
-                  Câu {currentQuestionIdx + 1}/104
+                  Câu {quiz.result ? quiz.result.total : currentQuestionIdx + 1}/{KANA_COUNT}
                 </div>
               </div>
 
@@ -552,7 +338,8 @@ export const AlphabetPage: React.FC = () => {
                 <div className="flex items-center gap-1.5 text-[#57534e]">
                   <span>Bảng: {selectedQuizMode === 'hiragana' ? 'Hiragana' : selectedQuizMode === 'katakana' ? 'Katakana' : 'Cả hai'}</span>
                   <button
-                    onClick={() => setIsQuizStarted(false)}
+                    disabled={blocked}
+                    onClick={() => quiz.chooseBoard()}
                     className="text-[#0094ff] hover:underline flex items-center gap-0.5 cursor-pointer font-bold"
                   >
                     <RotateCcw className="w-3 h-3" />
@@ -565,11 +352,20 @@ export const AlphabetPage: React.FC = () => {
               <div className="w-full bg-[#eae3d5] h-1.5 rounded-full overflow-hidden">
                 <div 
                   className="bg-[#0094ff] h-full rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(100, Math.max(3, ((currentQuestionIdx + 1) / 104) * 100))}%` }}
+                  style={{ width: `${Math.min(100, Math.max(3, ((quiz.result ? quiz.result.total : currentQuestionIdx + 1) / KANA_COUNT) * 100))}%` }}
                 />
               </div>
             </div>
 
+            {quiz.result ? (
+              <div className="space-y-4 py-6 text-center">
+                <p className="text-lg font-black text-[#292524]">Bạn đã hoàn thành bài tập!</p>
+                <p className="text-xs text-[#57534e]">{userId ? 'Kết quả đã lưu vào tài khoản.' : 'Kết quả luyện thử chỉ giữ trong lượt mở này.'}</p>
+                <RoughButton onClick={event => { if (event.detail <= 1) quiz.start(); }} disabled={blocked}
+                  fill="#0094ff" stroke="#0369a1" borderRadius={8} roughness={0.7}
+                  className="text-white px-5 py-2 text-xs font-bold shadow-md cursor-pointer">Làm lại</RoughButton>
+              </div>
+            ) : <>
             {/* Quiz Main 2-Column Split */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr] gap-4 items-start pt-1">
               
@@ -592,6 +388,7 @@ export const AlphabetPage: React.FC = () => {
                 </p>
 
                 <button
+                  disabled={blocked}
                   onClick={handlePlayQuizAudio}
                   className="p-3 bg-white text-[#0094ff] rounded-full shadow-md hover:scale-110 active:scale-95 transition-transform cursor-pointer"
                   title="Bấm để nghe lại (R)"
@@ -613,9 +410,9 @@ export const AlphabetPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {quizOptions.map((opt, idx) => {
-                    const activeType = selectedQuizMode === 'both' ? activeTab : selectedQuizMode;
+                    const activeType = quiz.question!.script;
                     const char = activeType === 'hiragana' ? opt.hira : opt.kata;
-                    const isSelected = selectedAnswer?.romaji === opt.romaji;
+                    const isSelected = selectedAnswer?.id === opt.id;
                     const isCorrect = opt.romaji === targetKana.romaji;
 
                     let cardFill = '#ffffff';
@@ -633,8 +430,16 @@ export const AlphabetPage: React.FC = () => {
 
                     return (
                       <div
-                        key={idx}
-                        onClick={() => handleAnswer(opt)}
+                        key={opt.id}
+                        role="button" tabIndex={blocked || isAnswered ? -1 : 0}
+                        aria-label={`Đáp án ${idx + 1}: ${char}`} aria-disabled={blocked || isAnswered}
+                        onKeyDown={event => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault(); event.stopPropagation();
+                            if (!event.repeat && !blocked) { if (isAnswered) handleNextQuestion(); else handleAnswer(opt); }
+                          }
+                        }}
+                        onClick={event => { if (event.detail <= 1) handleAnswer(opt); }}
                         className={`cursor-pointer ${isAnswered ? 'cursor-default' : ''}`}
                       >
                         <RoughCard
@@ -680,13 +485,14 @@ export const AlphabetPage: React.FC = () => {
                     <div className="flex items-baseline gap-2 font-sketch">
                       <span className="text-xs font-bold text-[#57534e]">Đáp án:</span>
                       <span className="text-2xl font-kanji font-black text-[#292524]">
-                        {selectedQuizMode === 'katakana' ? targetKana.kata : targetKana.hira}
+                        {quiz.question?.script === 'katakana' ? targetKana.kata : targetKana.hira}
                       </span>
                       <span className="text-xs font-bold text-[#78716c]">({targetKana.romaji})</span>
                     </div>
 
                     <RoughButton
-                      onClick={handleNextQuestion}
+                      disabled={blocked}
+                      onClick={event => { if (event.detail <= 1) handleNextQuestion(); }}
                       fill="#0094ff"
                       stroke="#0369a1"
                       borderRadius={8}
@@ -701,13 +507,15 @@ export const AlphabetPage: React.FC = () => {
 
             </div>
 
+            </>}
+
             {/* Bottom Score Footer */}
             <div className="flex items-center gap-4 text-xs font-bold pt-3 border-t border-[#78716c]/20">
               <span className="text-emerald-600 font-black">Đúng {correctCount}</span>
               <span className="text-slate-300">|</span>
               <span className="text-rose-600 font-black">Sai {wrongCount}</span>
               <span className="text-slate-300">|</span>
-              <span className="text-[#78716c]">Đã làm {correctCount + wrongCount}/104</span>
+              <span className="text-[#78716c]">Đã làm {correctCount + wrongCount}/{KANA_COUNT}</span>
             </div>
           </>
         )}

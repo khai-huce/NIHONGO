@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Type, Volume2, Eye } from 'lucide-react';
 import { UserSettings } from '../types';
+import { JAPANESE_FONTS } from '../utils/learning-settings';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
         className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-6"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Cài đặt giao diện & học tập"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -28,6 +32,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             ⚙️ Cài đặt giao diện & học tập
           </h3>
           <button
+            aria-label="Đóng cài đặt"
             onClick={onClose}
             className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white"
           >
@@ -42,14 +47,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             Font chữ tiếng Nhật hiển thị
           </label>
           <div className="grid grid-cols-2 gap-2">
-            {[
-              { id: 'Zen Maru Gothic', name: 'Zen Maru Gothic (Tròn, Đẹp)' },
-              { id: 'UD Digi Kyokasho', name: 'Sách giáo khoa Nhật' },
-              { id: 'Noto Sans JP', name: 'Noto Sans JP (Chuẩn)' },
-              { id: 'sans-serif', name: 'Mặc định hệ thống' }
-            ].map((f) => (
+            {JAPANESE_FONTS.map((f) => (
               <button
                 key={f.id}
+                aria-pressed={settings.fontFamily === f.id}
                 onClick={() => setSettings(prev => ({ ...prev, fontFamily: f.id }))}
                 className={`p-3 rounded-xl text-xs font-semibold border text-left transition-all ${
                   settings.fontFamily === f.id
@@ -77,7 +78,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             ].map((opt) => (
               <button
                 key={opt.id}
-                onClick={() => setSettings(prev => ({ ...prev, showFurigana: opt.id as any }))}
+                aria-pressed={settings.showFurigana === opt.id}
+                onClick={() => setSettings(prev => ({ ...prev, showFurigana: opt.id as UserSettings['showFurigana'] }))}
                 className={`p-2.5 rounded-xl border text-center transition-all ${
                   settings.showFurigana === opt.id
                     ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300'
@@ -99,6 +101,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </label>
           </div>
           <input
+            aria-label="Tốc độ phát âm giọng đọc"
             type="range"
             min="0.6"
             max="1.3"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Play, 
   Pause, 
@@ -25,6 +25,8 @@ import {
   Zap
 } from 'lucide-react';
 import { RoughCard } from '../components/RoughCard';
+import { useLearningSettings } from '../hooks/useLearningSettings';
+import { speakJapanese } from '../utils/speech';
 
 // ---------------------------------------------------------------------------
 // DATA INTERFACES
@@ -300,8 +302,14 @@ export const ShadowingPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [autoPause, setAutoPause] = useState<boolean>(true);
   const [showTranslation, setShowTranslation] = useState<boolean>(true);
-  const [showFurigana, setShowFurigana] = useState<boolean>(true);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
+  const settings = useLearningSettings();
+  const [furiganaOverride, setShowFurigana] = useState<boolean | null>(null);
+  const [speedOverride, setPlaybackSpeed] = useState<number | null>(null);
+  const furiganaMode = furiganaOverride === null ? settings.showFurigana : furiganaOverride ? 'always' : 'never';
+  const showFurigana = furiganaMode !== 'never';
+  const playbackSpeed = speedOverride ?? settings.audioSpeed;
+  const [playbackRevision, setPlaybackRevision] = useState(0);
+  const playingSentenceRef = useRef<ShadowingSentence | null>(null);
   const [isVideoHidden, setIsVideoHidden] = useState<boolean>(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
   const [bookmarkedSentenceIds, setBookmarkedSentenceIds] = useState<number[]>([2]);
@@ -340,27 +348,34 @@ export const ShadowingPage: React.FC = () => {
     setTypingChecked(false);
   }, [currentSentenceIndex, activeVideo]);
 
-  // Speech synthesis for authentic audio
+  // Page-local speed follows the device default until the learner overrides it.
+  // Each playback effect owns its request; changing sentence/video stops it.
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (!currentSentence || playingSentenceRef.current !== currentSentence) {
+      setIsPlaying(false);
+      return;
+    }
+    let active = true;
+    const cancel = speakJapanese(currentSentence.fullJapanese, playbackSpeed, {
+      onEnd: () => { if (active) setIsPlaying(false); },
+      onError: () => { if (active) setIsPlaying(false); },
+    });
+    return () => {
+      active = false;
+      cancel();
+    };
+  }, [isPlaying, currentSentence, playbackSpeed, playbackRevision]);
+
   const speakCurrentSentence = () => {
     if (!currentSentence) return;
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(currentSentence.fullJapanese);
-      utterance.lang = 'ja-JP';
-      utterance.rate = playbackSpeed;
-      utterance.onstart = () => setIsPlaying(true);
-      utterance.onend = () => setIsPlaying(false);
-      utterance.onerror = () => setIsPlaying(false);
-      window.speechSynthesis.speak(utterance);
-    } else {
-      setIsPlaying(true);
-      setTimeout(() => setIsPlaying(false), 2500);
-    }
+    playingSentenceRef.current = currentSentence;
+    setIsPlaying(true);
+    setPlaybackRevision(revision => revision + 1);
   };
 
   const handlePlayPause = () => {
     if (isPlaying) {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       setIsPlaying(false);
     } else {
       speakCurrentSentence();
@@ -394,7 +409,8 @@ export const ShadowingPage: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Avoid hotkeys when typing in textarea or input
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
+      const target = e.target as HTMLElement;
+      if (e.repeat || document.querySelector('[role="dialog"]') || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(target.tagName) || target.isContentEditable) return;
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -415,7 +431,7 @@ export const ShadowingPage: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, currentSentenceIndex]);
+  }, [isPlaying, currentSentenceIndex, currentSentence, activeVideo, playbackSpeed]);
 
   // Puzzle handlers
   const handleSelectPoolToken = (token: string, index: number) => {
@@ -898,7 +914,7 @@ export const ShadowingPage: React.FC = () => {
 
               {/* Furigana toggle */}
               <button
-                onClick={() => setShowFurigana(prev => !prev)}
+                onClick={() => setShowFurigana(!showFurigana)}
                 className={`px-2.5 py-1 rounded-lg border border-[#292524] transition-colors ${
                   showFurigana ? 'bg-blue-50 text-blue-700 border-blue-600' : 'bg-white text-[#57534e]'
                 }`}
@@ -908,10 +924,12 @@ export const ShadowingPage: React.FC = () => {
 
               {/* Speed selector */}
               <select
+                aria-label="Tốc độ phát âm Shadowing"
                 value={playbackSpeed}
                 onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
                 className="px-2 py-1 rounded-lg border border-[#292524] bg-white text-xs font-bold text-[#292524] focus:outline-none cursor-pointer"
               >
+                {![0.75, 0.9, 1, 1.25, 1.5].includes(playbackSpeed) && <option value={playbackSpeed}>{playbackSpeed}x</option>}
                 <option value={0.75}>0.75x</option>
                 <option value={0.9}>0.9x</option>
                 <option value={1}>1x</option>
@@ -930,15 +948,19 @@ export const ShadowingPage: React.FC = () => {
               className="p-4 md:p-6 shadow-sketch flex flex-col justify-center min-h-[160px] text-center"
             >
               {/* Sentence Breakdown with Furigana & Underlines */}
-              <div className="space-y-3">
+              <div className="space-y-3" data-furigana={furiganaMode}>
                 {/* Line 1 tokens */}
                 <div className="flex flex-wrap items-end justify-center gap-x-4 gap-y-3 text-lg md:text-2xl font-bold text-[#292524]">
                   {currentSentence.line1Tokens.map((token, idx) => {
                     const tokenData = currentSentence.tokens.find(t => t.text === token);
                     return (
-                      <div key={idx} className="inline-flex flex-col items-center">
-                        {showFurigana && tokenData?.reading && (
-                          <span className="text-[11px] md:text-xs font-normal text-[#78716c] leading-none mb-0.5 select-none">
+                      <div key={idx} className="inline-flex flex-col items-center font-kanji"
+                        data-furigana-token
+                        tabIndex={furiganaMode === 'hover' && tokenData?.reading ? 0 : undefined}
+                        onPointerDown={event => { if (furiganaMode === 'hover') event.currentTarget.focus(); }}
+                      >
+                        {tokenData?.reading && (
+                          <span data-furigana-reading className="text-[11px] md:text-xs font-normal text-[#78716c] leading-none mb-0.5 select-none">
                             {tokenData.reading}
                           </span>
                         )}
@@ -952,7 +974,7 @@ export const ShadowingPage: React.FC = () => {
 
                 {/* Line 2 tokens (if any, rendered in blue with caret) */}
                 {currentSentence.line2Tokens && (
-                  <div className="flex flex-wrap items-center justify-center gap-2 text-xl md:text-2xl font-bold text-blue-600 mt-1">
+                  <div className="font-kanji flex flex-wrap items-center justify-center gap-2 text-xl md:text-2xl font-bold text-blue-600 mt-1">
                     <span className="text-blue-500 font-mono text-base">&lt;</span>
                     {currentSentence.line2Tokens.join(' ')}
                   </div>
@@ -985,7 +1007,7 @@ export const ShadowingPage: React.FC = () => {
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-[#78716c]">
                   <button 
-                    onClick={() => setShowFurigana(prev => !prev)}
+                    onClick={() => setShowFurigana(!showFurigana)}
                     className="hover:text-blue-600 flex items-center gap-1 font-bold"
                   >
                     👁 Furigana
@@ -1047,7 +1069,7 @@ export const ShadowingPage: React.FC = () => {
 
                         {/* Japanese Tokens: Chips */}
                         <div className="space-y-1.5">
-                          <div className="flex flex-wrap gap-1.5 text-xs md:text-sm font-bold text-[#292524]">
+                          <div className="font-kanji flex flex-wrap gap-1.5 text-xs md:text-sm font-bold text-[#292524]">
                             {sent.line1Tokens.map((tok, tIdx) => (
                               <span
                                 key={tIdx}
@@ -1059,7 +1081,7 @@ export const ShadowingPage: React.FC = () => {
                           </div>
 
                           {sent.line2Tokens && (
-                            <div className="flex flex-wrap gap-1.5 text-xs md:text-sm font-bold text-[#292524]">
+                            <div className="font-kanji flex flex-wrap gap-1.5 text-xs md:text-sm font-bold text-[#292524]">
                               {sent.line2Tokens.map((tok, tIdx) => (
                                 <span
                                   key={tIdx}
@@ -1191,7 +1213,7 @@ export const ShadowingPage: React.FC = () => {
                             key={slotIdx}
                             type="button"
                             onClick={() => handleReturnSelectedToken(token, slotIdx)}
-                            className={`px-3 py-1.5 rounded-lg font-bold text-xs md:text-sm border-2 transition-transform active:scale-95 ${
+                            className={`font-kanji px-3 py-1.5 rounded-lg font-bold text-xs md:text-sm border-2 transition-transform active:scale-95 ${
                               isCorrect
                                 ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
                                 : isWrong
@@ -1221,7 +1243,7 @@ export const ShadowingPage: React.FC = () => {
                         key={pIdx}
                         type="button"
                         onClick={() => handleSelectPoolToken(tok, pIdx)}
-                        className="px-3 py-1.5 rounded-lg border border-[#292524] bg-white hover:bg-[#f6f2e9] text-[#292524] font-bold text-xs md:text-sm shadow-sketch active:scale-95 transition-all"
+                        className="font-kanji px-3 py-1.5 rounded-lg border border-[#292524] bg-white hover:bg-[#f6f2e9] text-[#292524] font-bold text-xs md:text-sm shadow-sketch active:scale-95 transition-all"
                       >
                         {tok}
                       </button>
@@ -1237,7 +1259,7 @@ export const ShadowingPage: React.FC = () => {
                       className="p-2.5 text-xs text-[#292524] shadow-xs"
                     >
                       <span className="font-bold">Đáp án đúng:</span>{' '}
-                      <span className="font-semibold">{currentSentence.puzzleTokens.join(' ')}</span>
+                      <span className="font-semibold font-kanji">{currentSentence.puzzleTokens.join(' ')}</span>
                     </RoughCard>
                   )}
 
@@ -1280,7 +1302,7 @@ export const ShadowingPage: React.FC = () => {
                     value={typedAnswer}
                     onChange={(e) => setTypedAnswer(e.target.value)}
                     placeholder="Gõ câu trả lời của bạn tại đây..."
-                    className="w-full p-3 rounded-xl border-2 border-[#292524] bg-white text-sm text-[#292524] placeholder-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sketch resize-none"
+                    className="font-kanji w-full p-3 rounded-xl border-2 border-[#292524] bg-white text-sm text-[#292524] placeholder-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sketch resize-none"
                   />
 
                   {/* Word Hint Chips with Eye Icon (matches media_1788799701901.png) */}
@@ -1297,7 +1319,7 @@ export const ShadowingPage: React.FC = () => {
                             title="Bấm để hiện gợi ý"
                           >
                             <Eye className="w-3 h-3 text-[#78716c]" />
-                            {isRevealed ? tok.text : '.'.repeat(Math.max(3, tok.text.length * 2))}
+                            {isRevealed ? <span className="font-kanji">{tok.text}</span> : '.'.repeat(Math.max(3, tok.text.length * 2))}
                           </button>
                         );
                       })}
@@ -1317,7 +1339,7 @@ export const ShadowingPage: React.FC = () => {
                     >
                       <div>
                         <span className="font-bold">Đáp án chuẩn:</span>{' '}
-                        <span className="font-semibold text-emerald-700">{currentSentence.fullJapanese}</span>
+                        <span className="font-semibold text-emerald-700 font-kanji">{currentSentence.fullJapanese}</span>
                       </div>
                       <div className="text-[#78716c] italic">
                         {currentSentence.translationVi}

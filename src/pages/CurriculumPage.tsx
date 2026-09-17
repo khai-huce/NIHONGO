@@ -492,7 +492,7 @@ export const CurriculumPage: React.FC = () => {
                               {item.word}
                               <ReviewStar source={{category:'vocab',sourceId:'word:'+item.word+':'+item.reading,front:item.word,back:item.meaning,reading:item.reading}} />
                             </span>
-                            <span className="text-xs font-bold text-[#0094ff]">
+                            <span className="text-xs font-bold text-[#0094ff] font-kanji">
                               {item.reading}
                             </span>
                             <span className="text-[11px] font-bold text-[#78716c] bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -505,7 +505,7 @@ export const CurriculumPage: React.FC = () => {
                           </div>
 
                           <div className="text-[11px] text-[#78716c] italic">
-                            VD: {item.exampleJp} — {item.exampleVi}
+                            VD: <span className="font-kanji">{item.exampleJp}</span> — {item.exampleVi}
                           </div>
                         </div>
 

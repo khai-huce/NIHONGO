@@ -23,7 +23,8 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { SettingsModal } from './components/SettingsModal';
 import { MascotAssistant } from './components/MascotAssistant';
 import { AuthModal } from './components/AuthModal';
-import { UserSettings } from './types';
+import { LearningSettingsContext, useDeviceSettings } from './hooks/useLearningSettings';
+import { cancelJapaneseSpeech, subscribeSpeechErrors } from './utils/speech';
 import { useAuth } from './hooks/useAuth';
 import { ReviewProvider } from './hooks/useReview';
 
@@ -38,35 +39,16 @@ export const App: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
-  const [settings, setSettings] = useState<UserSettings>(() => {
-    try {
-      const saved = localStorage.getItem('nhai_kanji_settings');
-      return saved ? JSON.parse(saved) : {
-        darkMode: false,
-        fontFamily: 'Itim',
-        showFurigana: 'always',
-        audioSpeed: 0.9
-      };
-    } catch {
-      return {
-        darkMode: false,
-        fontFamily: 'Itim',
-        showFurigana: 'always',
-        audioSpeed: 0.9
-      };
-    }
-  });
-
+  const { settings, setSettings, storageError } = useDeviceSettings();
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  useEffect(() => subscribeSpeechErrors(setSpeechError), []);
   useEffect(() => {
-    localStorage.setItem('nhai_kanji_settings', JSON.stringify(settings));
-    if (settings.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [settings]);
+    setSpeechError(null);
+    return () => cancelJapaneseSpeech();
+  }, [location.pathname, auth.currentUser?.id]);
 
   return (
+    <LearningSettingsContext.Provider value={settings}>
     <ReviewProvider key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}>
     <div className="h-screen bg-sketch-paper text-[#292524] dark:text-[#f5f5f4] font-sketch transition-colors duration-200 flex flex-col overflow-hidden">
       
@@ -84,6 +66,11 @@ export const App: React.FC = () => {
       {auth.error && <div role="alert" className="px-4 py-2 bg-amber-50 text-amber-900 text-sm border-b border-amber-200">
         {auth.error}{' '}
         <button type="button" onClick={() => { void auth.refresh(); }} disabled={auth.checking || auth.loggingOut} className="underline font-bold">Tải lại tài khoản</button>
+      </div>}
+
+      {(speechError || storageError) && <div role="alert" className="fixed bottom-4 left-4 right-4 mx-auto max-w-xl z-[250] rounded-xl border border-amber-300 bg-amber-50 text-amber-950 px-4 py-3 text-sm shadow-lg flex items-center gap-3">
+        <span className="flex-1">{speechError || storageError}</span>
+        {speechError && <button type="button" onClick={() => setSpeechError(null)} className="underline font-bold">Đóng</button>}
       </div>}
 
       {/* 2. Content Row: Left Sidebar + Main Content */}
@@ -110,7 +97,7 @@ export const App: React.FC = () => {
             <Route path="/kanji/:id" element={<KanjiRoute />} />
             <Route path="/ngu-phap/:id" element={<GrammarRoute />} />
             <Route path={pagePaths['vocab-giao-trinh']} element={<CurriculumPage />} />
-            <Route path={pagePaths['vocab-bang-chu-cai']} element={<AlphabetPage />} />
+            <Route path={pagePaths['vocab-bang-chu-cai']} element={<AlphabetPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={pagePaths.bunpo} element={<BunpoPage />} />
             <Route path={pagePaths['personal-lo-trinh']} element={<PersonalRoadmapPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error}
               onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} onDetail={item => openDetail(kanjiPath(item.id))} />} />
@@ -153,5 +140,6 @@ export const App: React.FC = () => {
 
     </div>
     </ReviewProvider>
+    </LearningSettingsContext.Provider>
   );
 };

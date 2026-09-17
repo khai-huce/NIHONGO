@@ -17,6 +17,8 @@
     "test:roadmap": "node --test tests/roadmap.test.mjs",
     "test:roadmap-study": "node --test tests/roadmap-study.test.mjs",
     "test:default-roadmap": "node --test tests/default-roadmap.test.mjs",
+    "test:settings": "node --experimental-strip-types --test tests/learning-settings.test.mjs tests/speech.test.mjs",
+    "test:kana": "node --test tests/kana-quiz.test.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:stop": "docker compose stop db",
     "db:migrate": "npm --prefix server run db:migrate",

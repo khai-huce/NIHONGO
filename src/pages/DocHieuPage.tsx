@@ -21,6 +21,8 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { RoughCard, RoughButton } from '../components/RoughCard';
+import { useLearningSettings } from '../hooks/useLearningSettings';
+import { speakJapanese } from '../utils/speech';
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -406,8 +408,16 @@ export const DocHieuPage: React.FC = () => {
   const [activeSentenceId, setActiveSentenceId] = useState<number>(1);
   const [currentTimeSec, setCurrentTimeSec] = useState<number>(0);
   const [isLoopSentence, setIsLoopSentence] = useState<boolean>(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
-  const [showFurigana, setShowFurigana] = useState<boolean>(true);
+  const settings = useLearningSettings();
+  const [speedOverride, setPlaybackSpeed] = useState<number | null>(null);
+  const [furiganaOverride, setShowFurigana] = useState<boolean | null>(null);
+  const playbackSpeed = speedOverride ?? settings.audioSpeed;
+  const furiganaMode = furiganaOverride === null ? settings.showFurigana : furiganaOverride ? 'always' : 'never';
+  const showFurigana = furiganaMode !== 'never';
+  const [playbackRevision, setPlaybackRevision] = useState(0);
+  const loopRef = useRef(isLoopSentence);
+  loopRef.current = isLoopSentence;
+  const readingAreaRef = useRef<HTMLDivElement>(null);
   const [showTranslation, setShowTranslation] = useState<boolean>(false);
 
   // Quiz state: { [questionId]: selectedOptionIndex }
@@ -436,43 +446,50 @@ export const DocHieuPage: React.FC = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Speech synthesis utterance
-  const speakSentence = (text: string) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP';
-      utterance.rate = playbackSpeed;
-      utterance.onend = () => {
-        if (isLoopSentence) {
-          if (isPlaying) {
-            setTimeout(() => speakSentence(text), 400);
-          }
-        } else {
-          // Advance to next sentence if still playing
-          handleNextSentence(true);
-        }
-      };
-      utterance.onerror = () => {
-        // Fallback
-      };
-      window.speechSynthesis.speak(utterance);
+  // Each effect owns its speech request and loop timer. A speed change restarts
+  // the current sentence; pause/navigation cancels pending callbacks as well.
+  useEffect(() => {
+    if (!isPlaying || !currentArticle) return;
+    const sentences = currentArticle.paragraphs.flatMap(paragraph => paragraph.sentences);
+    const index = Math.max(0, sentences.findIndex(sentence => sentence.id === activeSentenceId));
+    const sentence = sentences[index];
+    if (!sentence) {
+      setIsPlaying(false);
+      return;
     }
-  };
+    let active = true;
+    let loopTimer: ReturnType<typeof setTimeout> | undefined;
+    const cancel = speakJapanese(sentence.japanese, playbackSpeed, {
+      onEnd: () => {
+        if (!active) return;
+        if (loopRef.current) {
+          loopTimer = setTimeout(() => {
+            if (active) setPlaybackRevision(revision => revision + 1);
+          }, 400);
+        } else if (sentences[index + 1]) {
+          setActiveSentenceId(sentences[index + 1].id);
+        } else {
+          setIsPlaying(false);
+        }
+      },
+      onError: () => { if (active) setIsPlaying(false); },
+    });
+    return () => {
+      active = false;
+      clearTimeout(loopTimer);
+      cancel();
+    };
+  }, [isPlaying, currentArticle, activeSentenceId, playbackSpeed, playbackRevision]);
+
+  useEffect(() => {
+    readingAreaRef.current?.querySelectorAll<HTMLElement>('ruby').forEach(ruby => {
+      ruby.tabIndex = furiganaMode === 'hover' ? 0 : -1;
+    });
+  }, [furiganaMode, currentArticle]);
 
   // Handle Play/Pause
   const togglePlay = () => {
-    if (isPlaying) {
-      setIsPlaying(false);
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    } else {
-      setIsPlaying(true);
-      if (activeSentence) {
-        speakSentence(activeSentence.japanese);
-      }
-    }
+    if (activeSentence) setIsPlaying(playing => !playing);
   };
 
   // Handle previous sentence
@@ -481,25 +498,19 @@ export const DocHieuPage: React.FC = () => {
     if (currentIndex > 0) {
       const prevSentence = allSentences[currentIndex - 1];
       setActiveSentenceId(prevSentence.id);
-      if (isPlaying) {
-        speakSentence(prevSentence.japanese);
-      }
     } else {
       if (activeSentence && isPlaying) {
-        speakSentence(activeSentence.japanese);
+        setPlaybackRevision(revision => revision + 1);
       }
     }
   };
 
   // Handle next sentence
-  const handleNextSentence = (fromAuto: boolean = false) => {
+  const handleNextSentence = () => {
     const currentIndex = allSentences.findIndex(s => s.id === activeSentenceId);
     if (currentIndex < allSentences.length - 1) {
       const nextSentence = allSentences[currentIndex + 1];
       setActiveSentenceId(nextSentence.id);
-      if (isPlaying || fromAuto) {
-        speakSentence(nextSentence.japanese);
-      }
     } else {
       setIsPlaying(false);
     }
@@ -508,12 +519,8 @@ export const DocHieuPage: React.FC = () => {
   // Select a specific sentence directly by clicking it
   const handleSelectSentence = (sentence: SentenceItem) => {
     setActiveSentenceId(sentence.id);
-    if (isPlaying) {
-      speakSentence(sentence.japanese);
-    } else {
-      setIsPlaying(true);
-      speakSentence(sentence.japanese);
-    }
+    setPlaybackRevision(revision => revision + 1);
+    setIsPlaying(true);
   };
 
   // Toggle speed
@@ -544,15 +551,6 @@ export const DocHieuPage: React.FC = () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isPlaying, playbackSpeed, currentArticle]);
-
-  // Clean up speech synthesis on unmount
-  useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
 
   // Use Sample Text button
   const handleUseSampleText = () => {
@@ -658,6 +656,7 @@ export const DocHieuPage: React.FC = () => {
     if (confirm('Bạn có chắc muốn xóa bài đọc này?')) {
       setUserArticles(prev => prev.filter(a => a.id !== id));
       if (currentArticle?.id === id) {
+        setIsPlaying(false);
         setCurrentArticle(DEMO_ARTICLE);
       }
     }
@@ -844,7 +843,7 @@ export const DocHieuPage: React.FC = () => {
                 onChange={(e) => setInputText(e.target.value.slice(0, 3000))}
                 placeholder="Dán một đoạn đọc ngắn, đoạn văn hoặc bài báo tiếng Nhật (tối đa 3000 ký tự) vào đây..."
                 rows={12}
-                className="w-full bg-transparent border-0 outline-none resize-y text-sm md:text-base text-[#292524] font-sketch placeholder:text-stone-400 focus:ring-0 leading-relaxed font-sans"
+                className="w-full bg-transparent border-0 outline-none resize-y text-sm md:text-base text-[#292524] font-kanji placeholder:text-stone-400 focus:ring-0 leading-relaxed"
               />
 
               <div className="flex items-center justify-end text-xs font-bold text-stone-400 pt-2 border-t border-stone-200/60">
@@ -909,9 +908,6 @@ export const DocHieuPage: React.FC = () => {
           onClick={() => {
             if (isPlaying) {
               setIsPlaying(false);
-              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-              }
             }
             setCurrentArticle(null);
           }}
@@ -953,7 +949,7 @@ export const DocHieuPage: React.FC = () => {
                 acc += s.durationSec;
                 if (targetSec <= acc) {
                   setActiveSentenceId(s.id);
-                  if (isPlaying) speakSentence(s.japanese);
+                  if (isPlaying) setPlaybackRevision(revision => revision + 1);
                   break;
                 }
               }
@@ -1000,7 +996,7 @@ export const DocHieuPage: React.FC = () => {
 
             {/* Next Sentence */}
             <button
-              onClick={() => handleNextSentence(false)}
+              onClick={handleNextSentence}
               className="w-8 h-8 border-sketch-subtle bg-white hover:bg-stone-100 text-[#292524] flex items-center justify-center transition-colors cursor-pointer"
               title="Câu kế tiếp"
             >
@@ -1064,7 +1060,7 @@ export const DocHieuPage: React.FC = () => {
       </RoughCard>
 
       {/* 4. Main 2-Column Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div ref={readingAreaRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* LEFT COLUMN: Japanese Text + Reading Comprehension Quiz (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
@@ -1093,15 +1089,17 @@ export const DocHieuPage: React.FC = () => {
                       }`}
                     >
                       {/* Japanese Text (with or without ruby Furigana) */}
-                      <div className="text-base md:text-lg leading-loose">
-                        {showFurigana ? (
-                          <span 
-                            dangerouslySetInnerHTML={{ __html: s.furiganaHtml }} 
-                            className="ruby-container font-medium"
-                          />
-                        ) : (
-                          <span className="font-medium">{s.japanese}</span>
-                        )}
+                      <div
+                        className="text-base md:text-lg leading-loose font-kanji"
+                        data-furigana={furiganaMode}
+                        onPointerDown={event => {
+                          if (furiganaMode === 'hover') (event.target as HTMLElement).closest<HTMLElement>('ruby')?.focus();
+                        }}
+                      >
+                        <span
+                          dangerouslySetInnerHTML={{ __html: s.furiganaHtml }}
+                          className="ruby-container font-medium"
+                        />
                       </div>
 
                       {/* Vietnamese Translation (Visible if toggle ON or on hover of active) */}
@@ -1144,7 +1142,7 @@ export const DocHieuPage: React.FC = () => {
                       <span className="text-xs font-black text-[#78716c] uppercase">
                         Câu {qIdx + 1}/{currentArticle.quizList.length}
                       </span>
-                      <h4 className="text-sm md:text-base font-black text-[#292524] leading-relaxed">
+                      <h4 className="text-sm md:text-base font-black text-[#292524] leading-relaxed font-kanji">
                         {quiz.question}
                       </h4>
                     </div>
@@ -1175,7 +1173,7 @@ export const DocHieuPage: React.FC = () => {
                             disabled={isAnswered}
                             className={`w-full text-left p-3.5 rounded-xl text-xs md:text-sm font-medium transition-colors cursor-pointer flex items-center justify-between ${optStyle}`}
                           >
-                            <span>{optIdx + 1}. {opt}</span>
+                            <span className="font-kanji">{optIdx + 1}. {opt}</span>
                             {isAnswered && optIdx === quiz.correctIndex && (
                               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 ml-2" />
                             )}
@@ -1229,10 +1227,10 @@ export const DocHieuPage: React.FC = () => {
                   className="p-3 space-y-1 shadow-sketch"
                 >
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-sm md:text-base font-black text-[#292524] font-sketch">
+                    <span className="text-sm md:text-base font-black text-[#292524] font-kanji">
                       {v.word}
                     </span>
-                    <span className="text-xs font-bold text-slate-500">
+                    <span className="text-xs font-bold text-slate-500 font-kanji">
                       {v.reading}
                     </span>
                     <span className="text-[11px] font-black text-[#0094ff] uppercase">
@@ -1267,7 +1265,7 @@ export const DocHieuPage: React.FC = () => {
                   {/* Grammar Header: Pattern + External link + JLPT Level badge */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-sm font-black text-[#0094ff] font-sketch">
+                      <span className="text-sm font-black text-[#0094ff] font-kanji">
                         {g.pattern}
                       </span>
                       <ExternalLink className="w-3.5 h-3.5 text-stone-400" />
@@ -1285,7 +1283,7 @@ export const DocHieuPage: React.FC = () => {
 
                   {/* Example sentences */}
                   <div className="p-2.5 rounded-lg bg-stone-50 border-sketch-subtle space-y-1 text-xs">
-                    <p className="font-bold text-[#292524] leading-relaxed">
+                    <p className="font-bold text-[#292524] leading-relaxed font-kanji">
                       {g.exampleJp}
                     </p>
                     <p className="text-[11px] font-medium text-slate-500 leading-relaxed">

@@ -19,7 +19,7 @@ import {
 import type { VocabWord } from '../../hooks/useVocabLessons';
 import { useVocabProgress, type ProgressSnapshot } from '../../hooks/useVocabProgress';
 import { summarizeVocabProgress, nextUnratedIndex } from '../../utils/vocab-progress';
-import { speakJapanese } from '../../utils/speech';
+import { speakJapanese, cancelJapaneseSpeech } from '../../utils/speech';
 
 interface FlashcardStudyProps {
   words: VocabWord[];
@@ -195,7 +195,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
     return () => window.clearTimeout(timer);
   }, [isAutoPlay, isFinished, blocked, isFlipped, currentIndex, deck, autoSpeechOnFlip]);
   useEffect(() => { if (blocked) setIsAutoPlay(false); }, [blocked]);
-  useEffect(() => () => { window.speechSynthesis?.cancel(); }, []);
+  useEffect(() => () => { cancelJapaneseSpeech(); }, []);
 
   // Global Keyboard listener
   useEffect(() => {
@@ -344,7 +344,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
               <div className="space-y-4 animate-in fade-in duration-200 flex flex-col items-center">
                 {direction === 'jp-vi' ? (
                   <>
-                    <h2 className="text-5xl md:text-6xl font-black text-white tracking-wide font-sans">
+                    <h2 className="text-5xl md:text-6xl font-black text-white tracking-wide font-kanji">
                       {currentWord?.word}
                     </h2>
                     <button
@@ -371,12 +371,12 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
             ) : (
               /* Back View (Flipped) */
               <div className="space-y-3 animate-in fade-in duration-200 flex flex-col items-center">
-                <h2 className="text-4xl md:text-5xl font-black text-white">
+                <h2 className="text-4xl md:text-5xl font-black text-white font-kanji">
                   {currentWord?.word}
                 </h2>
 
                 {currentWord?.reading && currentWord?.reading !== currentWord?.word && (
-                  <p className="text-xl md:text-2xl font-bold text-sky-300">
+                  <p className="text-xl md:text-2xl font-bold text-sky-300 font-kanji">
                     {currentWord.reading}
                   </p>
                 )}

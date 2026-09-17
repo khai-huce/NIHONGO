@@ -12,8 +12,8 @@
   font-family: var(--font-sketch);
 }
 
-.font-kanji {
-  font-family: "Zen Maru Gothic", "UD Digi Kyokasho", sans-serif;
+.font-kanji, .font-japanese {
+  font-family: var(--font-japanese, "Zen Maru Gothic", "Yu Gothic", sans-serif);
 }
 
 /* Delicate Paper Grid Background (Authentic Japanese notebook graph paper) */
@@ -106,4 +106,18 @@ rt {
   font-weight: 600;
   color: #0369a1;
   user-select: none;
+}
+
+/* Keep the annotation space stable when furigana is hidden. */
+[data-furigana="never"] rt,
+[data-furigana="never"] [data-furigana-reading],
+[data-furigana="hover"] rt,
+[data-furigana="hover"] [data-furigana-reading] {
+  visibility: hidden;
+}
+[data-furigana="hover"] ruby:hover rt,
+[data-furigana="hover"] ruby:focus-within rt,
+[data-furigana="hover"] [data-furigana-token]:hover [data-furigana-reading],
+[data-furigana="hover"] [data-furigana-token]:focus-within [data-furigana-reading] {
+  visibility: visible;
 }

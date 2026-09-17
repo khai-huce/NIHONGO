@@ -24,6 +24,7 @@ model User {
   vocabStudyResults VocabStudyResult[]
   personalRoadmaps PersonalRoadmap[]
   defaultRoadmapProgress DefaultRoadmapProgress[]
+  kanaQuizResults KanaQuizResult[]
 
   @@map("users")
 }
@@ -163,4 +164,20 @@ model DefaultRoadmapProgress {
 
   @@id([userId, catalogId])
   @@map("default_roadmap_progress")
+}
+
+model KanaQuizResult {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  catalogId String @map("catalog_id") @db.VarChar(32)
+  mode String @db.VarChar(16)
+  total Int
+  correct Int
+  answers Json
+  submissionHash String @map("submission_hash") @db.VarChar(64)
+  completedAt DateTime @default(now()) @map("completed_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@map("kana_quiz_results")
 }

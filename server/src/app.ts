@@ -13,6 +13,7 @@ import { vocabProgressRoutes } from './vocab-progress.routes.js';
 import { vocabResultsRoutes } from './vocab-results.routes.js';
 import { roadmapRoutes } from './roadmaps.routes.js';
 import { defaultRoadmapRoutes } from './default-roadmaps.routes.js';
+import { kanaResultsRoutes } from './kana-results.routes.js';
 
 export function createApp(config: Config) {
   const db = new PrismaClient({ datasources: { db: { url: config.DATABASE_URL } } });
@@ -39,6 +40,7 @@ export function createApp(config: Config) {
   });
   app.use('/api/vocab/lessons', middleware, lessonRoutes(db));
   app.use('/api/vocab/results', middleware, vocabResultsRoutes(db));
+  app.use('/api/kana/results', middleware, kanaResultsRoutes(db));
   app.use(express.json({ limit: '16kb' }));
   app.use('/api/auth', middleware, authRoutes(config, db, pool));
   app.use('/api/progress', middleware, progressRoutes(db));
