@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Edit3, Target, Trophy } from 'lucide-react';
-import { createPortal } from 'react-dom';
 import { RoughButton, RoughCard } from './RoughCard';
-import { FlashcardView } from './FlashcardView';
+import { RoadmapStudyOverlay } from './RoadmapStudyOverlay';
+import { useRoadmapStudy } from '../hooks/useRoadmapStudy';
 import { KANJI_DATABASE } from '../data/kanjiData';
 import type { KanjiItem } from '../types';
 import type { PersonalRoadmap, usePersonalRoadmaps } from '../hooks/usePersonalRoadmaps';
@@ -10,14 +9,6 @@ import { roadmapDayKanji } from '../../shared/roadmap.mjs';
 import { speakJapanese } from '../utils/speech';
 
 type Plans = ReturnType<typeof usePersonalRoadmaps>;
-type Session = {
-  roadmap: PersonalRoadmap;
-  day: number;
-  items: KanjiItem[];
-  initialId?: string;
-  reviewed: Set<string>;
-  replay: boolean;
-};
 type Props = {
   roadmap: PersonalRoadmap;
   day: number;
@@ -32,85 +23,14 @@ type Props = {
 const catalog = new Map(KANJI_DATABASE.map(item => [item.kanji, item]));
 
 export function PersonalRoadmapStudy({ roadmap, day, plans, userId, authBusy, onDay, onBack, onLogin, onDetail }: Props) {
-  const [session, setSession] = useState<Session | null>(null);
-  const sessionRef = useRef<Session | null>(null);
-  const pending = useRef(false);
-  const mounted = useRef(false);
-  const [needsReload, setNeedsReload] = useState(false);
-  const [notice, setNotice] = useState('');
-  const [reloadKey, setReloadKey] = useState(0);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const study = useRoadmapStudy(roadmap, day, { ...plans, reload: async () => (await plans.reload())?.find(item => item.id === roadmap.id) });
+  const { session, notice, setNotice, start, reload } = study;
   const chars = roadmapDayKanji(roadmap.kanjiList, roadmap.perDay, day);
   const unsupported = roadmap.kanjiList.filter(char => !catalog.has(char));
   const items = chars.map(char => catalog.get(char)).filter((item): item is KanjiItem => !!item);
   const completed = roadmap.completedDays.includes(day);
   const assessed = items.filter(item => Object.prototype.hasOwnProperty.call(roadmap.assessments, item.id)).length;
   const percent = Math.round(roadmap.completedDays.length / roadmap.totalDays * 100);
-
-  const close = () => {
-    if (pending.current) return;
-    sessionRef.current = null;
-    setSession(null);
-  };
-  const start = async () => {
-    if (pending.current || plans.busy || unsupported.length) return;
-    pending.current = true;
-    setNotice('');
-    try {
-      const saved = await plans.start(roadmap, day);
-      if (!saved || !mounted.current) return;
-      const nextItems = roadmapDayKanji(saved.kanjiList, saved.perDay, day).map(char => catalog.get(char)!);
-      // An unfinished day resumes; replay assesses the whole day without clearing saved completion.
-      const replay = saved.completedDays.includes(day);
-      const reviewed = new Set(replay ? [] : nextItems.filter(item => Object.prototype.hasOwnProperty.call(saved.assessments, item.id)).map(item => item.id));
-      const next = { roadmap: saved, day, items: nextItems, reviewed, replay, initialId: nextItems.find(item => !reviewed.has(item.id))?.id };
-      sessionRef.current = next;
-      setNeedsReload(false);
-      setSession(next);
-    } finally { pending.current = false; }
-  };
-  const rate = async (kanjiId: string, memorized: boolean) => {
-    const current = sessionRef.current;
-    if (!current || pending.current || plans.busy || needsReload) return false;
-    pending.current = true;
-    try {
-      const saved = await plans.rate(current.roadmap, current.day, kanjiId, memorized);
-      if (!mounted.current || sessionRef.current !== current) return false;
-      if (!saved) { setNeedsReload(true); return false; }
-      const reviewed = new Set(current.replay ? [...current.reviewed, kanjiId] : current.items.filter(item => Object.prototype.hasOwnProperty.call(saved.assessments, item.id)).map(item => item.id));
-      const next = { ...current, roadmap: saved, reviewed };
-      if (current.items.every(item => reviewed.has(item.id))) {
-        sessionRef.current = null;
-        setSession(null);
-        setNotice(`Đã hoàn thành ngày ${current.day}.`);
-      } else {
-        sessionRef.current = next;
-        setSession(next);
-      }
-      return true;
-    } finally { pending.current = false; }
-  };
-  const reload = async () => {
-    if (pending.current) return;
-    const current = sessionRef.current;
-    const latest = await plans.reload();
-    if (!latest || !mounted.current || sessionRef.current !== current) return;
-    const saved = latest.find(item => item.id === roadmap.id);
-    if (!saved) { close(); return; }
-    if (current) {
-      const reviewed = current.replay ? current.reviewed : new Set(current.items.filter(item => Object.prototype.hasOwnProperty.call(saved.assessments, item.id)).map(item => item.id));
-      if (current.items.every(item => reviewed.has(item.id))) {
-        close();
-        setNotice(`Đã hoàn thành ngày ${current.day}.`);
-      } else {
-        const next = { ...current, roadmap: saved, reviewed, initialId: current.items.find(item => !reviewed.has(item.id))?.id };
-        sessionRef.current = next;
-        setSession(next);
-        setReloadKey(value => value + 1);
-      }
-    }
-    setNeedsReload(false);
-  };
 
   return <div className="space-y-5">
     <button type="button" onClick={onBack} disabled={plans.saving} className="flex items-center gap-1 text-xs font-bold text-[#57534e] hover:text-[#ea580c]">
@@ -176,13 +96,6 @@ export function PersonalRoadmapStudy({ roadmap, day, plans, userId, authBusy, on
         })}
       </div>
     </RoughCard>
-    {session && createPortal(<div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-6">
-      <div className="w-full max-w-[672px]">
-        <FlashcardView key={reloadKey} items={session.items} userId={userId} authBusy={authBusy} onClose={close} onLogin={onLogin} onDetail={onDetail}
-          study={{ memorizedIds: Object.keys(session.roadmap.assessments).filter(id => session.roadmap.assessments[id]), loaded: plans.loaded && !needsReload, loading: plans.loading, saving: plans.saving,
-            error: plans.error || (needsReload ? 'Chưa xác nhận được đánh giá. Tải lại tiến độ đã lưu trước khi học tiếp.' : ''),
-            reload, save: rate, initialId: session.initialId, guestPersistent: !userId }} />
-      </div>
-    </div>, document.body)}
+    <RoadmapStudyOverlay study={study} userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={onDetail} />
   </div>;
 }

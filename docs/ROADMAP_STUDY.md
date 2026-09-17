@@ -51,4 +51,4 @@ Giữ giao diện danh sách/tạo/sửa/xóa, nhãn Học ngay và flashcard. C
 - Khách học một chữ Chưa thuộc → hoàn thành; F5 vẫn 1/1 và 100%. Đăng nhập lại chỉ thấy lộ trình tài khoản, không nhận lộ trình khách. Đăng xuất quay về dữ liệu khách riêng.
 - Đối chiếu screenshot chi tiết/flashcard: đủ khung đã duyệt, lật nội dung trong khung đứng yên. Tài khoản/phiên/lộ trình/thẻ QA và lộ trình khách QA đã dọn; không xóa dữ liệu người dùng. API local hoạt động trở lại.
 
-P07 hoàn thành. P08 cần chốt thứ tự/catalog và mục tiêu cho **Lộ trình mặc định** trước khi nối dữ liệu thật của tab đó.
+P07 hoàn thành. Ngày 16/09/2026, P08 đã nối tab mặc định với 28 chữ N5 theo phạm vi được duyệt; xem [DEFAULT_ROADMAP.md](DEFAULT_ROADMAP.md). P07/P08 dùng chung logic phiên học và overlay flashcard; tiến độ từng lộ trình vẫn riêng.

@@ -23,6 +23,7 @@ model User {
   vocabProgress VocabProgress[]
   vocabStudyResults VocabStudyResult[]
   personalRoadmaps PersonalRoadmap[]
+  defaultRoadmapProgress DefaultRoadmapProgress[]
 
   @@map("users")
 }
@@ -148,4 +149,18 @@ model PersonalRoadmap {
 
   @@index([userId, createdAt])
   @@map("personal_roadmaps")
+}
+
+model DefaultRoadmapProgress {
+  userId String @map("user_id") @db.Uuid
+  catalogId String @map("catalog_id") @db.VarChar(32)
+  assessments Json @default("{}")
+  completedDays Int[] @default([]) @map("completed_days")
+  progressVersion Int @default(0) @map("progress_version")
+  startedAt DateTime? @map("started_at") @db.Timestamptz(3)
+  activityDays String[] @default([]) @map("activity_days")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, catalogId])
+  @@map("default_roadmap_progress")
 }

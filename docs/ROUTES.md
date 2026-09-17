@@ -9,6 +9,7 @@ Dùng React Router với BrowserRouter. URL là nguồn xác định trang và m
 | Bảng chữ cái | `/tu-vung/bang-chu-cai` |
 | Ngữ pháp / chi tiết | `/ngu-phap`, `/ngu-phap/:id` (ví dụ `s-ka`) |
 | Lộ trình cá nhân | `/ca-nhan/lo-trinh` |
+| Ngày của lộ trình mặc định | `/ca-nhan/lo-trinh?level=N5&day=1` (P08: ngày 1–3); bỏ `day` tiếp tục ngày chưa hoàn thành đầu tiên; N4–N1 báo chưa có dữ liệu |
 | Danh sách / ngày của lộ trình riêng | `/ca-nhan/lo-trinh?tab=my`, thêm `roadmap=<UUID>&day=<ngày>` để giữ chi tiết/ngày qua F5 và quay lại từ Kanji |
 | Ôn tập | `/ca-nhan/on-tap?type=kanji` (`vocab`, `grammar`) |
 | Chủ động | `/ca-nhan/chu-dong` |

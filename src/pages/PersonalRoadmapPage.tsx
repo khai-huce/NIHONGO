@@ -1,12 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { 
-  Calendar, 
-  Target, 
-  Flame, 
-  Trophy, 
-  ChevronLeft, 
-  ChevronRight, 
-  Crown, 
   MapPin, 
   Compass, 
   Edit3,
@@ -15,10 +8,10 @@ import {
   X,
   Trash2
 } from 'lucide-react';
-import { speakJapanese } from '../utils/speech';
 import { RoughCard, RoughButton } from '../components/RoughCard';
 import { usePersonalRoadmaps, type PersonalRoadmap } from '../hooks/usePersonalRoadmaps';
 import { analyzeRoadmapKanji, MAX_ROADMAP_TEXT, ROADMAP_PER_DAY } from '../../shared/roadmap.mjs';
+import { DefaultRoadmapView } from '../components/DefaultRoadmapView';
 import { RoadmapDeleteDialog } from '../components/RoadmapDeleteDialog';
 import { PersonalRoadmapStudy } from '../components/PersonalRoadmapStudy';
 import { useSearchParams } from 'react-router-dom';
@@ -29,9 +22,6 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
   const selectedId = search.get('roadmap');
   const activeRoadmap = selectedId || search.get('tab') === 'my' ? 'my' : 'default';
   const setActiveRoadmap = (tab: 'default' | 'my') => setSearch(tab === 'my' ? {tab: 'my'} : {});
-  const [selectedLevel, setSelectedLevel] = useState<'N5' | 'N4' | 'N3' | 'N2' | 'N1'>('N5');
-  const [currentDay, setCurrentDay] = useState(2);
-  const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
 
   const studyPlans = usePersonalRoadmaps(userId, authBusy);
   const customRoadmaps = studyPlans.roadmaps;
@@ -130,18 +120,6 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
     </div>;
   };
 
-  const defaultDayKanjiList = [
-    { kanji: '一', hanViet: 'NHẤT', meaning: 'Một' },
-    { kanji: '二', hanViet: 'NHỊ', meaning: 'Hai' },
-    { kanji: '八', hanViet: 'BÁT', meaning: 'Tám' },
-    { kanji: '六', hanViet: 'LỤC', meaning: 'Sáu' },
-    { kanji: '日', hanViet: 'NHẬT', meaning: 'Ngày' },
-    { kanji: '目', hanViet: 'MỤC', meaning: 'Mắt' },
-    { kanji: '三', hanViet: 'TAM', meaning: 'Ba' },
-    { kanji: '手', hanViet: 'THỦ', meaning: 'Tay' },
-    { kanji: '十', hanViet: 'THẬP', meaning: 'Mười' },
-    { kanji: '千', hanViet: 'THIÊN', meaning: 'Nghìn' }
-  ];
 
   return (
     <div className="w-full min-h-[calc(100vh-48px)] bg-sketch-paper p-4 md:p-8 space-y-5 max-w-5xl mx-auto overflow-y-auto select-none">
@@ -333,233 +311,7 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
         /* ============================================================ */
         /* 2. VIEW: LỘ TRÌNH MẶC ĐỊNH (DEFAULT ROADMAP) */
         /* ============================================================ */
-        <div className="space-y-5">
-          
-          {/* Main Title Section */}
-          <div className="text-center space-y-0.5 py-1">
-            <h1 className="text-2xl md:text-3xl font-black text-[#292524] dark:text-white font-sketch tracking-tight">
-              Lộ trình học Kanji
-            </h1>
-            <p className="text-xs md:text-sm font-bold text-[#78716c] dark:text-[#a8a29e]">
-              10 chữ mỗi ngày – Tổng cộng 253 ngày
-            </p>
-          </div>
-
-          {/* 4 Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-            <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3.5 shadow-sketch">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0094ff]">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Đã học</span>
-              </div>
-              <div className="mt-1.5">
-                <div className="text-2xl font-black text-[#292524] dark:text-white">1/253</div>
-                <div className="text-[11px] font-bold text-[#78716c]">ngày</div>
-              </div>
-            </RoughCard>
-
-            <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3.5 shadow-sketch">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-                <Target className="w-3.5 h-3.5" />
-                <span>Kanji</span>
-              </div>
-              <div className="mt-1.5">
-                <div className="text-2xl font-black text-[#292524] dark:text-white">10</div>
-                <div className="text-[11px] font-bold text-[#78716c]">chữ đã học</div>
-              </div>
-            </RoughCard>
-
-            <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3.5 shadow-sketch">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-orange-500">
-                <Flame className="w-3.5 h-3.5 fill-orange-500" />
-                <span>Streak</span>
-              </div>
-              <div className="mt-1.5">
-                <div className="text-2xl font-black text-[#292524] dark:text-white">1</div>
-                <div className="text-[11px] font-bold text-[#78716c]">ngày liên tiếp</div>
-              </div>
-            </RoughCard>
-
-            <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3.5 shadow-sketch">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-purple-600">
-                <Trophy className="w-3.5 h-3.5" />
-                <span>Tiến độ</span>
-              </div>
-              <div className="mt-1.5">
-                <div className="text-2xl font-black text-[#292524] dark:text-white">0%</div>
-                <div className="text-[11px] font-bold text-[#78716c]">hoàn thành</div>
-              </div>
-            </RoughCard>
-          </div>
-
-          {/* Level Selection Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            <div onClick={() => setSelectedLevel('N5')} className="cursor-pointer">
-              <RoughCard 
-                fill="#86efac" 
-                stroke="#047857" 
-                borderRadius={10}
-                roughness={0.7} 
-                active={selectedLevel === 'N5'}
-                className="p-3 text-center shadow-sketch"
-              >
-                <div className="text-base font-black text-[#047857]">N5</div>
-                <div className="text-[11px] font-bold text-[#065f46]">118 chữ – 12 ngày</div>
-                <div className="text-[10px] font-bold text-[#047857] mt-0.5">1/12 ngày</div>
-              </RoughCard>
-            </div>
-
-            <div onClick={() => setSelectedLevel('N4')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N4</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
-
-            <div onClick={() => setSelectedLevel('N3')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N3</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
-
-            <div onClick={() => setSelectedLevel('N2')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N2</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
-
-            <div onClick={() => setSelectedLevel('N1')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N1</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
-          </div>
-
-          {/* Day Selector Box */}
-          <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-2.5 shadow-sketch">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setCurrentDay(d => Math.max(1, d - 1))}
-                className="p-1 rounded-md hover:bg-[#eae3d5] text-[#57534e] cursor-pointer"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-2 font-bold text-sm text-[#292524] font-sketch">
-                <Calendar className="w-4 h-4 text-[#0094ff]" />
-                <span>Ngày {currentDay}</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#86efac] text-[#047857] border-sketch-subtle text-xs font-bold">
-                  {selectedLevel} - Cơ bản
-                </span>
-              </div>
-
-              <button 
-                onClick={() => setCurrentDay(d => Math.min(12, d + 1))}
-                className="p-1 rounded-md hover:bg-[#eae3d5] text-[#57534e] cursor-pointer"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </RoughCard>
-
-          {/* Progress Slider Box */}
-          <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3.5 shadow-sketch">
-            <div className="flex items-center gap-4 text-xs font-bold text-[#78716c]">
-              <span>Ngày 1</span>
-              <div className="relative flex-1 flex items-center">
-                <div className="w-full h-1.5 rounded-full bg-slate-200">
-                  <div 
-                    className="h-full rounded-full bg-[#0094ff]"
-                    style={{ width: `${(currentDay / 12) * 100}%` }}
-                  />
-                </div>
-                <div 
-                  className="absolute w-3.5 h-3.5 rounded-full bg-[#0094ff] border-2 border-white shadow-xs -translate-x-1/2 cursor-pointer"
-                  style={{ left: `${(currentDay / 12) * 100}%` }}
-                />
-              </div>
-              <span>Ngày 12 ({selectedLevel})</span>
-            </div>
-          </RoughCard>
-
-          {/* Daily Lesson Card */}
-          <RoughCard fill="#ffffff" stroke="#292524" borderRadius={12} roughness={0.7} className="p-5 space-y-4 shadow-sketch">
-            <div className="flex items-center justify-between border-b border-[#78716c]/30 pb-3">
-              <div className="flex items-center gap-2 font-black text-base text-[#292524] font-sketch">
-                <Target className="w-4 h-4 text-emerald-600" />
-                <span>Kanji ngày {currentDay}</span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-[#78716c]">10 chữ</span>
-                <RoughButton
-                  onClick={() => setIsStudyModalOpen(true)}
-                  fill="#0094ff"
-                  stroke="#0369a1"
-                  borderRadius={8}
-                  roughness={0.7}
-                  className="text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Học ngay</span>
-                  </div>
-                </RoughButton>
-              </div>
-            </div>
-
-            {/* Kanji tiles grid in the lesson */}
-            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2.5">
-              {defaultDayKanjiList.map((item, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => speakJapanese(item.kanji)}
-                  className="cursor-pointer group"
-                >
-                  <RoughCard 
-                    fill="#86efac" 
-                    stroke="#292524" 
-                    borderRadius={8}
-                    roughness={0.7} 
-                    className="p-2 text-center transition-transform group-hover:scale-105"
-                  >
-                    <div className="text-2xl font-kanji font-bold text-[#047857]">
-                      {item.kanji}
-                    </div>
-                    <div className="text-[10px] font-bold text-[#065f46] mt-0.5 truncate">
-                      {item.hanViet}
-                    </div>
-                    <div className="text-[9px] text-[#047857]/80 truncate">
-                      {item.meaning}
-                    </div>
-                  </RoughCard>
-                </div>
-              ))}
-            </div>
-          </RoughCard>
-
-          {/* Bottom Mascot */}
-          <div className="flex items-center gap-2 text-xs font-bold text-[#78716c] pt-1">
-            <div className="text-2xl">🐦</div>
-            <span className="font-sketch italic">"Tự tin lên! Mỗi ngày 10 chữ là thành công!"</span>
-          </div>
-
-        </div>
+        <DefaultRoadmapView userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={onDetail} />
       )}
 
       {/* ============================================================ */}
@@ -694,37 +446,6 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
       {deletingRoadmap && <RoadmapDeleteDialog name={deletingRoadmap.name} busy={studyPlans.busy} error={studyPlans.error}
         onCancel={() => { if (!actionPending.current) setDeletingRoadmap(null); }} onConfirm={() => { void confirmDelete(); }} />}
 
-      {/* Study Modal for Default Roadmap */}
-      {isStudyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <RoughCard fill="#ffffff" stroke="#292524" borderRadius={16} roughness={0.7} className="p-6 max-w-xl w-full shadow-sketch space-y-4">
-            <h3 className="text-lg font-black text-center font-sketch">
-              🌸 Bài học Ngày {currentDay} - 10 Chữ Kanji
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 max-h-80 overflow-y-auto p-1">
-              {defaultDayKanjiList.map((item, idx) => (
-                <RoughCard key={idx} fill="#86efac" stroke="#292524" borderRadius={8} roughness={0.7} className="p-2.5 text-center shadow-xs">
-                  <div className="text-2xl font-kanji font-bold text-[#047857]">{item.kanji}</div>
-                  <div className="text-xs font-bold text-[#065f46] mt-0.5">{item.hanViet}</div>
-                  <div className="text-[10px] text-[#047857]/80">{item.meaning}</div>
-                </RoughCard>
-              ))}
-            </div>
-            <div className="text-center pt-2">
-              <RoughButton
-                onClick={() => setIsStudyModalOpen(false)}
-                fill="#0094ff"
-                stroke="#0369a1"
-                borderRadius={8}
-                roughness={0.7}
-                className="text-white px-5 py-2 text-xs font-bold cursor-pointer"
-              >
-                Đã hiểu bài!
-              </RoughButton>
-            </div>
-          </RoughCard>
-        </div>
-      )}
 
     </div>
   );
