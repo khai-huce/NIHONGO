@@ -3,10 +3,10 @@ import { rateLimit } from 'express-rate-limit';
 import type { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { HttpError } from './errors.js';
-import { KANJI_IDS } from './kanji-ids.js';
+import { getKanji } from './content.service.js';
 
 const input = z.object({
-  kanjiId: z.string().max(32).refine(id => KANJI_IDS.includes(id), 'Kanji không tồn tại.'),
+  kanjiId: z.string().min(1).max(32),
   memorized: z.boolean(),
   expectedUserId: z.string().uuid(),
 }).strict();
@@ -34,6 +34,7 @@ export function progressRoutes(db: PrismaClient) {
     // A different tab may have switched the cookie to another account.
     // This value is only a guard; ownership always comes from the server session.
     if (expectedUserId !== userId) throw new HttpError(409, 'ACCOUNT_CHANGED', 'Tài khoản đã thay đổi. Vui lòng tải lại trang trước khi học tiếp.');
+    if (!await getKanji(db, kanjiId, { allowArchived: true })) throw new HttpError(400, 'INVALID_KANJI', 'Kanji không tồn tại.');
     const progress = await db.kanjiProgress.upsert({
       where: { userId_kanjiId: { userId, kanjiId } },
       create: { userId, kanjiId, memorized },

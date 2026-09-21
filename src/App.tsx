@@ -26,6 +26,7 @@ import { AuthModal } from './components/AuthModal';
 import { LearningSettingsContext, useDeviceSettings } from './hooks/useLearningSettings';
 import { cancelJapaneseSpeech, subscribeSpeechErrors } from './utils/speech';
 import { useAuth } from './hooks/useAuth';
+import { ContentCatalogProvider, CatalogGate } from './hooks/useContentCatalog';
 import { ReviewProvider } from './hooks/useReview';
 
 export const App: React.FC = () => {
@@ -49,6 +50,7 @@ export const App: React.FC = () => {
 
   return (
     <LearningSettingsContext.Provider value={settings}>
+    <ContentCatalogProvider>
     <ReviewProvider key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}>
     <div className="h-screen bg-sketch-paper text-[#292524] dark:text-[#f5f5f4] font-sketch transition-colors duration-200 flex flex-col overflow-hidden">
       
@@ -87,20 +89,20 @@ export const App: React.FC = () => {
         <main ref={mainRef} className="flex-1 h-full overflow-y-auto">
           <Routes>
             <Route path="/" element={<Navigate to="/kanji" replace />} />
-            <Route path={pagePaths.kanji} element={<HomePage
+            <Route path={pagePaths.kanji} element={<CatalogGate><HomePage
               onSelectKanji={item => openDetail(kanjiPath(item.id))}
               onOpenWrite={() => navigate(pagePaths.write)}
               userId={auth.currentUser?.id ?? null}
               authBusy={auth.checking || auth.loggingOut || !!auth.error}
               onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
-            />} />
-            <Route path="/kanji/:id" element={<KanjiRoute />} />
+            /></CatalogGate>} />
+            <Route path="/kanji/:id" element={<CatalogGate><KanjiRoute /></CatalogGate>} />
             <Route path="/ngu-phap/:id" element={<GrammarRoute />} />
             <Route path={pagePaths['vocab-giao-trinh']} element={<CurriculumPage />} />
             <Route path={pagePaths['vocab-bang-chu-cai']} element={<AlphabetPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={pagePaths.bunpo} element={<BunpoPage />} />
-            <Route path={pagePaths['personal-lo-trinh']} element={<PersonalRoadmapPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error}
-              onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} onDetail={item => openDetail(kanjiPath(item.id))} />} />
+            <Route path={pagePaths['personal-lo-trinh']} element={<CatalogGate><PersonalRoadmapPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error}
+              onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} onDetail={item => openDetail(kanjiPath(item.id))} /></CatalogGate>} />
             <Route path={pagePaths['personal-on-tap']} element={<ReviewPage
               onSelectKanji={item => openDetail(kanjiPath(item.id))}
               onSelectGrammar={item => openDetail(grammarPath(item.id))}
@@ -108,9 +110,10 @@ export const App: React.FC = () => {
             <Route path={pagePaths['personal-chu-dong']} element={<ChuDongPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={pagePaths.accent} element={<AccentPage />} />
             <Route path={pagePaths.leaderboard} element={<LeaderboardPage />} />
-            <Route path={pagePaths.write} element={<WritePage />} />
+            <Route path={pagePaths.write} element={<CatalogGate><WritePage /></CatalogGate>} />
             <Route path={pagePaths['lifetime-jlpt']} element={<JlptRoadmapPage />} />
-            <Route path={pagePaths['lifetime-doc-hieu']} element={<DocHieuPage />} />
+            <Route path={pagePaths['lifetime-doc-hieu']} element={<DocHieuPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
+            <Route path={`${pagePaths['lifetime-doc-hieu']}/:articleId`} element={<DocHieuPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={pagePaths['lifetime-shadowing']} element={<ShadowingPage />} />
             <Route path={pagePaths['lifetime-tao-file']} element={<UpgradePage />} />
             <Route path={pagePaths.upgrade} element={<UpgradePage />} />
@@ -140,6 +143,7 @@ export const App: React.FC = () => {
 
     </div>
     </ReviewProvider>
+    </ContentCatalogProvider>
     </LearningSettingsContext.Provider>
   );
 };

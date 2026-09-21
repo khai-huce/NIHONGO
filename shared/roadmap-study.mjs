@@ -1,9 +1,9 @@
 import { ROADMAP_KANJI, roadmapDayKanji } from './roadmap.mjs';
 
-const idsByCharacter = new Map(ROADMAP_KANJI.map(([id, character]) => [character, id]));
 
 // Progress belongs to this roadmap; global memorized flags never complete its days.
-export function roadmapProgress(kanjiList, perDay, assessments, completedDays) {
+export function roadmapProgress(kanjiList, perDay, assessments, completedDays, catalog = ROADMAP_KANJI) {
+  const idsByCharacter = new Map(catalog.map(([id, character]) => [character, id]));
   const totalDays = Math.ceil(kanjiList.length / perDay);
   roadmapDayKanji(kanjiList, perDay, 1);
   const memberIds = new Set(kanjiList.map(character => idsByCharacter.get(character)).filter(Boolean));
@@ -20,15 +20,16 @@ export function roadmapProgress(kanjiList, perDay, assessments, completedDays) {
   return { assessments: validAssessments, completedDays: validDays, currentDay };
 }
 
-export function assessRoadmapKanji(kanjiList, perDay, assessments, completedDays, day, kanjiId, memorized) {
+export function assessRoadmapKanji(kanjiList, perDay, assessments, completedDays, day, kanjiId, memorized, catalog = ROADMAP_KANJI) {
+  const idsByCharacter = new Map(catalog.map(([id, character]) => [character, id]));
   const dayIds = roadmapDayKanji(kanjiList, perDay, day).map(character => idsByCharacter.get(character));
   if (typeof memorized !== 'boolean' || !dayIds.includes(kanjiId)) {
     throw new RangeError('Chữ Kanji không thuộc ngày học này.');
   }
-  const progress = roadmapProgress(kanjiList, perDay, assessments, completedDays);
+  const progress = roadmapProgress(kanjiList, perDay, assessments, completedDays, catalog);
   progress.assessments[kanjiId] = memorized;
   if (dayIds.every(id => id && Object.hasOwn(progress.assessments, id)) && !progress.completedDays.includes(day)) {
     progress.completedDays.push(day);
   }
-  return roadmapProgress(kanjiList, perDay, progress.assessments, progress.completedDays);
+  return roadmapProgress(kanjiList, perDay, progress.assessments, progress.completedDays, catalog);
 }

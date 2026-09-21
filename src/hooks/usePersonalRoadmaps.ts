@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useContentCatalog } from './useContentCatalog';
 import { api, ApiError } from '../utils/api';
-import { analyzeRoadmapKanji, MAX_ROADMAPS, MAX_ROADMAP_TEXT, ROADMAP_KANJI, ROADMAP_PER_DAY, roadmapDayKanji } from '../../shared/roadmap.mjs';
+import { analyzeRoadmapKanji, MAX_ROADMAPS, MAX_ROADMAP_TEXT, ROADMAP_PER_DAY, roadmapDayKanji } from '../../shared/roadmap.mjs';
 import { assessRoadmapKanji, roadmapProgress } from '../../shared/roadmap-study.mjs';
 
 export type PersonalRoadmap = {
@@ -31,7 +32,8 @@ type DeviceEntry = Record<string, unknown>;
 type DeviceStore = { serialized: string | null; entries: DeviceEntry[]; roadmaps: PersonalRoadmap[] };
 type MutationResult = { roadmaps: PersonalRoadmap[]; roadmap?: PersonalRoadmap; removed?: boolean };
 const DEVICE_KEY = 'nhai_kanji_custom_roadmaps';
-const kanjiIds = new Map(ROADMAP_KANJI.map(([id, character]) => [character, id]));
+function createCatalogHelpers(pairs: readonly (readonly [string, string])[]) {
+const kanjiIds = new Map(pairs.map(([id, character]) => [character, id]));
 
 function fail(code: string, message: string): never { throw new ApiError(0, code, message); }
 function parseRoadmap(value: unknown, legacy: boolean): PersonalRoadmap {
@@ -63,7 +65,7 @@ function parseRoadmap(value: unknown, legacy: boolean): PersonalRoadmap {
     (startedAt === null && (Object.keys(assessments).length > 0 || completedDays.length > 0))) {
     throw new Error('Tiến độ lộ trình không hợp lệ.');
   }
-  const progress = roadmapProgress(kanjiList, perDay, assessments as Record<string, boolean>, completedDays as number[]);
+  const progress = roadmapProgress(kanjiList, perDay, assessments as Record<string, boolean>, completedDays as number[], pairs);
   const assessedDays = Array.from({ length: totalDays }, (_, index) => index + 1).filter(day =>
     roadmapDayKanji(kanjiList, perDay, day).every(character => {
       const id = kanjiIds.get(character);
@@ -140,7 +142,13 @@ function emptyState(owner: string | null): State {
   return { owner, roadmaps: [], loaded: false, loading: false, saving: false, error: '', errorCode: '' };
 }
 
+return { fail, parseRoadmap, parseList, readDeviceRoadmaps, writeDeviceRoadmaps, validateDetails, latestRoadmap, validateStudyDay, latestStudyRoadmap, saveDeviceRoadmap, emptyState, kanjiIds };
+}
+
 export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
+  const { pairs, activePairs } = useContentCatalog();
+  const helpers = useMemo(() => createCatalogHelpers(pairs), [pairs]);
+  const { fail, parseRoadmap, parseList, readDeviceRoadmaps, writeDeviceRoadmaps, validateDetails, latestRoadmap, validateStudyDay, latestStudyRoadmap, saveDeviceRoadmap, emptyState, kanjiIds } = helpers;
   const context = useRef({ userId, authBusy });
   const mounted = useRef(false), pending = useRef(false), revision = useRef(0);
   if (context.current.userId !== userId) { ++revision.current; pending.current = false; }
@@ -172,7 +180,7 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
         error: err instanceof Error ? err.message : 'Chưa tải được lộ trình. Vui lòng thử lại.',
         errorCode: err instanceof ApiError ? err.code : '' });
     } finally { if (isCurrent(request)) pending.current = false; }
-  }, [userId, apply, isCurrent]);
+  }, [userId, apply, isCurrent, helpers]);
 
   useEffect(() => {
     mounted.current = true;
@@ -233,13 +241,13 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
         if (current.current.saving) apply({ ...current.current, saving: false });
       }
     }
-  }, [userId, apply, isCurrent]);
+  }, [userId, apply, isCurrent, helpers]);
 
   const create = useCallback(async (id: string, name: string, rawKanji: string, perDay: number): Promise<PersonalRoadmap | null> => {
     const result = await change('/roadmaps', { id, name, rawKanji, perDay }, store => {
       validateDetails(name, perDay);
       if (!id.trim() || rawKanji.length > MAX_ROADMAP_TEXT) fail('VALIDATION_ERROR', 'Danh sách Kanji tối đa 2.000 ký tự.');
-      const { kanjiList, unsupported } = analyzeRoadmapKanji(rawKanji);
+      const { kanjiList, unsupported } = analyzeRoadmapKanji(rawKanji, activePairs);
       if (unsupported.length) fail('UNSUPPORTED_KANJI', `Chưa có dữ liệu cho: ${unsupported.join(' ')}. Hãy loại bỏ các chữ này trước khi lưu.`);
       if (!kanjiList.length) fail('VALIDATION_ERROR', 'Vui lòng nhập ít nhất một chữ Kanji có dữ liệu.');
       const existing = store.roadmaps.find(item => item.id === id);
@@ -257,7 +265,7 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
       return { roadmap, roadmaps: [roadmap, ...store.roadmaps] };
     });
     return result?.roadmap ?? null;
-  }, [change]);
+  }, [change, helpers, pairs, activePairs]);
 
   const update = useCallback(async (roadmap: PersonalRoadmap, details: { name: string; perDay: number }): Promise<PersonalRoadmap | null> => {
     const result = await change('/roadmaps/update', { id: roadmap.id, version: roadmap.version, ...details }, store => {
@@ -271,7 +279,7 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
       return saveDeviceRoadmap(store, saved);
     });
     return result?.roadmap ?? null;
-  }, [change]);
+  }, [change, helpers, pairs, activePairs]);
 
   const start = useCallback(async (roadmap: PersonalRoadmap, day: number): Promise<PersonalRoadmap | null> => {
     const result = await change('/roadmaps/start', { id: roadmap.id, version: roadmap.version, day }, store => {
@@ -283,7 +291,7 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
       return saveDeviceRoadmap(store, saved);
     });
     return result?.roadmap ?? null;
-  }, [change]);
+  }, [change, helpers, pairs, activePairs]);
 
   const rate = useCallback(async (roadmap: PersonalRoadmap, day: number, kanjiId: string, memorized: boolean): Promise<PersonalRoadmap | null> => {
     const result = await change('/roadmaps/rate', { id: roadmap.id, progressVersion: roadmap.progressVersion, day, kanjiId, memorized }, store => {
@@ -293,11 +301,11 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
       if (typeof memorized !== 'boolean' || !dayKanji.some(character => kanjiIds.get(character) === kanjiId)) {
         fail('VALIDATION_ERROR', 'Chữ được đánh giá không thuộc ngày học này.');
       }
-      const progress = assessRoadmapKanji(before.kanjiList, before.perDay, before.assessments, before.completedDays, day, kanjiId, memorized);
+      const progress = assessRoadmapKanji(before.kanjiList, before.perDay, before.assessments, before.completedDays, day, kanjiId, memorized, pairs);
       return saveDeviceRoadmap(store, { ...before, ...progress, progressVersion: before.progressVersion + 1 });
     });
     return result?.roadmap ?? null;
-  }, [change]);
+  }, [change, helpers, pairs, activePairs]);
 
   const remove = useCallback(async (roadmap: PersonalRoadmap): Promise<boolean> => {
     const result = await change('/roadmaps/delete', { id: roadmap.id, version: roadmap.version }, store => {
@@ -306,7 +314,7 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
       return { roadmaps: store.roadmaps.filter(item => item.id !== roadmap.id), removed: true };
     });
     return result?.removed ?? false;
-  }, [change]);
+  }, [change, helpers, pairs, activePairs]);
 
   const sameOwner = state.owner === userId;
   return { roadmaps: sameOwner ? state.roadmaps : [], loaded: sameOwner && state.loaded,

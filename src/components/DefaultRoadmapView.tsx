@@ -4,17 +4,17 @@ import { RoughCard, RoughButton } from './RoughCard';
 import { useDefaultRoadmap } from '../hooks/useDefaultRoadmap';
 import { useRoadmapStudy } from '../hooks/useRoadmapStudy';
 import { RoadmapStudyOverlay } from './RoadmapStudyOverlay';
-import { KANJI_DATABASE } from '../data/kanjiData';
+import { useContentCatalog } from '../hooks/useContentCatalog';
 import { roadmapDayKanji } from '../../shared/roadmap.mjs';
 import { speakJapanese } from '../utils/speech';
 import type { KanjiItem } from '../types';
 import type { KeyboardEvent } from 'react';
 
-const catalog = new Map(KANJI_DATABASE.map(item => [item.kanji, item]));
 const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 type Props = { userId: string | null; authBusy: boolean; onLogin: () => void; onDetail: (item: KanjiItem) => void };
 
 export function DefaultRoadmapView({ userId, authBusy, onLogin, onDetail }: Props) {
+  const { byCharacter: catalog } = useContentCatalog();
   const plans = useDefaultRoadmap(userId, authBusy);
   const {roadmap} = plans;
   const [search, setSearch] = useSearchParams();

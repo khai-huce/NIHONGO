@@ -1,0 +1,3022 @@
+{
+  "schemaVersion": 1,
+  "status": "preview_not_imported",
+  "purpose": "C01.0 source preview; not an approved production catalog or roadmap order",
+  "source": {
+    "name": "KANJIDIC2",
+    "url": "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz",
+    "documentation": "https://www.edrdg.org/wiki/KANJIDIC_Project.html",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://www.edrdg.org/edrdg/licence.html",
+    "copyright": "James William BREEN and the Electronic Dictionary Research and Development Group",
+    "datasetDate": "2026-09-17",
+    "downloadedAt": "2026-09-17T09:26:28.871067+00:00",
+    "compressedSha256": "8c8089ad06b6fa27ef2de65b2c136043c9e76f2cbe065843aa917fa20c91adba"
+  },
+  "selection": {
+    "rule": "misc/jlpt = 4 (pre-2010); proposed N5 reference set, not an official current JLPT list",
+    "total": 103,
+    "existingIdsRetained": 27,
+    "order": "Source file order for review only; new roadmap ordering is not approved",
+    "existingCatalogOutsideSelection": [
+      {
+        "kanji": "体",
+        "id": "k-23",
+        "level": "N5",
+        "action": "retain ID and existing learning data; review classification separately"
+      },
+      {
+        "kanji": "旅",
+        "id": "k-101",
+        "level": "N4",
+        "action": "retain ID and existing learning data; review classification separately"
+      },
+      {
+        "kanji": "館",
+        "id": "k-102",
+        "level": "N4",
+        "action": "retain ID and existing learning data; review classification separately"
+      },
+      {
+        "kanji": "働",
+        "id": "k-103",
+        "level": "N4",
+        "action": "retain ID and existing learning data; review classification separately"
+      },
+      {
+        "kanji": "想",
+        "id": "k-201",
+        "level": "N3",
+        "action": "retain ID and existing learning data; review classification separately"
+      },
+      {
+        "kanji": "恋",
+        "id": "k-202",
+        "level": "N3",
+        "action": "retain ID and existing learning data; review classification separately"
+      },
+      {
+        "kanji": "響",
+        "id": "k-301",
+        "level": "N2",
+        "action": "retain ID and existing learning data; review classification separately"
+      },
+      {
+        "kanji": "鬱",
+        "id": "k-401",
+        "level": "N1",
+        "action": "retain ID and existing learning data; review classification separately"
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "k-u5b89",
+      "kanji": "安",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 40,
+        "onyomi": [
+          "アン"
+        ],
+        "kunyomi": [
+          "やす.い",
+          "やす.まる",
+          "やす",
+          "やす.らか"
+        ],
+        "vietnameseReadings": [
+          "An"
+        ],
+        "meaningsEn": [
+          "relax",
+          "cheap",
+          "low",
+          "quiet",
+          "rested",
+          "contented",
+          "peaceful"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-1",
+      "kanji": "一",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 1,
+        "classicalRadicalNumber": 1,
+        "onyomi": [
+          "イチ",
+          "イツ"
+        ],
+        "kunyomi": [
+          "ひと-",
+          "ひと.つ"
+        ],
+        "vietnameseReadings": [
+          "Nhất"
+        ],
+        "meaningsEn": [
+          "one",
+          "one radical (no.1)"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u98f2",
+      "kanji": "飲",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 12,
+        "classicalRadicalNumber": 184,
+        "onyomi": [
+          "イン",
+          "オン"
+        ],
+        "kunyomi": [
+          "の.む",
+          "-の.み"
+        ],
+        "vietnameseReadings": [
+          "Ấm",
+          "Ẩm",
+          "Hẩm",
+          "Ỡm"
+        ],
+        "meaningsEn": [
+          "drink",
+          "smoke",
+          "take"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u53f3",
+      "kanji": "右",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 30,
+        "onyomi": [
+          "ウ",
+          "ユウ"
+        ],
+        "kunyomi": [
+          "みぎ"
+        ],
+        "vietnameseReadings": [
+          "Hữu"
+        ],
+        "meaningsEn": [
+          "right"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u96e8",
+      "kanji": "雨",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 173,
+        "onyomi": [
+          "ウ"
+        ],
+        "kunyomi": [
+          "あめ",
+          "あま-",
+          "-さめ"
+        ],
+        "vietnameseReadings": [
+          "Vũ",
+          "Vú"
+        ],
+        "meaningsEn": [
+          "rain"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u99c5",
+      "kanji": "駅",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 14,
+        "classicalRadicalNumber": 187,
+        "onyomi": [
+          "エキ"
+        ],
+        "kunyomi": [],
+        "vietnameseReadings": [
+          "Dịch"
+        ],
+        "meaningsEn": [
+          "station"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5186",
+      "kanji": "円",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 13,
+        "onyomi": [
+          "エン"
+        ],
+        "kunyomi": [
+          "まる.い",
+          "まる",
+          "まど",
+          "まど.か",
+          "まろ.やか"
+        ],
+        "vietnameseReadings": [
+          "Viên"
+        ],
+        "meaningsEn": [
+          "circle",
+          "yen",
+          "round"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u4e0b",
+      "kanji": "下",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 1,
+        "onyomi": [
+          "カ",
+          "ゲ"
+        ],
+        "kunyomi": [
+          "した",
+          "しも",
+          "もと",
+          "さ.げる",
+          "さ.がる",
+          "くだ.る",
+          "くだ.り",
+          "くだ.す",
+          "-くだ.す",
+          "くだ.さる",
+          "お.ろす",
+          "お.りる"
+        ],
+        "vietnameseReadings": [
+          "Hạ",
+          "Há"
+        ],
+        "meaningsEn": [
+          "below",
+          "down",
+          "descend",
+          "give",
+          "low",
+          "inferior"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-24",
+      "kanji": "何",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 9,
+        "onyomi": [
+          "カ"
+        ],
+        "kunyomi": [
+          "なに",
+          "なん",
+          "なに-",
+          "なん-"
+        ],
+        "vietnameseReadings": [
+          "Hà"
+        ],
+        "meaningsEn": [
+          "what"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-16",
+      "kanji": "火",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 86,
+        "onyomi": [
+          "カ"
+        ],
+        "kunyomi": [
+          "ひ",
+          "-び",
+          "ほ-"
+        ],
+        "vietnameseReadings": [
+          "Hỏa"
+        ],
+        "meaningsEn": [
+          "fire"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u82b1",
+      "kanji": "花",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 140,
+        "onyomi": [
+          "カ",
+          "ケ"
+        ],
+        "kunyomi": [
+          "はな"
+        ],
+        "vietnameseReadings": [
+          "Hoa"
+        ],
+        "meaningsEn": [
+          "flower"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u4f1a",
+      "kanji": "会",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 9,
+        "onyomi": [
+          "カイ",
+          "エ"
+        ],
+        "kunyomi": [
+          "あ.う",
+          "あ.わせる",
+          "あつ.まる"
+        ],
+        "vietnameseReadings": [
+          "Cối",
+          "Hội",
+          "Hụi"
+        ],
+        "meaningsEn": [
+          "meeting",
+          "meet",
+          "party",
+          "association",
+          "interview",
+          "join"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5916",
+      "kanji": "外",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 36,
+        "onyomi": [
+          "ガイ",
+          "ゲ"
+        ],
+        "kunyomi": [
+          "そと",
+          "ほか",
+          "はず.す",
+          "はず.れる",
+          "と-"
+        ],
+        "vietnameseReadings": [
+          "Ngoại"
+        ],
+        "meaningsEn": [
+          "outside"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-25",
+      "kanji": "学",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 39,
+        "onyomi": [
+          "ガク"
+        ],
+        "kunyomi": [
+          "まな.ぶ"
+        ],
+        "vietnameseReadings": [
+          "Học"
+        ],
+        "meaningsEn": [
+          "study",
+          "learning",
+          "science"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u9593",
+      "kanji": "間",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 12,
+        "classicalRadicalNumber": 169,
+        "onyomi": [
+          "カン",
+          "ケン"
+        ],
+        "kunyomi": [
+          "あいだ",
+          "ま",
+          "あい"
+        ],
+        "vietnameseReadings": [
+          "Gian"
+        ],
+        "meaningsEn": [
+          "interval",
+          "space"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u6c17",
+      "kanji": "気",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 84,
+        "onyomi": [
+          "キ",
+          "ケ"
+        ],
+        "kunyomi": [
+          "いき",
+          "き"
+        ],
+        "vietnameseReadings": [
+          "Khí"
+        ],
+        "meaningsEn": [
+          "spirit",
+          "mind",
+          "air",
+          "atmosphere",
+          "mood"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-22",
+      "kanji": "休",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 9,
+        "onyomi": [
+          "キュウ"
+        ],
+        "kunyomi": [
+          "やす.む",
+          "やす.まる",
+          "やす.める"
+        ],
+        "vietnameseReadings": [
+          "Hưu"
+        ],
+        "meaningsEn": [
+          "rest",
+          "day off",
+          "retire",
+          "sleep"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u9b5a",
+      "kanji": "魚",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 11,
+        "classicalRadicalNumber": 195,
+        "onyomi": [
+          "ギョ"
+        ],
+        "kunyomi": [
+          "うお",
+          "さかな",
+          "-ざかな"
+        ],
+        "vietnameseReadings": [
+          "Ngư"
+        ],
+        "meaningsEn": [
+          "fish"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-19",
+      "kanji": "金",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 167,
+        "onyomi": [
+          "キン",
+          "コン",
+          "ゴン"
+        ],
+        "kunyomi": [
+          "かね",
+          "かな-",
+          "-がね"
+        ],
+        "vietnameseReadings": [
+          "Kim"
+        ],
+        "meaningsEn": [
+          "gold"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-9",
+      "kanji": "九",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 2,
+        "classicalRadicalNumber": 5,
+        "onyomi": [
+          "キュウ",
+          "ク"
+        ],
+        "kunyomi": [
+          "ここの",
+          "ここの.つ"
+        ],
+        "vietnameseReadings": [
+          "Cửu",
+          "Cưu"
+        ],
+        "meaningsEn": [
+          "nine"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u7a7a",
+      "kanji": "空",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 116,
+        "onyomi": [
+          "クウ"
+        ],
+        "kunyomi": [
+          "そら",
+          "あ.く",
+          "あ.き",
+          "あ.ける",
+          "から",
+          "す.く",
+          "す.かす",
+          "むな.しい"
+        ],
+        "vietnameseReadings": [
+          "Không",
+          "Khống",
+          "Khổng"
+        ],
+        "meaningsEn": [
+          "empty",
+          "sky",
+          "void",
+          "vacant",
+          "vacuum"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-15",
+      "kanji": "月",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 74,
+        "onyomi": [
+          "ゲツ",
+          "ガツ"
+        ],
+        "kunyomi": [
+          "つき"
+        ],
+        "vietnameseReadings": [
+          "Nguyệt"
+        ],
+        "meaningsEn": [
+          "month",
+          "moon"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u898b",
+      "kanji": "見",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 147,
+        "onyomi": [
+          "ケン"
+        ],
+        "kunyomi": [
+          "み.る",
+          "み.える",
+          "み.せる"
+        ],
+        "vietnameseReadings": [
+          "Kiến",
+          "Hiện"
+        ],
+        "meaningsEn": [
+          "see",
+          "hopes",
+          "chances",
+          "idea",
+          "opinion",
+          "look at",
+          "visible"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8a00",
+      "kanji": "言",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 149,
+        "onyomi": [
+          "ゲン",
+          "ゴン"
+        ],
+        "kunyomi": [
+          "い.う",
+          "こと"
+        ],
+        "vietnameseReadings": [
+          "Ngôn",
+          "Ngân"
+        ],
+        "meaningsEn": [
+          "say",
+          "word"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u53e4",
+      "kanji": "古",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 30,
+        "onyomi": [
+          "コ"
+        ],
+        "kunyomi": [
+          "ふる.い",
+          "ふる-",
+          "-ふる.す"
+        ],
+        "vietnameseReadings": [
+          "Cổ"
+        ],
+        "meaningsEn": [
+          "old"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-5",
+      "kanji": "五",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 7,
+        "onyomi": [
+          "ゴ"
+        ],
+        "kunyomi": [
+          "いつ",
+          "いつ.つ"
+        ],
+        "vietnameseReadings": [
+          "Ngũ"
+        ],
+        "meaningsEn": [
+          "five"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5348",
+      "kanji": "午",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 24,
+        "onyomi": [
+          "ゴ"
+        ],
+        "kunyomi": [
+          "うま"
+        ],
+        "vietnameseReadings": [
+          "Ngọ"
+        ],
+        "meaningsEn": [
+          "noon",
+          "sign of the horse",
+          "11AM-1PM",
+          "seventh sign of Chinese zodiac"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5f8c",
+      "kanji": "後",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 9,
+        "classicalRadicalNumber": 60,
+        "onyomi": [
+          "ゴ",
+          "コウ"
+        ],
+        "kunyomi": [
+          "のち",
+          "うし.ろ",
+          "うしろ",
+          "あと",
+          "おく.れる"
+        ],
+        "vietnameseReadings": [
+          "Hậu",
+          "Hấu"
+        ],
+        "meaningsEn": [
+          "behind",
+          "back",
+          "later"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8a9e",
+      "kanji": "語",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 14,
+        "classicalRadicalNumber": 149,
+        "onyomi": [
+          "ゴ"
+        ],
+        "kunyomi": [
+          "かた.る",
+          "かた.らう"
+        ],
+        "vietnameseReadings": [
+          "Ngữ",
+          "Ngứ"
+        ],
+        "meaningsEn": [
+          "word",
+          "speech",
+          "language"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u53e3",
+      "kanji": "口",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 30,
+        "onyomi": [
+          "コウ",
+          "ク"
+        ],
+        "kunyomi": [
+          "くち"
+        ],
+        "vietnameseReadings": [
+          "Khẩu"
+        ],
+        "meaningsEn": [
+          "mouth"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-26",
+      "kanji": "校",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 10,
+        "classicalRadicalNumber": 75,
+        "onyomi": [
+          "コウ",
+          "キョウ"
+        ],
+        "kunyomi": [],
+        "vietnameseReadings": [
+          "Giáo",
+          "Hiệu",
+          "Hào"
+        ],
+        "meaningsEn": [
+          "exam",
+          "school",
+          "printing",
+          "proof",
+          "correction"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u884c",
+      "kanji": "行",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 144,
+        "onyomi": [
+          "コウ",
+          "ギョウ",
+          "アン"
+        ],
+        "kunyomi": [
+          "い.く",
+          "ゆ.く",
+          "-ゆ.き",
+          "-ゆき",
+          "-い.き",
+          "-いき",
+          "おこな.う",
+          "おこ.なう"
+        ],
+        "vietnameseReadings": [
+          "Hành",
+          "Hạnh",
+          "Hàng",
+          "Hạng"
+        ],
+        "meaningsEn": [
+          "going",
+          "journey",
+          "carry out",
+          "conduct",
+          "act",
+          "line",
+          "row",
+          "bank"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u9ad8",
+      "kanji": "高",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 10,
+        "classicalRadicalNumber": 189,
+        "onyomi": [
+          "コウ"
+        ],
+        "kunyomi": [
+          "たか.い",
+          "たか",
+          "-だか",
+          "たか.まる",
+          "たか.める"
+        ],
+        "vietnameseReadings": [
+          "Cao"
+        ],
+        "meaningsEn": [
+          "tall",
+          "high",
+          "expensive"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u56fd",
+      "kanji": "国",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 31,
+        "onyomi": [
+          "コク"
+        ],
+        "kunyomi": [
+          "くに"
+        ],
+        "vietnameseReadings": [
+          "Quốc",
+          "Cuốc"
+        ],
+        "meaningsEn": [
+          "country"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u4eca",
+      "kanji": "今",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 9,
+        "onyomi": [
+          "コン",
+          "キン"
+        ],
+        "kunyomi": [
+          "いま"
+        ],
+        "vietnameseReadings": [
+          "Kim"
+        ],
+        "meaningsEn": [
+          "now"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5de6",
+      "kanji": "左",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 48,
+        "onyomi": [
+          "サ",
+          "シャ"
+        ],
+        "kunyomi": [
+          "ひだり"
+        ],
+        "vietnameseReadings": [
+          "Tả",
+          "Tá"
+        ],
+        "meaningsEn": [
+          "left"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-3",
+      "kanji": "三",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 1,
+        "onyomi": [
+          "サン",
+          "ゾウ"
+        ],
+        "kunyomi": [
+          "み",
+          "み.つ",
+          "みっ.つ"
+        ],
+        "vietnameseReadings": [
+          "Tam",
+          "Tám"
+        ],
+        "meaningsEn": [
+          "three"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5c71",
+      "kanji": "山",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 46,
+        "onyomi": [
+          "サン",
+          "セン"
+        ],
+        "kunyomi": [
+          "やま"
+        ],
+        "vietnameseReadings": [
+          "San",
+          "Sơn"
+        ],
+        "meaningsEn": [
+          "mountain"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-4",
+      "kanji": "四",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 31,
+        "onyomi": [
+          "シ"
+        ],
+        "kunyomi": [
+          "よ",
+          "よ.つ",
+          "よっ.つ",
+          "よん"
+        ],
+        "vietnameseReadings": [
+          "Tứ"
+        ],
+        "meaningsEn": [
+          "four"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5b50",
+      "kanji": "子",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 39,
+        "onyomi": [
+          "シ",
+          "ス",
+          "ツ"
+        ],
+        "kunyomi": [
+          "こ",
+          "-こ",
+          "ね"
+        ],
+        "vietnameseReadings": [
+          "Tử",
+          "Tý"
+        ],
+        "meaningsEn": [
+          "child",
+          "sign of the rat",
+          "11PM-1AM",
+          "first sign of Chinese zodiac"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u6642",
+      "kanji": "時",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 10,
+        "classicalRadicalNumber": 72,
+        "onyomi": [
+          "ジ"
+        ],
+        "kunyomi": [
+          "とき",
+          "-どき"
+        ],
+        "vietnameseReadings": [
+          "Thì",
+          "Thời"
+        ],
+        "meaningsEn": [
+          "time",
+          "hour"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8033",
+      "kanji": "耳",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 128,
+        "onyomi": [
+          "ジ"
+        ],
+        "kunyomi": [
+          "みみ"
+        ],
+        "vietnameseReadings": [
+          "Nhĩ"
+        ],
+        "meaningsEn": [
+          "ear"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-7",
+      "kanji": "七",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 2,
+        "classicalRadicalNumber": 1,
+        "onyomi": [
+          "シチ"
+        ],
+        "kunyomi": [
+          "なな",
+          "なな.つ",
+          "なの"
+        ],
+        "vietnameseReadings": [
+          "Thất"
+        ],
+        "meaningsEn": [
+          "seven"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u793e",
+      "kanji": "社",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 113,
+        "onyomi": [
+          "シャ"
+        ],
+        "kunyomi": [
+          "やしろ"
+        ],
+        "vietnameseReadings": [
+          "Xã"
+        ],
+        "meaningsEn": [
+          "company",
+          "firm",
+          "office",
+          "association",
+          "shrine"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8eca",
+      "kanji": "車",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 159,
+        "onyomi": [
+          "シャ"
+        ],
+        "kunyomi": [
+          "くるま"
+        ],
+        "vietnameseReadings": [
+          "Xa"
+        ],
+        "meaningsEn": [
+          "car"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u624b",
+      "kanji": "手",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 64,
+        "onyomi": [
+          "シュ",
+          "ズ"
+        ],
+        "kunyomi": [
+          "て",
+          "て-",
+          "-て",
+          "た-"
+        ],
+        "vietnameseReadings": [
+          "Thủ"
+        ],
+        "meaningsEn": [
+          "hand"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u9031",
+      "kanji": "週",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 11,
+        "classicalRadicalNumber": 162,
+        "onyomi": [
+          "シュウ"
+        ],
+        "kunyomi": [],
+        "vietnameseReadings": [
+          "Chu"
+        ],
+        "meaningsEn": [
+          "week"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-10",
+      "kanji": "十",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 2,
+        "classicalRadicalNumber": 24,
+        "onyomi": [
+          "ジュウ",
+          "ジッ",
+          "ジュッ"
+        ],
+        "kunyomi": [
+          "とお",
+          "と",
+          "そ"
+        ],
+        "vietnameseReadings": [
+          "Thập"
+        ],
+        "meaningsEn": [
+          "ten"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u51fa",
+      "kanji": "出",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 17,
+        "onyomi": [
+          "シュツ",
+          "スイ"
+        ],
+        "kunyomi": [
+          "で.る",
+          "-で",
+          "だ.す",
+          "-だ.す",
+          "い.でる",
+          "い.だす"
+        ],
+        "vietnameseReadings": [
+          "Xuất",
+          "Xúy"
+        ],
+        "meaningsEn": [
+          "exit",
+          "leave",
+          "go out",
+          "come out",
+          "put out",
+          "protrude"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u66f8",
+      "kanji": "書",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 10,
+        "classicalRadicalNumber": 73,
+        "onyomi": [
+          "ショ"
+        ],
+        "kunyomi": [
+          "か.く",
+          "-が.き",
+          "-がき"
+        ],
+        "vietnameseReadings": [
+          "Thư"
+        ],
+        "meaningsEn": [
+          "write"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5973",
+      "kanji": "女",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 38,
+        "onyomi": [
+          "ジョ",
+          "ニョ",
+          "ニョウ"
+        ],
+        "kunyomi": [
+          "おんな",
+          "め"
+        ],
+        "vietnameseReadings": [
+          "Nữ",
+          "Nứ",
+          "Nhữ"
+        ],
+        "meaningsEn": [
+          "woman",
+          "female"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5c0f",
+      "kanji": "小",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 42,
+        "onyomi": [
+          "ショウ"
+        ],
+        "kunyomi": [
+          "ちい.さい",
+          "こ-",
+          "お-",
+          "さ-"
+        ],
+        "vietnameseReadings": [
+          "Tiểu"
+        ],
+        "meaningsEn": [
+          "little",
+          "small"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5c11",
+      "kanji": "少",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 42,
+        "onyomi": [
+          "ショウ"
+        ],
+        "kunyomi": [
+          "すく.ない",
+          "すこ.し"
+        ],
+        "vietnameseReadings": [
+          "Thiểu",
+          "Thiếu"
+        ],
+        "meaningsEn": [
+          "few",
+          "little"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u4e0a",
+      "kanji": "上",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 1,
+        "onyomi": [
+          "ジョウ",
+          "ショウ",
+          "シャン"
+        ],
+        "kunyomi": [
+          "うえ",
+          "-うえ",
+          "うわ-",
+          "かみ",
+          "あ.げる",
+          "-あ.げる",
+          "あ.がる",
+          "-あ.がる",
+          "あ.がり",
+          "-あ.がり",
+          "のぼ.る",
+          "のぼ.り",
+          "のぼ.せる",
+          "のぼ.す",
+          "たてまつ.る"
+        ],
+        "vietnameseReadings": [
+          "Thượng",
+          "Thướng"
+        ],
+        "meaningsEn": [
+          "above",
+          "up"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u98df",
+      "kanji": "食",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 9,
+        "classicalRadicalNumber": 184,
+        "onyomi": [
+          "ショク",
+          "ジキ"
+        ],
+        "kunyomi": [
+          "く.う",
+          "く.らう",
+          "た.べる",
+          "は.む"
+        ],
+        "vietnameseReadings": [
+          "Thực",
+          "Tự"
+        ],
+        "meaningsEn": [
+          "eat",
+          "food"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u65b0",
+      "kanji": "新",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 13,
+        "classicalRadicalNumber": 69,
+        "onyomi": [
+          "シン"
+        ],
+        "kunyomi": [
+          "あたら.しい",
+          "あら.た",
+          "あら-",
+          "にい-"
+        ],
+        "vietnameseReadings": [
+          "Tân"
+        ],
+        "meaningsEn": [
+          "new"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-21",
+      "kanji": "人",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 2,
+        "classicalRadicalNumber": 9,
+        "onyomi": [
+          "ジン",
+          "ニン"
+        ],
+        "kunyomi": [
+          "ひと",
+          "-り",
+          "-と"
+        ],
+        "vietnameseReadings": [
+          "Nhân"
+        ],
+        "meaningsEn": [
+          "person"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-17",
+      "kanji": "水",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 85,
+        "onyomi": [
+          "スイ"
+        ],
+        "kunyomi": [
+          "みず",
+          "みず-"
+        ],
+        "vietnameseReadings": [
+          "Thủy"
+        ],
+        "meaningsEn": [
+          "water"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-28",
+      "kanji": "生",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 100,
+        "onyomi": [
+          "セイ",
+          "ショウ"
+        ],
+        "kunyomi": [
+          "い.きる",
+          "い.かす",
+          "い.ける",
+          "う.まれる",
+          "うま.れる",
+          "う.まれ",
+          "うまれ",
+          "う.む",
+          "お.う",
+          "は.える",
+          "は.やす",
+          "き",
+          "なま",
+          "なま-",
+          "な.る",
+          "な.す",
+          "む.す",
+          "-う"
+        ],
+        "vietnameseReadings": [
+          "Sanh",
+          "Sinh"
+        ],
+        "meaningsEn": [
+          "life",
+          "genuine",
+          "birth"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u897f",
+      "kanji": "西",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 146,
+        "onyomi": [
+          "セイ",
+          "サイ",
+          "ス"
+        ],
+        "kunyomi": [
+          "にし"
+        ],
+        "vietnameseReadings": [
+          "Tây",
+          "Tê"
+        ],
+        "meaningsEn": [
+          "west",
+          "Spain"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-27",
+      "kanji": "先",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 10,
+        "onyomi": [
+          "セン"
+        ],
+        "kunyomi": [
+          "さき",
+          "ま.ず"
+        ],
+        "vietnameseReadings": [
+          "Tiên",
+          "Tiến"
+        ],
+        "meaningsEn": [
+          "before",
+          "ahead",
+          "previous",
+          "future",
+          "precedence"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-12",
+      "kanji": "千",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 24,
+        "onyomi": [
+          "セン"
+        ],
+        "kunyomi": [
+          "ち"
+        ],
+        "vietnameseReadings": [
+          "Thiên"
+        ],
+        "meaningsEn": [
+          "thousand"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5ddd",
+      "kanji": "川",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 47,
+        "onyomi": [
+          "セン"
+        ],
+        "kunyomi": [
+          "かわ"
+        ],
+        "vietnameseReadings": [
+          "Xuyên"
+        ],
+        "meaningsEn": [
+          "stream",
+          "river",
+          "river or three-stroke river radical (no. 47)"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u524d",
+      "kanji": "前",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 9,
+        "classicalRadicalNumber": 18,
+        "onyomi": [
+          "ゼン"
+        ],
+        "kunyomi": [
+          "まえ",
+          "-まえ"
+        ],
+        "vietnameseReadings": [
+          "Tiền"
+        ],
+        "meaningsEn": [
+          "in front",
+          "before"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8db3",
+      "kanji": "足",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 157,
+        "onyomi": [
+          "ソク"
+        ],
+        "kunyomi": [
+          "あし",
+          "た.りる",
+          "た.る",
+          "た.す"
+        ],
+        "vietnameseReadings": [
+          "Túc"
+        ],
+        "meaningsEn": [
+          "leg",
+          "foot",
+          "be sufficient",
+          "counter for pairs of footwear"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u591a",
+      "kanji": "多",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 36,
+        "onyomi": [
+          "タ"
+        ],
+        "kunyomi": [
+          "おお.い",
+          "まさ.に",
+          "まさ.る"
+        ],
+        "vietnameseReadings": [
+          "Đa"
+        ],
+        "meaningsEn": [
+          "many",
+          "frequent",
+          "much"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5927",
+      "kanji": "大",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 37,
+        "onyomi": [
+          "ダイ",
+          "タイ"
+        ],
+        "kunyomi": [
+          "おお-",
+          "おお.きい",
+          "-おお.いに"
+        ],
+        "vietnameseReadings": [
+          "Đại",
+          "Thái"
+        ],
+        "meaningsEn": [
+          "large",
+          "big"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u7537",
+      "kanji": "男",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 102,
+        "onyomi": [
+          "ダン",
+          "ナン"
+        ],
+        "kunyomi": [
+          "おとこ",
+          "お"
+        ],
+        "vietnameseReadings": [
+          "Nam"
+        ],
+        "meaningsEn": [
+          "male"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u4e2d",
+      "kanji": "中",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 2,
+        "onyomi": [
+          "チュウ"
+        ],
+        "kunyomi": [
+          "なか",
+          "うち",
+          "あた.る"
+        ],
+        "vietnameseReadings": [
+          "Trung",
+          "Trúng"
+        ],
+        "meaningsEn": [
+          "in",
+          "inside",
+          "middle",
+          "mean",
+          "center"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u9577",
+      "kanji": "長",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 168,
+        "onyomi": [
+          "チョウ"
+        ],
+        "kunyomi": [
+          "なが.い",
+          "おさ"
+        ],
+        "vietnameseReadings": [
+          "Trường",
+          "Trưởng",
+          "Trướng"
+        ],
+        "meaningsEn": [
+          "long",
+          "leader",
+          "superior",
+          "senior"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5929",
+      "kanji": "天",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 37,
+        "onyomi": [
+          "テン"
+        ],
+        "kunyomi": [
+          "あまつ",
+          "あめ",
+          "あま-"
+        ],
+        "vietnameseReadings": [
+          "Thiên"
+        ],
+        "meaningsEn": [
+          "heavens",
+          "sky",
+          "imperial"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5e97",
+      "kanji": "店",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 53,
+        "onyomi": [
+          "テン"
+        ],
+        "kunyomi": [
+          "みせ",
+          "たな"
+        ],
+        "vietnameseReadings": [
+          "Điếm"
+        ],
+        "meaningsEn": [
+          "store",
+          "shop"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u96fb",
+      "kanji": "電",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 13,
+        "classicalRadicalNumber": 173,
+        "onyomi": [
+          "デン"
+        ],
+        "kunyomi": [],
+        "vietnameseReadings": [
+          "Điện"
+        ],
+        "meaningsEn": [
+          "electricity"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-20",
+      "kanji": "土",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 32,
+        "onyomi": [
+          "ド",
+          "ト"
+        ],
+        "kunyomi": [
+          "つち"
+        ],
+        "vietnameseReadings": [
+          "Thổ",
+          "Độ",
+          "Đỗ"
+        ],
+        "meaningsEn": [
+          "soil",
+          "earth",
+          "ground",
+          "Turkey"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u6771",
+      "kanji": "東",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 8,
+        "classicalRadicalNumber": 75,
+        "onyomi": [
+          "トウ"
+        ],
+        "kunyomi": [
+          "ひがし"
+        ],
+        "vietnameseReadings": [
+          "Đông"
+        ],
+        "meaningsEn": [
+          "east"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u9053",
+      "kanji": "道",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 12,
+        "classicalRadicalNumber": 162,
+        "onyomi": [
+          "ドウ",
+          "トウ"
+        ],
+        "kunyomi": [
+          "みち",
+          "いう"
+        ],
+        "vietnameseReadings": [
+          "Đạo",
+          "Đáo"
+        ],
+        "meaningsEn": [
+          "road-way",
+          "street",
+          "district",
+          "journey",
+          "course",
+          "moral",
+          "teachings"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8aad",
+      "kanji": "読",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 14,
+        "classicalRadicalNumber": 149,
+        "onyomi": [
+          "ドク",
+          "トク",
+          "トウ"
+        ],
+        "kunyomi": [
+          "よ.む",
+          "-よ.み"
+        ],
+        "vietnameseReadings": [
+          "Đậu",
+          "Độc"
+        ],
+        "meaningsEn": [
+          "read"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5357",
+      "kanji": "南",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 9,
+        "classicalRadicalNumber": 24,
+        "onyomi": [
+          "ナン",
+          "ナ"
+        ],
+        "kunyomi": [
+          "みなみ"
+        ],
+        "vietnameseReadings": [
+          "Nam"
+        ],
+        "meaningsEn": [
+          "south"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-2",
+      "kanji": "二",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 2,
+        "classicalRadicalNumber": 7,
+        "onyomi": [
+          "ニ",
+          "ジ"
+        ],
+        "kunyomi": [
+          "ふた",
+          "ふた.つ",
+          "ふたたび"
+        ],
+        "vietnameseReadings": [
+          "Nhị"
+        ],
+        "meaningsEn": [
+          "two",
+          "two radical (no. 7)"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-14",
+      "kanji": "日",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 72,
+        "onyomi": [
+          "ニチ",
+          "ジツ"
+        ],
+        "kunyomi": [
+          "ひ",
+          "-び",
+          "-か"
+        ],
+        "vietnameseReadings": [
+          "Nhật"
+        ],
+        "meaningsEn": [
+          "day",
+          "sun",
+          "Japan",
+          "counter for days"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5165",
+      "kanji": "入",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 2,
+        "classicalRadicalNumber": 11,
+        "onyomi": [
+          "ニュウ",
+          "ジュ"
+        ],
+        "kunyomi": [
+          "い.る",
+          "-い.る",
+          "-い.り",
+          "い.れる",
+          "-い.れ",
+          "はい.る"
+        ],
+        "vietnameseReadings": [
+          "Nhập"
+        ],
+        "meaningsEn": [
+          "enter",
+          "insert"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5e74",
+      "kanji": "年",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 51,
+        "onyomi": [
+          "ネン"
+        ],
+        "kunyomi": [
+          "とし"
+        ],
+        "vietnameseReadings": [
+          "Niên"
+        ],
+        "meaningsEn": [
+          "year",
+          "counter for years"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8cb7",
+      "kanji": "買",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 12,
+        "classicalRadicalNumber": 154,
+        "onyomi": [
+          "バイ"
+        ],
+        "kunyomi": [
+          "か.う"
+        ],
+        "vietnameseReadings": [
+          "Mãi"
+        ],
+        "meaningsEn": [
+          "buy"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u767d",
+      "kanji": "白",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 106,
+        "onyomi": [
+          "ハク",
+          "ビャク"
+        ],
+        "kunyomi": [
+          "しろ",
+          "しら-",
+          "しろ.い"
+        ],
+        "vietnameseReadings": [
+          "Bạch"
+        ],
+        "meaningsEn": [
+          "white"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-8",
+      "kanji": "八",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 2,
+        "classicalRadicalNumber": 12,
+        "onyomi": [
+          "ハチ",
+          "ハツ"
+        ],
+        "kunyomi": [
+          "や",
+          "や.つ",
+          "やっ.つ",
+          "よう"
+        ],
+        "vietnameseReadings": [
+          "Bát"
+        ],
+        "meaningsEn": [
+          "eight",
+          "eight radical (no. 12)"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u534a",
+      "kanji": "半",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 24,
+        "onyomi": [
+          "ハン"
+        ],
+        "kunyomi": [
+          "なか.ば"
+        ],
+        "vietnameseReadings": [
+          "Bán"
+        ],
+        "meaningsEn": [
+          "half",
+          "middle",
+          "odd number",
+          "semi-",
+          "part-"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-11",
+      "kanji": "百",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 106,
+        "onyomi": [
+          "ヒャク",
+          "ビャク"
+        ],
+        "kunyomi": [
+          "もも"
+        ],
+        "vietnameseReadings": [
+          "Bách",
+          "Bá",
+          "Mạch"
+        ],
+        "meaningsEn": [
+          "hundred"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u7236",
+      "kanji": "父",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 88,
+        "onyomi": [
+          "フ"
+        ],
+        "kunyomi": [
+          "ちち"
+        ],
+        "vietnameseReadings": [
+          "Phụ",
+          "Phủ"
+        ],
+        "meaningsEn": [
+          "father"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5206",
+      "kanji": "分",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 18,
+        "onyomi": [
+          "ブン",
+          "フン",
+          "ブ"
+        ],
+        "kunyomi": [
+          "わ.ける",
+          "わ.け",
+          "わ.かれる",
+          "わ.かる",
+          "わ.かつ"
+        ],
+        "vietnameseReadings": [
+          "Phân",
+          "Phận"
+        ],
+        "meaningsEn": [
+          "part",
+          "minute of time",
+          "segment",
+          "share",
+          "degree",
+          "one's lot",
+          "duty",
+          "understand",
+          "know",
+          "rate",
+          "1%",
+          "chances",
+          "shaku/100"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u805e",
+      "kanji": "聞",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 14,
+        "classicalRadicalNumber": 128,
+        "onyomi": [
+          "ブン",
+          "モン"
+        ],
+        "kunyomi": [
+          "き.く",
+          "き.こえる"
+        ],
+        "vietnameseReadings": [
+          "Văn",
+          "Vấn",
+          "Vặn"
+        ],
+        "meaningsEn": [
+          "hear",
+          "ask",
+          "listen"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u6bcd",
+      "kanji": "母",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 80,
+        "onyomi": [
+          "ボ"
+        ],
+        "kunyomi": [
+          "はは",
+          "も"
+        ],
+        "vietnameseReadings": [
+          "Mẫu"
+        ],
+        "meaningsEn": [
+          "mother"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u5317",
+      "kanji": "北",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 21,
+        "onyomi": [
+          "ホク"
+        ],
+        "kunyomi": [
+          "きた"
+        ],
+        "vietnameseReadings": [
+          "Bắc"
+        ],
+        "meaningsEn": [
+          "north"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u672c",
+      "kanji": "本",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 75,
+        "onyomi": [
+          "ホン"
+        ],
+        "kunyomi": [
+          "もと"
+        ],
+        "vietnameseReadings": [
+          "Bổn",
+          "Bản"
+        ],
+        "meaningsEn": [
+          "book",
+          "present",
+          "main",
+          "origin",
+          "true",
+          "real",
+          "counter for long cylindrical things"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u6bce",
+      "kanji": "毎",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 80,
+        "onyomi": [
+          "マイ"
+        ],
+        "kunyomi": [
+          "ごと",
+          "-ごと.に"
+        ],
+        "vietnameseReadings": [
+          "Mỗi"
+        ],
+        "meaningsEn": [
+          "every"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-13",
+      "kanji": "万",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 3,
+        "classicalRadicalNumber": 1,
+        "onyomi": [
+          "マン",
+          "バン"
+        ],
+        "kunyomi": [
+          "よろず"
+        ],
+        "vietnameseReadings": [
+          "Vạn",
+          "Mặc"
+        ],
+        "meaningsEn": [
+          "ten thousand",
+          "10,000"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u540d",
+      "kanji": "名",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 6,
+        "classicalRadicalNumber": 30,
+        "onyomi": [
+          "メイ",
+          "ミョウ"
+        ],
+        "kunyomi": [
+          "な",
+          "-な"
+        ],
+        "vietnameseReadings": [
+          "Danh"
+        ],
+        "meaningsEn": [
+          "name",
+          "noted",
+          "distinguished",
+          "reputation"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-18",
+      "kanji": "木",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 75,
+        "onyomi": [
+          "ボク",
+          "モク"
+        ],
+        "kunyomi": [
+          "き",
+          "こ-"
+        ],
+        "vietnameseReadings": [
+          "Mộc"
+        ],
+        "meaningsEn": [
+          "tree",
+          "wood"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u76ee",
+      "kanji": "目",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 109,
+        "onyomi": [
+          "モク",
+          "ボク"
+        ],
+        "kunyomi": [
+          "め",
+          "-め",
+          "ま-"
+        ],
+        "vietnameseReadings": [
+          "Mục"
+        ],
+        "meaningsEn": [
+          "eye",
+          "class",
+          "look",
+          "insight",
+          "experience",
+          "care",
+          "favor"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u53cb",
+      "kanji": "友",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 29,
+        "onyomi": [
+          "ユウ"
+        ],
+        "kunyomi": [
+          "とも"
+        ],
+        "vietnameseReadings": [
+          "Hữu"
+        ],
+        "meaningsEn": [
+          "friend"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u6765",
+      "kanji": "来",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 7,
+        "classicalRadicalNumber": 75,
+        "onyomi": [
+          "ライ",
+          "タイ"
+        ],
+        "kunyomi": [
+          "く.る",
+          "きた.る",
+          "きた.す",
+          "き.たす",
+          "き.たる",
+          "き",
+          "こ"
+        ],
+        "vietnameseReadings": [
+          "Lai",
+          "Lãi",
+          "Lay",
+          "Lơi",
+          "Ray",
+          "Rơi"
+        ],
+        "meaningsEn": [
+          "come",
+          "due",
+          "next",
+          "cause",
+          "become"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u7acb",
+      "kanji": "立",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 5,
+        "classicalRadicalNumber": 117,
+        "onyomi": [
+          "リツ",
+          "リュウ",
+          "リットル"
+        ],
+        "kunyomi": [
+          "た.つ",
+          "-た.つ",
+          "た.ち-",
+          "た.てる",
+          "-た.てる",
+          "た.て-",
+          "たて-",
+          "-た.て",
+          "-だ.て",
+          "-だ.てる"
+        ],
+        "vietnameseReadings": [
+          "Lập"
+        ],
+        "meaningsEn": [
+          "stand up",
+          "rise",
+          "set up",
+          "erect"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-6",
+      "kanji": "六",
+      "existingId": true,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 4,
+        "classicalRadicalNumber": 12,
+        "onyomi": [
+          "ロク",
+          "リク"
+        ],
+        "kunyomi": [
+          "む",
+          "む.つ",
+          "むっ.つ",
+          "むい"
+        ],
+        "vietnameseReadings": [
+          "Lục"
+        ],
+        "meaningsEn": [
+          "six"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    },
+    {
+      "id": "k-u8a71",
+      "kanji": "話",
+      "existingId": false,
+      "proposedLevel": "N5",
+      "sourceData": {
+        "jlptBefore2010": 4,
+        "strokeCount": 13,
+        "classicalRadicalNumber": 149,
+        "onyomi": [
+          "ワ"
+        ],
+        "kunyomi": [
+          "はな.す",
+          "はなし"
+        ],
+        "vietnameseReadings": [
+          "Thoại"
+        ],
+        "meaningsEn": [
+          "tale",
+          "talk"
+        ]
+      },
+      "editorialStatus": "awaiting_vietnamese_review"
+    }
+  ]
+}

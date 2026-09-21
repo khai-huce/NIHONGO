@@ -117,7 +117,7 @@ const FlashcardContent: React.FC<FlashcardViewProps & {progress: FlashcardProgre
   });
 
   if (!current) return <div className="kanji-flashcard" role="dialog" aria-label="Flashcard Kanji"><p>Không có Kanji trong danh sách này.</p><button onClick={onClose}>Đóng</button></div>;
-  const japanese = <span className="kf-japanese"><span className="kf-glyph font-japanese">{current.kanji}</span><span className="kf-hanviet">{current.hanViet}</span><span className="kf-mnemonic">💡 {current.mnemonic}</span></span>;
+  const japanese = <span className="kf-japanese"><span className="kf-glyph font-japanese">{current.kanji}</span><span className="kf-hanviet">{current.hanViet}</span><span className="kf-mnemonic">💡 {current.mnemonic || 'Chưa có gợi nhớ được biên tập.'}</span></span>;
   const meaning = <span className="kf-meaning">{current.meaning}</span>;
   return (
     <div ref={root} tabIndex={-1} className="kanji-flashcard" role="dialog" aria-label="Flashcard Kanji" aria-modal="true">

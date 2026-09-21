@@ -20,3 +20,9 @@ const result = spawnSync(process.execPath, [fileURLToPath(new URL('../node_modul
   stdio: 'inherit', env: { ...process.env, DATABASE_URL: raw },
 });
 process.exitCode = result.status ?? 1;
+if (result.status === 0) {
+  const seed = spawnSync(process.execPath, ['--import', 'tsx', fileURLToPath(new URL('./content-seed.ts', import.meta.url)), '--commit'], {
+    stdio: 'inherit', env: { ...process.env, DATABASE_URL: raw },
+  });
+  process.exitCode = seed.status ?? 1;
+}

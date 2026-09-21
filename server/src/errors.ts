@@ -30,6 +30,7 @@ export const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, _ne
     res.status(413).json({ error: { code: 'BODY_TOO_LARGE', message: 'Dữ liệu gửi lên quá lớn.' } });
     return;
   }
-  console.error('API request failed:', error instanceof Error ? error.name : 'UnknownError');
+  console.error('API request failed:', error instanceof Error ? error.name : 'UnknownError',
+    error instanceof Prisma.PrismaClientKnownRequestError ? error.code : '');
   res.status(503).json({ error: { code: 'SERVICE_UNAVAILABLE', message: 'Máy chủ tạm thời không sẵn sàng. Vui lòng thử lại.' } });
 };

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FlashcardProgress } from '../components/FlashcardView';
-import { KANJI_DATABASE } from '../data/kanjiData';
+import { useContentCatalog } from '../hooks/useContentCatalog';
 import type { KanjiItem } from '../types';
 import { roadmapDayKanji } from '../../shared/roadmap.mjs';
 
@@ -33,9 +33,9 @@ type Session<T extends RoadmapStudyData> = {
   replay: boolean;
 };
 
-const catalog = new Map(KANJI_DATABASE.map(item => [item.kanji, item]));
 
 export function useRoadmapStudy<T extends RoadmapStudyData>(roadmap: T, day: number, plans: RoadmapStudyAdapter<T>) {
+  const { byCharacter: catalog } = useContentCatalog();
   const [session, setSession] = useState<Session<T> | null>(null);
   const sessionRef = useRef<Session<T> | null>(null);
   const pending = useRef(false);

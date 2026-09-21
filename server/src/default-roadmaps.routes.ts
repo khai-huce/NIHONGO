@@ -1,29 +1,39 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
-import type { DefaultRoadmapProgress, Prisma, PrismaClient } from '@prisma/client';
-import { DEFAULT_ROADMAP, studyStreak, vietnamStudyDate } from '../../shared/default-roadmap.mjs';
-import { ROADMAP_KANJI, roadmapDayKanji } from '../../shared/roadmap.mjs';
+import type { CatalogDefinition, DefaultRoadmapProgress, Prisma, PrismaClient } from '@prisma/client';
+import { studyStreak, vietnamStudyDate } from '../../shared/default-roadmap.mjs';
+import { roadmapDayKanji } from '../../shared/roadmap.mjs';
 import { assessRoadmapKanji, roadmapProgress } from '../../shared/roadmap-study.mjs';
 import { HttpError } from './errors.js';
+import { loadRoadmapDefinition, type ContentDb } from './content.service.js';
 
-const { id: catalogId, kanjiList, perDay } = DEFAULT_ROADMAP;
-const totalDays = Math.ceil(kanjiList.length / perDay);
+const catalogId = 'n5-v1';
+async function definition(db: ContentDb) {
+  const value = await loadRoadmapDefinition(db, catalogId);
+  if (!value) throw new HttpError(503, 'CONTENT_UNAVAILABLE', 'Lộ trình chưa được nhập vào kho nội dung.');
+  return value;
+}
+const pairsFor = (catalog: CatalogDefinition) => catalog.kanjiIds.map((id, index) => [id, catalog.kanjiList[index]] as const);
 const identity = { expectedUserId: z.string().uuid(), catalogId: z.literal(catalogId) };
 const day = z.number().int().positive().max(2000);
 const startInput = z.object({ ...identity, day }).strict();
 const rateInput = z.object({ ...identity, day, progressVersion: z.number().int().nonnegative().max(2147483647),
   kanjiId: z.string().min(1).max(32), memorized: z.boolean() }).strict();
-const idsByCharacter = new Map(ROADMAP_KANJI.map(([id, character]) => [character, id]));
 const changed = () => new HttpError(409, 'ROADMAP_PROGRESS_CHANGED', 'Tiến độ đã thay đổi ở phiên khác. Vui lòng tải lại trước khi đánh giá tiếp.');
 
-function studyDayIds(day: number) {
+function studyDayIds(day: number, catalog: CatalogDefinition) {
+  const { kanjiList, perDay } = catalog;
+  const totalDays = Math.ceil(kanjiList.length / perDay);
+  const idsByCharacter = new Map(pairsFor(catalog).map(([id, character]) => [character, id]));
   if (day > totalDays) throw new HttpError(400, 'INVALID_ROADMAP_DAY', 'Ngày học không tồn tại trong lộ trình.');
   return roadmapDayKanji(kanjiList, perDay, day).map(character => idsByCharacter.get(character));
 }
 
-function toDto(saved: DefaultRoadmapProgress | null, now: Date) {
-  const progress = roadmapProgress(kanjiList, perDay, saved?.assessments, saved?.completedDays);
+function toDto(saved: DefaultRoadmapProgress | null, now: Date, catalog: CatalogDefinition) {
+  const { kanjiList, perDay } = catalog;
+  const totalDays = Math.ceil(kanjiList.length / perDay);
+  const progress = roadmapProgress(kanjiList, perDay, saved?.assessments, saved?.completedDays, pairsFor(catalog));
   const activityDays = saved?.activityDays ?? [];
   return {
     id: catalogId, kanjiList, perDay, totalDays, ...progress,
@@ -54,7 +64,7 @@ export function defaultRoadmapRoutes(db: PrismaClient) {
     const saved = await db.defaultRoadmapProgress.findUnique({ where: { userId_catalogId: { userId, catalogId } } });
     // Looking at the plan creates no progress and never imports personal/global study data.
     const now = new Date();
-    res.json({ userId, roadmap: toDto(saved, now), serverNow: now });
+    res.json({ userId, roadmap: toDto(saved, now, await definition(db)), serverNow: now });
   });
   router.use((req, _res, next) => {
     if (req.body?.expectedUserId !== req.session.userId) throw new HttpError(409, 'ACCOUNT_CHANGED', 'Tài khoản đã đổi. Vui lòng tải lại trang.');
@@ -62,7 +72,7 @@ export function defaultRoadmapRoutes(db: PrismaClient) {
   });
   router.post('/start', async (req, res) => {
     const input = startInput.parse(req.body), userId = req.session.userId!;
-    studyDayIds(input.day);
+    studyDayIds(input.day, await definition(db));
     const saved = await db.$transaction(async tx => {
       await lockDefaultRoadmap(tx, userId);
       const where = { userId_catalogId: { userId, catalogId } };
@@ -74,11 +84,11 @@ export function defaultRoadmapRoutes(db: PrismaClient) {
       });
     });
     const now = new Date();
-    res.json({ userId, roadmap: toDto(saved, now), serverNow: now });
+    res.json({ userId, roadmap: toDto(saved, now, await definition(db)), serverNow: now });
   });
   router.post('/rate', async (req, res) => {
     const input = rateInput.parse(req.body), userId = req.session.userId!;
-    const dayIds = studyDayIds(input.day);
+    const dayIds = studyDayIds(input.day, await definition(db));
     if (!dayIds.includes(input.kanjiId)) throw new HttpError(400, 'INVALID_ROADMAP_KANJI', 'Chữ Kanji không thuộc ngày học này.');
     const saved = await db.$transaction(async tx => {
       await lockDefaultRoadmap(tx, userId);
@@ -86,7 +96,8 @@ export function defaultRoadmapRoutes(db: PrismaClient) {
       const before = await tx.defaultRoadmapProgress.findUnique({ where });
       if (!before?.startedAt) throw new HttpError(409, 'ROADMAP_NOT_STARTED', 'Vui lòng bắt đầu ngày học trước khi đánh giá.');
       if (before.progressVersion !== input.progressVersion) throw changed();
-      const progress = assessRoadmapKanji(kanjiList, perDay, before.assessments, before.completedDays, input.day, input.kanjiId, input.memorized);
+      const catalog = await definition(tx);
+      const progress = assessRoadmapKanji(catalog.kanjiList, catalog.perDay, before.assessments, before.completedDays, input.day, input.kanjiId, input.memorized, pairsFor(catalog));
       const now = new Date();
       const activityDays = [...new Set([...before.activityDays, vietnamStudyDate(now)])].sort();
       const updated = await tx.defaultRoadmapProgress.updateMany({
@@ -102,7 +113,7 @@ export function defaultRoadmapRoutes(db: PrismaClient) {
       return tx.defaultRoadmapProgress.findUniqueOrThrow({ where });
     });
     const now = new Date();
-    res.json({ userId, roadmap: toDto(saved, now), serverNow: now });
+    res.json({ userId, roadmap: toDto(saved, now, await definition(db)), serverNow: now });
   });
   return router;
 }

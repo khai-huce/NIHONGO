@@ -144,13 +144,13 @@ export const ROADMAP_KANJI = [
 export const ROADMAP_PER_DAY = [5, 10, 15, 20, 25, 30];
 export const MAX_ROADMAP_TEXT = 2000;
 export const MAX_ROADMAPS = 100;
-const supported = new Set(ROADMAP_KANJI.map(([, character]) => character));
 
 export function extractRoadmapKanji(raw) {
   return [...new Set(raw.match(/\p{Script=Han}/gu) ?? [])];
 }
 
-export function analyzeRoadmapKanji(raw) {
+export function analyzeRoadmapKanji(raw, catalog = ROADMAP_KANJI) {
+  const supported = new Set(catalog.map(([, character]) => character));
   const kanjiList = extractRoadmapKanji(raw);
   return { kanjiList, unsupported: kanjiList.filter(character => !supported.has(character)) };
 }

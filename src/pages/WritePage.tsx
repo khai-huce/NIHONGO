@@ -1,16 +1,17 @@
 import React, { useState, useRef } from 'react';
 import { PenTool, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { KANJI_DATABASE } from '../data/kanjiData';
+import { useContentCatalog } from '../hooks/useContentCatalog';
 import { speakJapanese } from '../utils/speech';
 
 export const WritePage: React.FC = () => {
+  const { kanji: KANJI_DATABASE } = useContentCatalog();
   const [selectedKanjiIndex, setSelectedKanjiIndex] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushColor, setBrushColor] = useState('#2563eb');
   const [brushWidth, setBrushWidth] = useState(8);
 
-  const currentKanji = KANJI_DATABASE[selectedKanjiIndex];
+  const currentKanji = KANJI_DATABASE[selectedKanjiIndex % KANJI_DATABASE.length];
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -57,6 +58,8 @@ export const WritePage: React.FC = () => {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
+
+  if (!currentKanji) return <p className="p-6">Chưa có Kanji được xuất bản.</p>;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">

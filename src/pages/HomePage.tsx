@@ -7,8 +7,7 @@ import {
   BookOpen, 
   ExternalLink
 } from 'lucide-react';
-import { KANJI_DATABASE } from '../data/kanjiData';
-import { RADICALS_DATABASE } from '../data/radicalsData';
+import { useContentCatalog } from '../hooks/useContentCatalog';
 import { KanjiTile } from '../components/KanjiTile';
 import { FlashcardView } from '../components/FlashcardView';
 import { RoughCard, RoughButton } from '../components/RoughCard';
@@ -26,6 +25,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onSelectKanji,
   onOpenWrite, userId, authBusy, onLogin
 }) => {
+  const { kanji: KANJI_DATABASE, radicals: RADICALS_DATABASE } = useContentCatalog();
   const [activeLevel, setActiveLevel] = useState<JLPTLevel | 'RADICALS'>('N5');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFlashcardOpen, setIsFlashcardOpen] = useState(false);

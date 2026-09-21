@@ -22,332 +22,11 @@ import {
 } from 'lucide-react';
 import { RoughCard, RoughButton } from '../components/RoughCard';
 import { useLearningSettings } from '../hooks/useLearningSettings';
-import { speakJapanese } from '../utils/speech';
-
-// ---------------------------------------------------------------------------
-// TYPES
-// ---------------------------------------------------------------------------
-export interface SentenceItem {
-  id: number;
-  japanese: string;
-  furiganaHtml: string;
-  translation: string;
-  durationSec: number;
-}
-
-export interface ParagraphItem {
-  id: number;
-  sentences: SentenceItem[];
-}
-
-export interface VocabItem {
-  word: string;
-  reading: string;
-  hanViet: string;
-  meaning: string;
-}
-
-export interface GrammarItem {
-  pattern: string;
-  jlptLevel: string;
-  meaning: string;
-  exampleJp: string;
-  exampleVi: string;
-}
-
-export interface QuizItem {
-  id: number;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
-
-export interface ReadingArticle {
-  id: string;
-  title: string;
-  subtitle: string;
-  charCount: number;
-  durationText: string;
-  totalSeconds: number;
-  isDemo: boolean;
-  createdAt: string;
-  paragraphs: ParagraphItem[];
-  vocabList: VocabItem[];
-  grammarList: GrammarItem[];
-  quizList: QuizItem[];
-}
-
-// ---------------------------------------------------------------------------
-// DEMO ARTICLE DATA: 単身世帯の増加 (Matching screenshots exactly)
-// ---------------------------------------------------------------------------
-const DEMO_ARTICLE: ReadingArticle = {
-  id: 'demo-tan-shin-se-tai',
-  title: '単身世帯の増加',
-  subtitle: 'Hộ độc thân ngày càng tăng (bài mẫu)',
-  charCount: 1261,
-  durationText: '3:43',
-  totalSeconds: 223,
-  isDemo: true,
-  createdAt: '2026-09-07',
-  paragraphs: [
-    {
-      id: 1,
-      sentences: [
-        {
-          id: 1,
-          japanese: '最近の日本社会で最も目立つ変化の一つは、一人で暮らす人が急速に増えていることです。',
-          furiganaHtml: '<ruby>最近<rt>さいきん</rt></ruby>の<ruby>日本社会<rt>にほんしゃかい</rt></ruby>で<ruby>最<rt>もっと</rt></ruby>も<ruby>目立<rt>めだ</rt></ruby>つ<ruby>変化<rt>へんか</rt></ruby>の<ruby>一<rt>ひと</rt></ruby>つは、<ruby>一人<rt>ひとり</rt></ruby>で<ruby>暮<rt>く</rt></ruby>らす<ruby>人<rt>ひと</rt></ruby>が<ruby>急速<rt>きゅうそく</rt></ruby>に<ruby>増<rt>ふ</rt></ruby>えていることです。',
-          translation: 'Một trong những biến đổi nổi bật nhất trong xã hội Nhật Bản gần đây là số người sống một mình đang tăng lên nhanh chóng.',
-          durationSec: 14
-        },
-        {
-          id: 2,
-          japanese: '統計によると、全世帯のうち単身世帯が占める割合はすでに三分の一を超えており、今後も増え続けると見られています。',
-          furiganaHtml: '<ruby>統計<rt>とうけい</rt></ruby>によると、<ruby>全世帯<rt>ぜんせたい</rt></ruby>のうち<ruby>単身世帯<rt>たんしんせたい</rt></ruby>が<ruby>占<rt>し</rt></ruby>める<ruby>割合<rt>わりあい</rt></ruby>はすでに<ruby>三分の一<rt>さんぶんのいち</rt></ruby>を<ruby>超<rt>こ</rt></ruby>えており、<ruby>今後<rt>こんご</rt></ruby>も<ruby>増<rt>ふ</rt></ruby>え<ruby>続<rt>つづ</rt></ruby>けると<ruby>見<rt>み</rt></ruby>られています。',
-          translation: 'Theo thống kê, tỷ lệ hộ gia đình đơn thân đã vượt quá một phần ba tổng số hộ gia đình và dự kiến sẽ tiếp tục tăng trong tương lai.',
-          durationSec: 16
-        },
-        {
-          id: 3,
-          japanese: '一人でご飯を食べたり、一人で映画を見たり、一人で旅行に出かけたりする姿は、もう特別なことではありません。',
-          furiganaHtml: '<ruby>一人<rt>ひとり</rt></ruby>でご<ruby>飯<rt>はん</rt></ruby>を<ruby>食<rt>た</rt></ruby>べたり、<ruby>一人<rt>ひとり</rt></ruby>で<ruby>映画<rt>えいが</rt></ruby>を<ruby>見<rt>み</rt></ruby>たり、<ruby>一人<rt>ひとり</rt></ruby>で<ruby>旅行<rt>りょこう</rt></ruby>に<ruby>出<rt>で</rt></ruby>かけたりする<ruby>姿<rt>すがた</rt></ruby>は、もう<ruby>特別<rt>とくべつ</rt></ruby>なことではありません。',
-          translation: 'Hình ảnh một mình đi ăn cơm, một mình xem phim, hay một mình đi du lịch không còn là điều gì quá đặc biệt nữa.',
-          durationSec: 15
-        },
-        {
-          id: 4,
-          japanese: '以前は一人で何かをする人を気の毒に思う視線が多かったのですが、最近の若い世代はむしろ一人だけの時間を楽しむことを自然な生活スタイルとして受け入れています。',
-          furiganaHtml: '<ruby>以前<rt>いぜん</rt></ruby>は<ruby>一人<rt>ひとり</rt></ruby>で<ruby>何<rt>なに</rt></ruby>かを する<ruby>人<rt>ひと</rt></ruby>を<ruby>気<rt>き</rt></ruby>の<ruby>毒<rt>どく</rt></ruby>に<ruby>思<rt>おも</rt></ruby>う<ruby>視線<rt>しせん</rt></ruby>が<ruby>多<rt>おお</rt></ruby>かったのですが、<ruby>最近<rt>さいきん</rt></ruby>の<ruby>若<rt>わか</rt></ruby>い<ruby>世代<rt>せだい</rt></ruby>はむしろ<ruby>一人<rt>ひとり</rt></ruby>だけの<ruby>時間<rt>じかん</rt></ruby>を<ruby>楽<rt>たの</rt></ruby>しむことを<ruby>自然<rt>しぜん</rt></ruby>な<ruby>生活<rt>せいかつ</rt></ruby>スタイルとして<ruby>受<rt>う</rt></ruby>け<ruby>入<rt>い</rt></ruby>れています。',
-          translation: 'Trước đây có nhiều ánh nhìn thương hại dành cho người làm việc gì đó một mình, nhưng thế hệ trẻ ngày nay lại đón nhận việc tận hưởng thời gian một mình như một phong cách sống tự nhiên.',
-          durationSec: 20
-        }
-      ]
-    },
-    {
-      id: 2,
-      sentences: [
-        {
-          id: 5,
-          japanese: '単身世帯が増える理由はさまざまです。',
-          furiganaHtml: '<ruby>単身世帯<rt>たんしんせたい</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>える<ruby>理由<rt>りゆう</rt></ruby>はさまざまです。',
-          translation: 'Có nhiều nguyên nhân khác nhau dẫn đến việc các hộ gia đình đơn thân ngày càng gia tăng.',
-          durationSec: 8
-        },
-        {
-          id: 6,
-          japanese: '結婚を遅らせたり、まったくしなかったりする人が多くなり、学業や仕事のために家族と離れて暮らす若者も増えました。',
-          furiganaHtml: '<ruby>結婚<rt>けっこん</rt></ruby>を<ruby>遅<rt>おく</rt></ruby>らせたり、まったくしなかったりする<ruby>人<rt>ひと</rt></ruby>が<ruby>多<rt>おお</rt></ruby>くなり、<ruby>学業<rt>がくぎょう</rt></ruby>や<ruby>仕事<rt>しごと</rt></ruby>のために<ruby>家族<rt>かぞく</rt></ruby>と<ruby>離<rt>はな</rt></ruby>れて<ruby>暮<rt>く</rt></ruby>らす<ruby>若者<rt>わかもの</rt></ruby>も<ruby>増<rt>ふ</rt></ruby>えました。',
-          translation: 'Ngày càng nhiều người kết hôn muộn hoặc không kết hôn, đồng thời số thanh niên sống xa gia đình vì học hành hay công việc cũng tăng lên.',
-          durationSec: 16
-        },
-        {
-          id: 7,
-          japanese: '平均寿命が延びるにつれて、配偶者を先に見送り、一人残される高齢者も多くなりました。',
-          furiganaHtml: '<ruby>平均寿命<rt>へいきんじゅみょう</rt></ruby>が<ruby>延<rt>の</rt></ruby>びるにつれて、<ruby>配偶者<rt>はいぐうしゃ</rt></ruby>を<ruby>先<rt>さき</rt></ruby>に<ruby>見送<rt>みおく</rt></ruby>り、<ruby>一人残<rt>ひとり残</rt></ruby>される<ruby>高齢者<rt>こうれいしゃ</rt></ruby>も<ruby>多<rt>おお</rt></ruby>くなりました。',
-          translation: 'Khi tuổi thọ trung bình ngày càng kéo dài, số người cao tuổi tiễn biệt người bạn đời và ở lại một mình cũng nhiều hơn.',
-          durationSec: 15
-        },
-        {
-          id: 8,
-          japanese: 'さらに、個人の自由やプライバシーを大切にする価値観の変化も大きな影響を与えました。',
-          furiganaHtml: 'さらに、<ruby>個人<rt>こじん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>やプライバシーを<ruby>大切<rt>たいせつ</rt></ruby>にする<ruby>価値観<rt>かちかん</rt></ruby>の<ruby>変化<rt>へんか</rt></ruby>も<ruby>大<rt>おお</rt></ruby>きな<ruby>影響<rt>えいきょう</rt></ruby>を<ruby>与<rt>あた</rt></ruby>えました。',
-          translation: 'Thêm vào đó, sự thay đổi trong hệ giá trị đề cao sự tự do cá nhân và quyền riêng tư cũng tạo nên ảnh hưởng to lớn.',
-          durationSec: 14
-        },
-        {
-          id: 9,
-          japanese: '経済的に自立できる女性が増えたことも、重要な理由の一つに挙げられます。',
-          furiganaHtml: '<ruby>経済的<rt>けいざいてき</rt></ruby>に<ruby>自立<rt>じりつ</rt></ruby>できる<ruby>女性<rt>じょせい</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>えたことも、<ruby>重要<rt>じゅうよう</rt></ruby>な<ruby>理由<rt>りゆう</rt></ruby>の<ruby>一<rt>ひと</rt></ruby>つに<ruby>挙<rt>あ</rt></ruby>げられます。',
-          translation: 'Việc ngày càng nhiều phụ nữ có khả năng tự chủ về kinh tế cũng được xem là một lý do quan trọng.',
-          durationSec: 13
-        }
-      ]
-    },
-    {
-      id: 3,
-      sentences: [
-        {
-          id: 10,
-          japanese: '「一人焼肉」や「一人カラオケ」という言葉が流行しているのも、この流れをよく示しています。',
-          furiganaHtml: '「<ruby>一人焼肉<rt>ひとりやきにく</rt></ruby>」や「<ruby>一人<rt>ひとり</rt></ruby>カラオケ」という<ruby>言葉<rt>ことば</rt></ruby>が<ruby>流行<rt>りゅうこう</rt></ruby>しているのも、この<ruby>流<rt>なが</rt></ruby>れをよく<ruby>示<rt>しめ</rt></ruby>しています。',
-          translation: 'Sự phổ biến của những từ như "ăn thịt nướng một mình" hay "karaoke một mình" cũng phản ánh rõ nét xu hướng này.',
-          durationSec: 14
-        },
-        {
-          id: 11,
-          japanese: '一人で食事をすることはもう珍しい日常になり、飲食店も一人客のためのメニューや専用のカウンター席を充実させています。',
-          furiganaHtml: '<ruby>一人<rt>ひとり</rt></ruby>で<ruby>食事<rt>しょくじ</rt></ruby>をすることはもう<ruby>珍<rt>めずら</rt></ruby>しい<ruby>日常<rt>にちじょう</rt></ruby>になり、<ruby>飲食店<rt>いんしょくてん</rt></ruby>も<ruby>一人客<rt>ひとりきゃく</rt></ruby>のためのメニューや<ruby>専用<rt>せんよう</rt></ruby>のカウンター<ruby>席<rt>せき</rt></ruby>を<ruby>充実<rt>じゅうじつ</rt></ruby>させています。',
-          translation: 'Việc ăn một mình đã trở thành sinh hoạt quen thuộc hàng ngày, các quán ăn cũng bổ sung nhiều thực đơn và quầy ghế riêng cho khách đi một mình.',
-          durationSec: 17
-        },
-        {
-          id: 12,
-          japanese: 'スーパーやコンビニでも、少量パックの総菜や個食向けの商品が売り場に並び、生活のあらゆる場面で「おひとりさま」を前提としたサービスが定着しつつあります。',
-          furiganaHtml: 'スーパーやコンビニでも、<ruby>少量<rt>しょうりょう</rt></ruby>パックの<ruby>総菜<rt>そうざい</rt></ruby>や<ruby>個食向<rt>こしょくむ</rt></ruby>けの<ruby>商品<rt>しょうひん</rt></ruby>が<ruby>売<rt>う</rt></ruby>り<ruby>場<rt>ば</rt></ruby>に<ruby>並<rt>なら</rt></ruby>び、<ruby>生活<rt>せいかつ</rt></ruby>のあらゆる<ruby>場面<rt>ばめん</rt></ruby>で「おひとりさま」を<ruby>前提<rt>ぜんてい</rt></ruby>としたサービスが<ruby>定着<rt>ていちゃく</rt></ruby>しつつあります。',
-          translation: 'Tại các siêu thị và cửa hàng tiện lợi, các hộp thức ăn nhỏ và mặt hàng dành cho một người được bày bán nhiều nơi, dịch vụ dành cho người một mình đang dần ăn sâu vào mọi khía cạnh đời sống.',
-          durationSec: 20
-        }
-      ]
-    },
-    {
-      id: 4,
-      sentences: [
-        {
-          id: 13,
-          japanese: '一方で、単身世帯の増加には課題も指摘されています。',
-          furiganaHtml: '<ruby>一方<rt>いっぽう</rt></ruby>で、<ruby>単身世帯<rt>たんしんせたい</rt></ruby>の<ruby>増加<rt>ぞうか</rt></ruby>には<ruby>課題<rt>かだい</rt></ruby>も<ruby>指摘<rt>してき</rt></ruby>されています。',
-          translation: 'Mặt khác, sự gia tăng hộ gia đình đơn thân cũng đi kèm với không ít vấn đề nan giải.',
-          durationSec: 10
-        },
-        {
-          id: 14,
-          japanese: '病気のときや災害時の孤立、将来への経済的不安、そして社会的なつながりの希薄化などです。',
-          furiganaHtml: '<ruby>病気<rt>びょうき</rt></ruby>のときや<ruby>災害時<rt>さいがいじ</rt></ruby>の<ruby>孤立<rt>こりつ</rt></ruby>、<ruby>将来<rt>しょうらい</rt></ruby>への<ruby>経済的不安<rt>けいざいてきふあん</rt></ruby>、そして<ruby>社会的<rt>しゃかいてき</rt></ruby>なつながりの<ruby>希薄化<rt>きはくか</rt></ruby>などです。',
-          translation: 'Đó là nguy cơ cô lập lúc đau ốm hay khi xảy ra thiên tai, sự bất an về kinh tế trong tương lai, và sự suy giảm các mối liên kết xã hội.',
-          durationSec: 15
-        },
-        {
-          id: 15,
-          japanese: '一人で生きる自由を享受しながらも、いざというときに助け合える緩やかなコミュニティや、地域社会の見守り体制をどう整えていくかが、これからの日本にとって大きなテーマとなっています。',
-          furiganaHtml: '<ruby>一人<rt>ひとり</rt></ruby>で<ruby>生<rt>い</rt></ruby>きる<ruby>自由<rt>じゆう</rt></ruby>を<ruby>享受<rt>きょうじゅ</rt></ruby>しながらも、いざというときに<ruby>助<rt>たす</rt></ruby>け<ruby>合<rt>あ</rt></ruby>える<ruby>緩<rt>ゆる</rt></ruby>やかなコミュニティや、<ruby>地域社会<rt>ちいきしゃかい</rt></ruby>の<ruby>見守<rt>みまも</rt></ruby>り<ruby>体制<rt>たいせい</rt></ruby>をどう<ruby>整<rt>ととの</rt></ruby>えていくかが、これからの<ruby>日本<rt>にほん</rt></ruby>にとって<ruby>大<rt>おお</rt></ruby>きなテーマとなっています。',
-          translation: 'Làm thế nào để vừa tận hưởng sự tự do sống một mình, vừa xây dựng được mạng lưới cộng đồng gắn kết để giúp đỡ nhau khi hoạn nạn đang là chủ đề lớn của xã hội Nhật Bản hiện nay.',
-          durationSec: 26
-        }
-      ]
-    }
-  ],
-  vocabList: [
-    {
-      word: '変化',
-      reading: 'へんか',
-      hanViet: 'BIẾN HÓA',
-      meaning: 'sự thay đổi'
-    },
-    {
-      word: '急速',
-      reading: 'きゅうそく',
-      hanViet: 'CẤP TỐC',
-      meaning: 'nhanh chóng'
-    },
-    {
-      word: '統計',
-      reading: 'とうけい',
-      hanViet: 'THỐNG KÊ',
-      meaning: 'thống kê'
-    },
-    {
-      word: '割合',
-      reading: 'わりあい',
-      hanViet: 'CÁT HỢP',
-      meaning: 'tỷ lệ'
-    },
-    {
-      word: '見られる',
-      reading: 'みられる',
-      hanViet: 'KIẾN',
-      meaning: 'được thấy, được dự đoán'
-    },
-    {
-      word: '特別な',
-      reading: 'とくべつな',
-      hanViet: 'ĐẶC BIỆT',
-      meaning: 'đặc biệt'
-    },
-    {
-      word: '単身世帯',
-      reading: 'たんしんせたい',
-      hanViet: 'ĐƠN THÂN THẾ ĐỚI',
-      meaning: 'hộ gia đình đơn thân'
-    },
-    {
-      word: '平均寿命',
-      reading: 'へいきんじゅみょう',
-      hanViet: 'BÌNH QUÂN THỌ MỆNH',
-      meaning: 'tuổi thọ trung bình'
-    },
-    {
-      word: '自立',
-      reading: 'じりつ',
-      hanViet: 'TỰ LẬP',
-      meaning: 'tự lập, tự chủ kinh tế'
-    },
-    {
-      word: '孤立',
-      reading: 'こりつ',
-      hanViet: 'CÔ LẬP',
-      meaning: 'cô lập, tách biệt'
-    }
-  ],
-  grammarList: [
-    {
-      pattern: '〜によって・〜による',
-      jlptLevel: 'N2',
-      meaning: 'Do / Bằng cách / Theo như',
-      exampleJp: '統計によると、全世帯のうち単身世帯が占める割合はすでに三分の一を超えており、今後も増え続けると見られています。',
-      exampleVi: 'Theo thống kê, tỷ lệ hộ gia đình đơn thân đã vượt quá một phần ba tổng số hộ gia đình và dự kiến sẽ tiếp tục tăng trong tương lai.'
-    },
-    {
-      pattern: '〜として(は)',
-      jlptLevel: 'N2',
-      meaning: 'Với tư cách là / Như là',
-      exampleJp: '最近の若い世代はむしろ一人だけの時間を楽しむことを自然な生活スタイルとして受け入れています。',
-      exampleVi: 'Thế hệ trẻ gần đây chấp nhận việc tận hưởng khoảng thời gian một mình như một phong cách sống tự nhiên.'
-    },
-    {
-      pattern: '〜につれて',
-      jlptLevel: 'N2',
-      meaning: 'Cùng với / Càng... càng...',
-      exampleJp: '平均寿命が延びるにつれて、配偶者を先に見送り、一人残される高齢者も多くなりました。',
-      exampleVi: 'Khi tuổi thọ trung bình ngày càng tăng, số lượng người cao tuổi tiễn biệt bạn đời và sống một mình cũng tăng lên.'
-    },
-    {
-      pattern: '〜ながら(も)',
-      jlptLevel: 'N2',
-      meaning: 'Tuy... nhưng / Dù vậy',
-      exampleJp: '一人で生きる自由を享受しながらも、いざというときに助け合える緩やかなコミュニティが必要です。',
-      exampleVi: 'Dù đang tận hưởng sự tự do khi sống một mình, nhưng một cộng đồng gắn kết để giúp đỡ nhau khi hoạn nạn vẫn là điều cần thiết.'
-    }
-  ],
-  quizList: [
-    {
-      id: 1,
-      question: '筆者によると、単身世帯が増えている理由として適切でないものはどれか。',
-      options: [
-        '子供を持つことを諦める人が増えた。',
-        '平均寿命が延びた。',
-        '女性の経済的自立が進んだ。',
-        '結婚を遅らせる人が増えた。'
-      ],
-      correctIndex: 0,
-      explanation: 'Trong bài, tác giả nêu các lý do: kết hôn muộn hoặc không kết hôn, tuổi thọ tăng dẫn đến người già neo đơn, phụ nữ độc lập kinh tế, giá trị cá nhân riêng tư. Không hề nhắc đến việc "từ bỏ sinh con".'
-    },
-    {
-      id: 2,
-      question: 'この文章で筆者が最も言いたいことはどれか。',
-      options: [
-        '経済的な自立が一人暮らしの最大のメリットである。',
-        '一人暮らしは孤独で寂しいものである。',
-        '一人で暮らすことは必ずしも悪いことではない。',
-        '単身世帯の増加は社会全体に大きな影響を与えている。'
-      ],
-      correctIndex: 3,
-      explanation: 'Toàn bộ bài viết luận giải việc số lượng người sống một mình tăng lên tác động sâu rộng tới kinh doanh, tiêu dùng, dịch vụ và đặt ra bài toán hệ thống gắn kết cộng đồng cho toàn xã hội.'
-    },
-    {
-      id: 3,
-      question: 'この文章の内容と合っているものはどれか。',
-      options: [
-        '政府は単身世帯への支援を十分に行っている。',
-        'コンビニでは一人用の席が用意され始めている。',
-        '一人だけの時間を楽しむ若者が増えている。',
-        '高齢者の単身世帯は今後減少すると予想されている。'
-      ],
-      correctIndex: 2,
-      explanation: 'Khớp với câu trong bài: "最近の若い世代はむしろ一人だけの時間を楽しむことを自然な生活スタイルとして受け入れています".'
-    }
-  ]
-};
+import { useNavigate, useParams } from 'react-router-dom';
+import { pagePaths } from '../routes';
+import { useReadings } from '../hooks/useReadings';
+import { useReadingAudio } from '../hooks/useReadingAudio';
+import { formatReadingTime as formatTime, readingLength, READING_LIMIT } from '../utils/reading';
 
 // ---------------------------------------------------------------------------
 // 6-STEP EFFECTIVE READING COMPREHENSION METHOD
@@ -385,282 +64,55 @@ const READING_STEPS = [
   }
 ];
 
-export const DocHieuPage: React.FC = () => {
-  // Current active article (null = creation/overview view, non-null = reading study view)
-  const [currentArticle, setCurrentArticle] = useState<ReadingArticle | null>(DEMO_ARTICLE);
-
-  // Custom user articles stored in localStorage
-  const [userArticles, setUserArticles] = useState<ReadingArticle[]>(() => {
-    try {
-      const saved = localStorage.getItem('nhai_kanji_user_reading_articles');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Textarea state for creating new article
-  const [inputText, setInputText] = useState<string>('');
-  const [isMethodAccordionOpen, setIsMethodAccordionOpen] = useState<boolean>(false);
-
-  // Study view states
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [activeSentenceId, setActiveSentenceId] = useState<number>(1);
-  const [currentTimeSec, setCurrentTimeSec] = useState<number>(0);
-  const [isLoopSentence, setIsLoopSentence] = useState<boolean>(false);
+export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }> = ({ userId, authBusy }) => {
+  const { articleId } = useParams<{ articleId: string }>();
+  const navigate = useNavigate();
+  const readings = useReadings(userId, authBusy, articleId);
+  const currentArticle = readings.article;
+  const userArticles = readings.articles.filter(article => article.visibility === 'private');
+  const publicArticles = readings.articles.filter(article => article.visibility === 'public');
+  const [inputText, setInputText] = useState('');
+  const [isMethodAccordionOpen, setIsMethodAccordionOpen] = useState(false);
+  const [isLoopSentence, setIsLoopSentence] = useState(false);
   const settings = useLearningSettings();
   const [speedOverride, setPlaybackSpeed] = useState<number | null>(null);
   const [furiganaOverride, setShowFurigana] = useState<boolean | null>(null);
   const playbackSpeed = speedOverride ?? settings.audioSpeed;
   const furiganaMode = furiganaOverride === null ? settings.showFurigana : furiganaOverride ? 'always' : 'never';
   const showFurigana = furiganaMode !== 'never';
-  const [playbackRevision, setPlaybackRevision] = useState(0);
-  const loopRef = useRef(isLoopSentence);
-  loopRef.current = isLoopSentence;
+  const player = useReadingAudio(currentArticle, userId, authBusy, playbackSpeed, isLoopSentence);
+  const isPlaying = player.playing;
+  const activeSentenceId = player.sentenceId;
+  const currentTimeSec = player.currentTime;
   const readingAreaRef = useRef<HTMLDivElement>(null);
-  const [showTranslation, setShowTranslation] = useState<boolean>(false);
-
-  // Quiz state: { [questionId]: selectedOptionIndex }
-  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
-  const [showExplanations, setShowExplanations] = useState<Record<number, boolean>>({});
-
-  // Audio timer ref
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Save custom articles to localStorage
-  useEffect(() => {
-    localStorage.setItem('nhai_kanji_user_reading_articles', JSON.stringify(userArticles));
-  }, [userArticles]);
-
-  // Flattened sentences for audio playback synchronization
-  const allSentences = currentArticle 
-    ? currentArticle.paragraphs.flatMap(p => p.sentences) 
-    : [];
-
-  const activeSentence = allSentences.find(s => s.id === activeSentenceId) || allSentences[0];
-
-  // Format seconds to mm:ss
-  const formatTime = (secs: number): string => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  // Each effect owns its speech request and loop timer. A speed change restarts
-  // the current sentence; pause/navigation cancels pending callbacks as well.
-  useEffect(() => {
-    if (!isPlaying || !currentArticle) return;
-    const sentences = currentArticle.paragraphs.flatMap(paragraph => paragraph.sentences);
-    const index = Math.max(0, sentences.findIndex(sentence => sentence.id === activeSentenceId));
-    const sentence = sentences[index];
-    if (!sentence) {
-      setIsPlaying(false);
-      return;
-    }
-    let active = true;
-    let loopTimer: ReturnType<typeof setTimeout> | undefined;
-    const cancel = speakJapanese(sentence.japanese, playbackSpeed, {
-      onEnd: () => {
-        if (!active) return;
-        if (loopRef.current) {
-          loopTimer = setTimeout(() => {
-            if (active) setPlaybackRevision(revision => revision + 1);
-          }, 400);
-        } else if (sentences[index + 1]) {
-          setActiveSentenceId(sentences[index + 1].id);
-        } else {
-          setIsPlaying(false);
-        }
-      },
-      onError: () => { if (active) setIsPlaying(false); },
-    });
-    return () => {
-      active = false;
-      clearTimeout(loopTimer);
-      cancel();
-    };
-  }, [isPlaying, currentArticle, activeSentenceId, playbackSpeed, playbackRevision]);
-
-  useEffect(() => {
-    readingAreaRef.current?.querySelectorAll<HTMLElement>('ruby').forEach(ruby => {
-      ruby.tabIndex = furiganaMode === 'hover' ? 0 : -1;
-    });
-  }, [furiganaMode, currentArticle]);
-
-  // Handle Play/Pause
-  const togglePlay = () => {
-    if (activeSentence) setIsPlaying(playing => !playing);
-  };
-
-  // Handle previous sentence
-  const handlePrevSentence = () => {
-    const currentIndex = allSentences.findIndex(s => s.id === activeSentenceId);
-    if (currentIndex > 0) {
-      const prevSentence = allSentences[currentIndex - 1];
-      setActiveSentenceId(prevSentence.id);
-    } else {
-      if (activeSentence && isPlaying) {
-        setPlaybackRevision(revision => revision + 1);
-      }
-    }
-  };
-
-  // Handle next sentence
-  const handleNextSentence = () => {
-    const currentIndex = allSentences.findIndex(s => s.id === activeSentenceId);
-    if (currentIndex < allSentences.length - 1) {
-      const nextSentence = allSentences[currentIndex + 1];
-      setActiveSentenceId(nextSentence.id);
-    } else {
-      setIsPlaying(false);
-    }
-  };
-
-  // Select a specific sentence directly by clicking it
-  const handleSelectSentence = (sentence: SentenceItem) => {
-    setActiveSentenceId(sentence.id);
-    setPlaybackRevision(revision => revision + 1);
-    setIsPlaying(true);
-  };
-
-  // Toggle speed
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+  const [showExplanations, setShowExplanations] = useState<Record<string, boolean>>({});
+  useEffect(() => { setQuizAnswers({}); setShowExplanations({}); }, [articleId, currentArticle?.version, userId]);
+  const openArticle = (id: string) => navigate(`${pagePaths['lifetime-doc-hieu']}/${encodeURIComponent(id)}`);
   const cyclePlaybackSpeed = () => {
-    const speeds = [0.75, 1.0, 1.25, 1.5];
-    const currentIndex = speeds.indexOf(playbackSpeed);
-    const nextSpeed = speeds[(currentIndex + 1) % speeds.length];
-    setPlaybackSpeed(nextSpeed);
+    const speeds = [0.75, 1, 1.25, 1.5];
+    setPlaybackSpeed(speeds[(speeds.indexOf(playbackSpeed) + 1) % speeds.length]);
   };
-
-  // Timer ticker while playing to update timeline smoothly
-  useEffect(() => {
-    if (isPlaying && currentArticle) {
-      timerRef.current = setInterval(() => {
-        setCurrentTimeSec(prev => {
-          if (prev >= currentArticle.totalSeconds) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000 / playbackSpeed);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isPlaying, playbackSpeed, currentArticle]);
-
-  // Use Sample Text button
   const handleUseSampleText = () => {
-    const sample = `日本の四季にはそれぞれ特有の美しさがあります。春には桜が咲き誇り、多くの人々が公園で花見を楽しみます。夏は各地でお祭りや花火大会が開催され、浴衣を着た若者たちで街が賑わいます。秋になると紅葉が山々を美しく染め上げ、豊かな味覚を楽しむ季節となります。そして冬には雪景色が広がり、静かで厳かな雰囲気が漂います。このような季節の移り変わりを感じることは、日本人の心に深く根付いている伝統的な感性の一つです。`;
-    setInputText(sample);
+    const first = publicArticles[0];
+    if (first) setInputText(first.text);
   };
-
-  // Create new article from textarea
-  const handleCreateArticle = () => {
-    const text = inputText.trim();
-    if (!text) {
-      alert('Vui lòng dán một đoạn văn bản tiếng Nhật vào ô nhập!');
-      return;
-    }
-
-    // Split text into rough sentences by Japanese full stop '。'
-    const rawSentences = text
-      .split('。')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-
-    const generatedSentences: SentenceItem[] = rawSentences.map((s, idx) => ({
-      id: idx + 1,
-      japanese: s + '。',
-      furiganaHtml: s + '。',
-      translation: `Câu ${idx + 1}: ${s}。`,
-      durationSec: Math.max(5, Math.round(s.length * 0.4))
-    }));
-
-    const totalSecs = generatedSentences.reduce((acc, curr) => acc + curr.durationSec, 0);
-
-    const newArticle: ReadingArticle = {
-      id: `user-${Date.now()}`,
-      title: rawSentences[0].slice(0, 16) + '...',
-      subtitle: `Bài đọc tự tạo (${text.length} ký tự)`,
-      charCount: text.length,
-      durationText: formatTime(totalSecs),
-      totalSeconds: totalSecs,
-      isDemo: false,
-      createdAt: new Date().toLocaleDateString('vi-VN'),
-      paragraphs: [
-        {
-          id: 1,
-          sentences: generatedSentences
-        }
-      ],
-      vocabList: [
-        {
-          word: '日本',
-          reading: 'にほん',
-          hanViet: 'NHẬT BẢN',
-          meaning: 'nước Nhật Bản'
-        },
-        {
-          word: '社会',
-          reading: 'しゃかい',
-          hanViet: 'XÃ HỘI',
-          meaning: 'xã hội'
-        },
-        {
-          word: '生活',
-          reading: 'せいかつ',
-          hanViet: 'SINH HOẠT',
-          meaning: 'đời sống sinh hoạt'
-        }
-      ],
-      grammarList: [
-        {
-          pattern: '〜について',
-          jlptLevel: 'N3',
-          meaning: 'Về vấn đề / Nói về...',
-          exampleJp: text.slice(0, 60) + '...',
-          exampleVi: 'Ví dụ ngữ pháp trích xuất từ bài đọc tự tạo.'
-        }
-      ],
-      quizList: [
-        {
-          id: 1,
-          question: 'この文章の主なテーマは何ですか。',
-          options: [
-            rawSentences[0] || 'Vấn đề chính của đoạn văn',
-            'Một quan điểm trái ngược',
-            'Không liên quan',
-            'Nội dung khác'
-          ],
-          correctIndex: 0,
-          explanation: 'Chủ đề chính được thể hiện rõ ở câu mở đầu đoạn văn.'
-        }
-      ]
-    };
-
-    setUserArticles(prev => [newArticle, ...prev]);
-    setCurrentArticle(newArticle);
-    setInputText('');
-    setActiveSentenceId(1);
-    setCurrentTimeSec(0);
-    setIsPlaying(false);
+  const handleCreateArticle = async () => {
+    const id = await readings.create(inputText);
+    if (id) { setInputText(''); openArticle(id); }
   };
-
-  // Delete a user article
-  const handleDeleteUserArticle = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm('Bạn có chắc muốn xóa bài đọc này?')) {
-      setUserArticles(prev => prev.filter(a => a.id !== id));
-      if (currentArticle?.id === id) {
-        setIsPlaying(false);
-        setCurrentArticle(DEMO_ARTICLE);
-      }
-    }
+  const handleDeleteUserArticle = async (id: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    const article = userArticles.find(item => item.id === id);
+    if (article && window.confirm('Bạn có chắc muốn xóa bài đọc này?')) await readings.remove(article);
   };
+  const status = <>
+    {readings.loading && <p role="status" className="text-xs font-bold text-[#78716c]">Đang tải bài đọc…</p>}
+    {readings.saving && <p role="status" className="text-xs font-bold text-[#78716c]">Đang lưu…</p>}
+    {readings.error && <p role="alert" className="text-xs font-bold text-red-700">{readings.error} <button onClick={readings.refresh} className="underline" disabled={readings.saving}>Tải lại</button></p>}
+    {!userId && !authBusy && <p className="text-xs font-bold text-[#78716c]">Bạn đang dùng chế độ khách. Bài trên thiết bị được giữ riêng, không tự nhập vào tài khoản.</p>}
+  </>;
 
   // =========================================================================
   // VIEW 1: CREATION & ARTICLE LIST OVERVIEW (media_1788792133093.png)
@@ -678,10 +130,11 @@ export const DocHieuPage: React.FC = () => {
             Đọc hiểu
           </h1>
           <p className="text-xs md:text-sm font-bold text-[#78716c] leading-relaxed">
-            Dán một đoạn văn hoặc bài báo tiếng Nhật — hệ thống tạo audio giọng bản xứ kèm bản dịch, audio đọc tới đâu chữ sáng tới đó để bạn luyện đọc theo kiểu shadowing.
+            Lưu bài đọc tiếng Nhật để học và mở lại theo tài khoản. Audio, bản dịch và nội dung bổ trợ hiển thị khi đã sẵn sàng.
           </p>
         </div>
 
+        {status}
         {/* 2-Column Grid: Left (Articles list) + Right (Creation Box) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-2">
           
@@ -695,33 +148,31 @@ export const DocHieuPage: React.FC = () => {
                 <span>Bài demo</span>
               </div>
               <p className="text-xs font-bold text-[#78716c]">
-                Xem trước kết quả: audio đọc chuẩn, bấm từng câu, bản dịch, câu hỏi & từ vựng — miễn phí, không tốn lượt.
+                Xem bài đọc và nội dung bổ trợ đã được biên tập. Audio hiển thị khi đã sẵn sàng.
               </p>
 
-              {/* Demo Card */}
+              {publicArticles.length === 0 && !readings.loading && <p className="text-xs font-bold text-[#78716c]">Chưa có bài đọc được xuất bản.</p>}
+              {publicArticles.map(article => (
               <RoughCard
+                key={article.id}
                 fill="#ffffff"
                 stroke="#292524"
                 borderRadius={12}
                 roughness={0.7}
                 className="p-4 space-y-1.5 shadow-sketch cursor-pointer hover:bg-stone-50/70 transition-colors"
-                onClick={() => {
-                  setCurrentArticle(DEMO_ARTICLE);
-                  setActiveSentenceId(1);
-                  setCurrentTimeSec(0);
-                  setIsPlaying(false);
-                }}
+                onClick={() => openArticle(article.id)}
               >
                 <h3 className="text-sm md:text-base font-black text-[#292524] font-sketch">
-                  {DEMO_ARTICLE.title}
+                  {article.title}
                 </h3>
                 <p className="text-xs font-bold text-[#57534e]">
-                  {DEMO_ARTICLE.subtitle}
+                  {article.subtitle}
                 </p>
                 <div className="text-[11px] font-bold text-[#78716c] pt-1">
-                  {DEMO_ARTICLE.durationText} · {DEMO_ARTICLE.charCount} ký tự
+                  {article.audio ? formatTime(article.audio.totalSeconds) : '--:--'} · {readingLength(article.text)} ký tự
                 </div>
               </RoughCard>
+              ))}
             </div>
 
             {/* Section 2: Bài của bạn */}
@@ -755,19 +206,15 @@ export const DocHieuPage: React.FC = () => {
                       borderRadius={12}
                       roughness={0.7}
                       className="p-4 space-y-1.5 shadow-sketch cursor-pointer hover:bg-stone-50/70 transition-colors group relative"
-                      onClick={() => {
-                        setCurrentArticle(art);
-                        setActiveSentenceId(1);
-                        setCurrentTimeSec(0);
-                        setIsPlaying(false);
-                      }}
+                      onClick={() => openArticle(art.id)}
                     >
                       <div className="flex items-start justify-between">
                         <h3 className="text-sm font-black text-[#292524] font-sketch line-clamp-1">
                           {art.title}
                         </h3>
                         <button
-                          onClick={(e) => handleDeleteUserArticle(art.id, e)}
+                          onClick={(e) => { void handleDeleteUserArticle(art.id, e); }}
+                          disabled={readings.saving || readings.loading}
                           className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition-opacity p-1"
                           title="Xóa bài đọc"
                         >
@@ -778,7 +225,7 @@ export const DocHieuPage: React.FC = () => {
                         {art.subtitle}
                       </p>
                       <div className="text-[11px] font-bold text-[#78716c] pt-1">
-                        {art.durationText} · {art.charCount} ký tự · {art.createdAt}
+                        {art.audio ? formatTime(art.audio.totalSeconds) : '--:--'} · {readingLength(art.text)} ký tự · {Number.isFinite(Date.parse(art.createdAt)) ? new Date(art.createdAt).toLocaleDateString('vi-VN') : art.createdAt}
                       </div>
                     </RoughCard>
                   ))}
@@ -840,14 +287,15 @@ export const DocHieuPage: React.FC = () => {
             >
               <textarea
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value.slice(0, 3000))}
+                onChange={(e) => setInputText(Array.from(e.target.value).slice(0, READING_LIMIT).join(''))}
+                disabled={readings.saving || authBusy}
                 placeholder="Dán một đoạn đọc ngắn, đoạn văn hoặc bài báo tiếng Nhật (tối đa 3000 ký tự) vào đây..."
                 rows={12}
                 className="w-full bg-transparent border-0 outline-none resize-y text-sm md:text-base text-[#292524] font-kanji placeholder:text-stone-400 focus:ring-0 leading-relaxed"
               />
 
               <div className="flex items-center justify-end text-xs font-bold text-stone-400 pt-2 border-t border-stone-200/60">
-                <span>{inputText.length}/3000</span>
+                <span>{readingLength(inputText)}/3000</span>
               </div>
             </RoughCard>
 
@@ -856,6 +304,7 @@ export const DocHieuPage: React.FC = () => {
               <div>
                 <button
                   onClick={handleUseSampleText}
+                  disabled={!publicArticles.length || readings.saving}
                   className="text-xs font-bold text-[#78716c] hover:text-[#0094ff] underline underline-offset-2 transition-colors cursor-pointer"
                 >
                   Dùng văn bản mẫu
@@ -863,7 +312,8 @@ export const DocHieuPage: React.FC = () => {
               </div>
 
               <RoughButton
-                onClick={handleCreateArticle}
+                onClick={() => { void handleCreateArticle(); }}
+                disabled={readings.saving || readings.loading || !inputText.trim()}
                 fill="#70c4ff"
                 stroke="#0284c7"
                 borderRadius={10}
@@ -898,26 +348,21 @@ export const DocHieuPage: React.FC = () => {
           Đọc hiểu
         </h1>
         <p className="text-xs md:text-sm font-bold text-[#78716c] leading-relaxed">
-          Dán một đoạn văn hoặc bài báo tiếng Nhật — hệ thống tạo audio giọng bản xứ kèm bản dịch, audio đọc tới đâu chữ sáng tới đó để bạn luyện đọc theo kiểu shadowing.
+          Lưu bài đọc tiếng Nhật để học và mở lại theo tài khoản. Audio, bản dịch và nội dung bổ trợ hiển thị khi đã sẵn sàng.
         </p>
       </div>
 
       {/* 2. Sub-action bar: "Tạo bài đọc khác" + Demo badge */}
       <div className="flex items-center gap-3 flex-wrap">
         <button
-          onClick={() => {
-            if (isPlaying) {
-              setIsPlaying(false);
-            }
-            setCurrentArticle(null);
-          }}
+          onClick={() => navigate(pagePaths['lifetime-doc-hieu'])}
           className="px-3 py-1 rounded-lg border border-[#292524] bg-white hover:bg-stone-100 text-xs font-bold text-[#292524] flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
         >
           <Pencil className="w-3.5 h-3.5" />
           <span>Tạo bài đọc khác</span>
         </button>
 
-        {currentArticle.isDemo && (
+        {currentArticle.visibility === 'public' && (
           <span className="px-3 py-1 rounded-full border border-[#0094ff] bg-blue-50/70 text-xs font-black text-[#0094ff] flex items-center gap-1.5 shadow-xs">
             <BookOpen className="w-3.5 h-3.5" />
             <span>Bài đọc mẫu (demo) · miễn phí</span>
@@ -925,6 +370,7 @@ export const DocHieuPage: React.FC = () => {
         )}
       </div>
 
+      {status}
       {/* 3. Audio Player Bar (Full width RoughCard) */}
       <RoughCard
         fill="#ffffff"
@@ -933,36 +379,40 @@ export const DocHieuPage: React.FC = () => {
         roughness={0.7}
         className="p-4 md:p-5 shadow-sketch space-y-3"
       >
+        {player.generating && <p role="status" className="text-xs font-bold text-[#78716c]">Đang tạo audio bằng Microsoft Edge TTS…</p>}
+        {player.error && <p role="alert" className="text-xs font-bold text-red-700">{player.error}</p>}
+        {!player.audio && !player.generating && !player.error && <p className="text-xs font-bold text-[#78716c]">Chưa có audio. Bấm phát để tạo audio cho bài đọc.</p>}
         {/* Timeline Slider */}
         <div className="flex items-center gap-3 text-xs font-black text-slate-600 font-mono">
           <span className="w-10 text-right">{formatTime(currentTimeSec)}</span>
           
           <div 
+            role="slider"
+            tabIndex={player.audio ? 0 : -1}
+            aria-label="Vị trí phát audio"
+            aria-valuemin={0}
+            aria-valuemax={player.audio?.totalSeconds ?? 0}
+            aria-valuenow={Math.round(currentTimeSec)}
+            aria-disabled={!player.audio}
+            onKeyDown={event => {
+              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); player.seek(currentTimeSec + (event.key === 'ArrowLeft' ? -5 : 5)); }
+              if (event.key === 'Home') { event.preventDefault(); player.seek(0); }
+              if (event.key === 'End') { event.preventDefault(); player.seek(player.audio?.totalSeconds ?? 0); }
+            }}
             onClick={(e) => {
+              if (!player.audio) return;
               const rect = e.currentTarget.getBoundingClientRect();
-              const clickX = e.clientX - rect.left;
-              const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-              const targetSec = Math.round(ratio * currentArticle.totalSeconds);
-              setCurrentTimeSec(targetSec);
-              let acc = 0;
-              for (const s of allSentences) {
-                acc += s.durationSec;
-                if (targetSec <= acc) {
-                  setActiveSentenceId(s.id);
-                  if (isPlaying) setPlaybackRevision(revision => revision + 1);
-                  break;
-                }
-              }
+              player.seek(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * player.audio.totalSeconds);
             }}
             className="relative flex-1 h-2.5 border border-[#292524] rounded-full bg-stone-100 cursor-pointer overflow-hidden p-0.5"
           >
             <div 
               className="h-full bg-[#0094ff] rounded-full transition-all duration-200"
-              style={{ width: `${(currentTimeSec / (currentArticle.totalSeconds || 1)) * 100}%` }}
+              style={{ width: `${(currentTimeSec / (player.audio?.totalSeconds || 1)) * 100}%` }}
             />
           </div>
 
-          <span className="w-10">{currentArticle.durationText}</span>
+          <span className="w-10">{player.audio ? formatTime(player.audio.totalSeconds) : '--:--'}</span>
         </div>
 
         {/* Player Controls Bar */}
@@ -972,7 +422,8 @@ export const DocHieuPage: React.FC = () => {
           <div className="flex items-center gap-2">
             {/* Prev Sentence */}
             <button
-              onClick={handlePrevSentence}
+              onClick={player.previous}
+              disabled={!player.audio || player.generating || authBusy}
               className="w-8 h-8 border-sketch-subtle bg-white hover:bg-stone-100 text-[#292524] flex items-center justify-center transition-colors cursor-pointer"
               title="Câu trước"
             >
@@ -981,7 +432,8 @@ export const DocHieuPage: React.FC = () => {
 
             {/* Play/Pause Button */}
             <RoughButton
-              onClick={togglePlay}
+              onClick={() => { void player.toggle(); }}
+              disabled={player.generating || authBusy}
               fill="#0094ff"
               stroke="#0284c7"
               className="w-10 h-10 text-white flex items-center justify-center cursor-pointer"
@@ -996,7 +448,8 @@ export const DocHieuPage: React.FC = () => {
 
             {/* Next Sentence */}
             <button
-              onClick={handleNextSentence}
+              onClick={player.next}
+              disabled={!player.audio || player.generating || authBusy}
               className="w-8 h-8 border-sketch-subtle bg-white hover:bg-stone-100 text-[#292524] flex items-center justify-center transition-colors cursor-pointer"
               title="Câu kế tiếp"
             >
@@ -1073,6 +526,7 @@ export const DocHieuPage: React.FC = () => {
             roughness={0.7}
             className="p-5 md:p-7 shadow-sketch space-y-6"
           >
+            {showFurigana && !currentArticle.paragraphs.some(p => p.sentences.some(s => s.ruby?.some(token => token.reading))) && <p className="text-xs font-bold text-[#78716c]">Chưa có Furigana được biên tập cho bài này.</p>}
             {currentArticle.paragraphs.map(p => (
               <div key={p.id} className="space-y-3 leading-relaxed text-[#292524] font-sans">
                 {p.sentences.map(s => {
@@ -1081,7 +535,7 @@ export const DocHieuPage: React.FC = () => {
                   return (
                     <div
                       key={s.id}
-                      onClick={() => handleSelectSentence(s)}
+                      onClick={() => { void player.sentence(s.id); }}
                       className={`p-2.5 rounded-xl transition-all cursor-pointer group ${
                         isActive
                           ? 'bg-amber-100/70 border-l-4 border-[#0094ff] pl-3.5 shadow-xs ring-1 ring-amber-200'
@@ -1096,16 +550,17 @@ export const DocHieuPage: React.FC = () => {
                           if (furiganaMode === 'hover') (event.target as HTMLElement).closest<HTMLElement>('ruby')?.focus();
                         }}
                       >
-                        <span
-                          dangerouslySetInnerHTML={{ __html: s.furiganaHtml }}
-                          className="ruby-container font-medium"
-                        />
+                        <span className="ruby-container font-medium">
+                          {s.ruby?.length ? s.ruby.map((token, index) => token.reading
+                            ? <ruby key={index} tabIndex={furiganaMode === 'hover' ? 0 : -1}>{token.text}<rt>{token.reading}</rt></ruby>
+                            : <React.Fragment key={index}>{token.text}</React.Fragment>) : s.japanese}
+                        </span>
                       </div>
 
                       {/* Vietnamese Translation (Visible if toggle ON or on hover of active) */}
                       {(showTranslation || isActive) && (
                         <div className="text-xs md:text-sm font-bold text-slate-500 pt-1.5 animate-in fade-in duration-200">
-                          {s.translation}
+                          {s.translation || 'Chưa có bản dịch cho câu này.'}
                         </div>
                       )}
                     </div>
@@ -1129,6 +584,7 @@ export const DocHieuPage: React.FC = () => {
             </div>
 
             <div className="space-y-6">
+              {!currentArticle.quizList.length && <p className="text-xs font-bold text-[#78716c]">Chưa có câu hỏi đọc hiểu cho bài này.</p>}
               {currentArticle.quizList.map((quiz, qIdx) => {
                 const selected = quizAnswers[quiz.id];
                 const isAnswered = selected !== undefined;
@@ -1217,6 +673,7 @@ export const DocHieuPage: React.FC = () => {
 
             {/* Scrollable list of vocabulary cards */}
             <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+              {!currentArticle.vocabList.length && <p className="text-xs font-bold text-[#78716c]">Chưa có từ vựng được biên tập cho bài này.</p>}
               {currentArticle.vocabList.map((v, idx) => (
                 <RoughCard
                   key={idx}
@@ -1253,6 +710,7 @@ export const DocHieuPage: React.FC = () => {
             </div>
 
             <div className="space-y-3">
+              {!currentArticle.grammarList.length && <p className="text-xs font-bold text-[#78716c]">Chưa có ngữ pháp được biên tập cho bài này.</p>}
               {currentArticle.grammarList.map((g, idx) => (
                 <RoughCard
                   key={idx}

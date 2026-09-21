@@ -16,7 +16,7 @@ import { useSearchParams } from 'react-router-dom';
 import { speakJapanese } from '../utils/speech';
 import { RoughCard, RoughButton } from '../components/RoughCard';
 import { ReviewStar } from '../components/ReviewStar';
-import { KANJI_DATABASE } from '../data/kanjiData';
+import { useContentCatalog } from '../hooks/useContentCatalog';
 import { KanjiItem } from '../types';
 import { GrammarDetailItem, SAMPLE_GRAMMAR_ITEMS } from '../components/GrammarDetailView';
 
@@ -38,6 +38,7 @@ interface ReviewPageProps {
 
 export const ReviewPage: React.FC<ReviewPageProps> = ({ onSelectKanji, onSelectGrammar }) => {
   const review = useReview();
+  const { allKanji: KANJI_DATABASE } = useContentCatalog();
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('type');
   const activeCategory: ReviewCategory = categoryParam === 'vocab' || categoryParam === 'grammar' ? categoryParam : 'kanji';

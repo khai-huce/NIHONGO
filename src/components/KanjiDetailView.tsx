@@ -147,7 +147,7 @@ export const KanjiDetailView: React.FC<KanjiDetailViewProps> = ({
             {/* Gợi ý cách nhớ */}
             <p className="leading-relaxed">
               <span>Gợi ý cách nhớ: </span>
-              <span className="text-[#0094ff] font-bold font-sketch">{item.mnemonic}</span>
+              <span className="text-[#0094ff] font-bold font-sketch">{item.mnemonic || 'Chưa có gợi nhớ được biên tập.'}</span>
             </p>
 
           </div>

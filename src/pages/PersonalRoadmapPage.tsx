@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { RoughCard, RoughButton } from '../components/RoughCard';
 import { usePersonalRoadmaps, type PersonalRoadmap } from '../hooks/usePersonalRoadmaps';
+import { CatalogGate, useContentCatalog } from '../hooks/useContentCatalog';
 import { analyzeRoadmapKanji, MAX_ROADMAP_TEXT, ROADMAP_PER_DAY } from '../../shared/roadmap.mjs';
 import { DefaultRoadmapView } from '../components/DefaultRoadmapView';
 import { RoadmapDeleteDialog } from '../components/RoadmapDeleteDialog';
@@ -18,6 +19,7 @@ import { useSearchParams } from 'react-router-dom';
 import type { KanjiItem } from '../types';
 
 export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean; onLogin:()=>void; onDetail:(item:KanjiItem)=>void}> = ({userId, authBusy, onLogin, onDetail}) => {
+  const { activePairs } = useContentCatalog();
   const [search, setSearch] = useSearchParams();
   const selectedId = search.get('roadmap');
   const activeRoadmap = selectedId || search.get('tab') === 'my' ? 'my' : 'default';
@@ -40,7 +42,7 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
   const [formError, setFormError] = useState('');
   const draftId = useRef('');
   const actionPending = useRef(false);
-  const {kanjiList:extractedKanji, unsupported} = analyzeRoadmapKanji(newRoadmapKanjiText);
+  const {kanjiList:extractedKanji, unsupported} = analyzeRoadmapKanji(newRoadmapKanjiText, activePairs);
   const perDayLocked = !!editingRoadmap && (!!editingRoadmap.startedAt || editingRoadmap.currentDay > 1);
 
   const openCreate = () => {
@@ -311,7 +313,7 @@ export const PersonalRoadmapPage: React.FC<{userId:string|null; authBusy:boolean
         /* ============================================================ */
         /* 2. VIEW: LỘ TRÌNH MẶC ĐỊNH (DEFAULT ROADMAP) */
         /* ============================================================ */
-        <DefaultRoadmapView userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={onDetail} />
+        <CatalogGate roadmap><DefaultRoadmapView userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={onDetail} /></CatalogGate>
       )}
 
       {/* ============================================================ */}

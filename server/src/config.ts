@@ -9,6 +9,8 @@ const schema = z.object({
   DATABASE_URL: z.string().url().refine(value => /^postgres(ql)?:/.test(value), 'PostgreSQL URL required'),
   SESSION_SECRET: z.string().min(32).refine(value => !value.startsWith('replace-'), 'Generate a random SESSION_SECRET'),
   GOOGLE_CLIENT_ID: z.string().trim().default('').refine(value => value === '' || value.endsWith('.apps.googleusercontent.com'), 'Invalid Google Web client ID'),
+  TTS_PYTHON: z.string().min(1).optional(),
+  TTS_STORAGE_DIR: z.string().min(1).optional(),
 });
 
 export type Config = z.infer<typeof schema>;

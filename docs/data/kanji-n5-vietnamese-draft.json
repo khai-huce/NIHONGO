@@ -1,0 +1,850 @@
+{
+  "schemaVersion": 1,
+  "status": "draft_not_imported",
+  "purpose": "Bản nháp Hán Việt và nghĩa tiếng Việt cho người dùng duyệt; chưa được duyệt và chưa xuất bản vào ứng dụng.",
+  "sourceReference": {
+    "file": "docs/data/kanji-n5-source-preview.json",
+    "name": "KANJIDIC2",
+    "datasetDate": "2026-09-17",
+    "compressedSha256": "8c8089ad06b6fa27ef2de65b2c136043c9e76f2cbe065843aa917fa20c91adba",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://www.edrdg.org/edrdg/licence.html",
+    "copyright": "James William BREEN and the Electronic Dictionary Research and Development Group"
+  },
+  "selectionNote": "misc/jlpt = 4 (pre-2010); proposed N5 reference set, not an official current JLPT list",
+  "editorialMethod": "Hán Việt chọn từ các cách đọc của nguồn KANJIDIC2 và chuẩn hóa Unicode NFC. Nghĩa tiếng Việt là bản dịch nháp do trợ lý soạn từ nghĩa cốt lõi trong nguồn, cần người dùng kiểm tra và duyệt từng mục; không phải bản dịch tiếng Việt chính thức của KANJIDIC2.",
+  "excludedFields": [
+    "mnemonic",
+    "examples",
+    "radicalParts",
+    "strokePaths"
+  ],
+  "excludedFieldsNote": "Không tự tạo câu chuyện ghi nhớ, ví dụ từ/câu, chiết tự hay nét viết trong bản nháp nghĩa này. Không chỉnh dữ liệu âm On/Kun hoặc bộ thủ của bản nguồn.",
+  "total": 103,
+  "entries": [
+    {
+      "id": "k-u5b89",
+      "kanji": "安",
+      "hanViet": "AN",
+      "meaningVi": "Yên ổn; bình an; rẻ",
+      "reviewStatus": "draft",
+      "note": "Nghĩa rẻ thuộc cách dùng tiếng Nhật; không chỉ có nghĩa bình an."
+    },
+    {
+      "id": "k-1",
+      "kanji": "一",
+      "hanViet": "NHẤT",
+      "meaningVi": "Một",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u98f2",
+      "kanji": "飲",
+      "hanViet": "ẨM",
+      "meaningVi": "Uống",
+      "reviewStatus": "draft",
+      "note": "Chọn âm Hán Việt thông dụng ẨM trong các cách đọc của nguồn."
+    },
+    {
+      "id": "k-u53f3",
+      "kanji": "右",
+      "hanViet": "HỮU",
+      "meaningVi": "Bên phải",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u96e8",
+      "kanji": "雨",
+      "hanViet": "VŨ",
+      "meaningVi": "Mưa",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u99c5",
+      "kanji": "駅",
+      "hanViet": "DỊCH",
+      "meaningVi": "Nhà ga",
+      "reviewStatus": "draft",
+      "note": "Nghĩa dùng trong tiếng Nhật hiện đại là nhà ga."
+    },
+    {
+      "id": "k-u5186",
+      "kanji": "円",
+      "hanViet": "VIÊN",
+      "meaningVi": "Tròn; hình tròn; đồng yên",
+      "reviewStatus": "draft",
+      "note": "Đồng yên là đơn vị tiền tệ của Nhật Bản."
+    },
+    {
+      "id": "k-u4e0b",
+      "kanji": "下",
+      "hanViet": "HẠ",
+      "meaningVi": "Dưới; xuống; hạ xuống",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-24",
+      "kanji": "何",
+      "hanViet": "HÀ",
+      "meaningVi": "Gì; cái gì",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-16",
+      "kanji": "火",
+      "hanViet": "HỎA",
+      "meaningVi": "Lửa",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u82b1",
+      "kanji": "花",
+      "hanViet": "HOA",
+      "meaningVi": "Hoa",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u4f1a",
+      "kanji": "会",
+      "hanViet": "HỘI",
+      "meaningVi": "Gặp; gặp gỡ; hội; cuộc họp",
+      "reviewStatus": "draft",
+      "note": "Chọn HỘI cho nghĩa gặp gỡ và hội họp."
+    },
+    {
+      "id": "k-u5916",
+      "kanji": "外",
+      "hanViet": "NGOẠI",
+      "meaningVi": "Bên ngoài",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-25",
+      "kanji": "学",
+      "hanViet": "HỌC",
+      "meaningVi": "Học; việc học; học thuật",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u9593",
+      "kanji": "間",
+      "hanViet": "GIAN",
+      "meaningVi": "Khoảng; khoảng cách; khoảng thời gian",
+      "reviewStatus": "draft",
+      "note": "Nghĩa chỉ khoảng trong không gian hoặc thời gian, tùy từ ghép."
+    },
+    {
+      "id": "k-u6c17",
+      "kanji": "気",
+      "hanViet": "KHÍ",
+      "meaningVi": "Không khí; tinh thần; tâm trạng",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-22",
+      "kanji": "休",
+      "hanViet": "HƯU",
+      "meaningVi": "Nghỉ; nghỉ ngơi; ngày nghỉ",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u9b5a",
+      "kanji": "魚",
+      "hanViet": "NGƯ",
+      "meaningVi": "Cá",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-19",
+      "kanji": "金",
+      "hanViet": "KIM",
+      "meaningVi": "Vàng",
+      "reviewStatus": "draft",
+      "note": "Bản nháp này chỉ dịch nghĩa gold được ghi trong nguồn; nghĩa tiền cần bổ sung và đối chiếu khi biên tập từ vựng."
+    },
+    {
+      "id": "k-9",
+      "kanji": "九",
+      "hanViet": "CỬU",
+      "meaningVi": "Chín",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u7a7a",
+      "kanji": "空",
+      "hanViet": "KHÔNG",
+      "meaningVi": "Trời; trống; rỗng",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-15",
+      "kanji": "月",
+      "hanViet": "NGUYỆT",
+      "meaningVi": "Mặt trăng; tháng",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u898b",
+      "kanji": "見",
+      "hanViet": "KIẾN",
+      "meaningVi": "Nhìn; xem; thấy",
+      "reviewStatus": "draft",
+      "note": "Chọn KIẾN cho nghĩa nhìn thấy; không liệt kê mọi biến âm Hán Việt."
+    },
+    {
+      "id": "k-u8a00",
+      "kanji": "言",
+      "hanViet": "NGÔN",
+      "meaningVi": "Nói; lời nói",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u53e4",
+      "kanji": "古",
+      "hanViet": "CỔ",
+      "meaningVi": "Cũ; xưa",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-5",
+      "kanji": "五",
+      "hanViet": "NGŨ",
+      "meaningVi": "Năm",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5348",
+      "kanji": "午",
+      "hanViet": "NGỌ",
+      "meaningVi": "Trưa; giờ Ngọ",
+      "reviewStatus": "draft",
+      "note": "Giữ nghĩa buổi trưa làm trọng tâm cho người mới học."
+    },
+    {
+      "id": "k-u5f8c",
+      "kanji": "後",
+      "hanViet": "HẬU",
+      "meaningVi": "Phía sau; sau; về sau",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u8a9e",
+      "kanji": "語",
+      "hanViet": "NGỮ",
+      "meaningVi": "Ngôn ngữ; lời nói; từ ngữ",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u53e3",
+      "kanji": "口",
+      "hanViet": "KHẨU",
+      "meaningVi": "Miệng",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-26",
+      "kanji": "校",
+      "hanViet": "HIỆU",
+      "meaningVi": "Trường học; hiệu đính",
+      "reviewStatus": "draft",
+      "note": "Chọn HIỆU theo nghĩa trường học và hiệu đính; nguồn còn ghi GIÁO, HÀO nhưng không dùng làm nhãn chính ở đây."
+    },
+    {
+      "id": "k-u884c",
+      "kanji": "行",
+      "hanViet": "HÀNH / HÀNG",
+      "meaningVi": "Đi; thực hiện; hàng; dòng",
+      "reviewStatus": "draft",
+      "note": "HÀNH gắn với đi và thực hiện; HÀNG gắn với hàng, dòng. Âm Hán Việt không thay thế cách đọc tiếng Nhật."
+    },
+    {
+      "id": "k-u9ad8",
+      "kanji": "高",
+      "hanViet": "CAO",
+      "meaningVi": "Cao; đắt",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u56fd",
+      "kanji": "国",
+      "hanViet": "QUỐC",
+      "meaningVi": "Nước; quốc gia",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u4eca",
+      "kanji": "今",
+      "hanViet": "KIM",
+      "meaningVi": "Bây giờ; hiện tại",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5de6",
+      "kanji": "左",
+      "hanViet": "TẢ",
+      "meaningVi": "Bên trái",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-3",
+      "kanji": "三",
+      "hanViet": "TAM",
+      "meaningVi": "Ba",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5c71",
+      "kanji": "山",
+      "hanViet": "SƠN",
+      "meaningVi": "Núi",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-4",
+      "kanji": "四",
+      "hanViet": "TỨ",
+      "meaningVi": "Bốn",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5b50",
+      "kanji": "子",
+      "hanViet": "TỬ",
+      "meaningVi": "Con; đứa trẻ",
+      "reviewStatus": "draft",
+      "note": "Chọn TỬ cho nghĩa con, trẻ; nghĩa địa chi Tý không phải trọng tâm bản nháp này."
+    },
+    {
+      "id": "k-u6642",
+      "kanji": "時",
+      "hanViet": "THỜI",
+      "meaningVi": "Thời gian; giờ",
+      "reviewStatus": "draft",
+      "note": "Nguồn có THÌ và THỜI; chọn THỜI làm nhãn chính."
+    },
+    {
+      "id": "k-u8033",
+      "kanji": "耳",
+      "hanViet": "NHĨ",
+      "meaningVi": "Tai",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-7",
+      "kanji": "七",
+      "hanViet": "THẤT",
+      "meaningVi": "Bảy",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u793e",
+      "kanji": "社",
+      "hanViet": "XÃ",
+      "meaningVi": "Công ty; hội; đền thờ Thần đạo",
+      "reviewStatus": "draft",
+      "note": "Nghĩa phụ thuộc từ ghép; không đồng nhất mọi cách dùng với công ty."
+    },
+    {
+      "id": "k-u8eca",
+      "kanji": "車",
+      "hanViet": "XA",
+      "meaningVi": "Xe",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u624b",
+      "kanji": "手",
+      "hanViet": "THỦ",
+      "meaningVi": "Tay",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u9031",
+      "kanji": "週",
+      "hanViet": "CHU",
+      "meaningVi": "Tuần",
+      "reviewStatus": "draft",
+      "note": "Chỉ tuần lễ; không đồng nhất với chữ 周 dù có cùng âm CHU."
+    },
+    {
+      "id": "k-10",
+      "kanji": "十",
+      "hanViet": "THẬP",
+      "meaningVi": "Mười",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u51fa",
+      "kanji": "出",
+      "hanViet": "XUẤT",
+      "meaningVi": "Ra; đi ra; đưa ra",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u66f8",
+      "kanji": "書",
+      "hanViet": "THƯ",
+      "meaningVi": "Viết",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5973",
+      "kanji": "女",
+      "hanViet": "NỮ",
+      "meaningVi": "Phụ nữ; nữ",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5c0f",
+      "kanji": "小",
+      "hanViet": "TIỂU",
+      "meaningVi": "Nhỏ; bé",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5c11",
+      "kanji": "少",
+      "hanViet": "THIỂU / THIẾU",
+      "meaningVi": "Ít; ít ỏi",
+      "reviewStatus": "draft",
+      "note": "Nguồn ghi cả THIỂU và THIẾU; nghĩa ít là trọng tâm, không mở rộng nghĩa trẻ trong bản nháp này."
+    },
+    {
+      "id": "k-u4e0a",
+      "kanji": "上",
+      "hanViet": "THƯỢNG",
+      "meaningVi": "Trên; lên",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u98df",
+      "kanji": "食",
+      "hanViet": "THỰC",
+      "meaningVi": "Ăn; thức ăn",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u65b0",
+      "kanji": "新",
+      "hanViet": "TÂN",
+      "meaningVi": "Mới",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-21",
+      "kanji": "人",
+      "hanViet": "NHÂN",
+      "meaningVi": "Người",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-17",
+      "kanji": "水",
+      "hanViet": "THỦY",
+      "meaningVi": "Nước",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-28",
+      "kanji": "生",
+      "hanViet": "SINH",
+      "meaningVi": "Sống; sự sống; sinh ra",
+      "reviewStatus": "draft",
+      "note": "Nguồn có SANH và SINH; chọn SINH làm nhãn chính."
+    },
+    {
+      "id": "k-u897f",
+      "kanji": "西",
+      "hanViet": "TÂY",
+      "meaningVi": "Phía tây",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-27",
+      "kanji": "先",
+      "hanViet": "TIÊN",
+      "meaningVi": "Trước; phía trước; đi trước",
+      "reviewStatus": "draft",
+      "note": "Giữ nghĩa trước làm trọng tâm; nghĩa cụ thể cần đọc trong từ ghép."
+    },
+    {
+      "id": "k-12",
+      "kanji": "千",
+      "hanViet": "THIÊN",
+      "meaningVi": "Nghìn",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5ddd",
+      "kanji": "川",
+      "hanViet": "XUYÊN",
+      "meaningVi": "Sông; dòng sông",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u524d",
+      "kanji": "前",
+      "hanViet": "TIỀN",
+      "meaningVi": "Phía trước; trước",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u8db3",
+      "kanji": "足",
+      "hanViet": "TÚC",
+      "meaningVi": "Chân; bàn chân; đủ",
+      "reviewStatus": "draft",
+      "note": "Bao gồm cả nghĩa chân và nghĩa đủ; không chỉ là bộ phận cơ thể."
+    },
+    {
+      "id": "k-u591a",
+      "kanji": "多",
+      "hanViet": "ĐA",
+      "meaningVi": "Nhiều",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5927",
+      "kanji": "大",
+      "hanViet": "ĐẠI",
+      "meaningVi": "To; lớn",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u7537",
+      "kanji": "男",
+      "hanViet": "NAM",
+      "meaningVi": "Đàn ông; nam",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u4e2d",
+      "kanji": "中",
+      "hanViet": "TRUNG",
+      "meaningVi": "Trong; bên trong; giữa; trung tâm",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u9577",
+      "kanji": "長",
+      "hanViet": "TRƯỜNG / TRƯỞNG",
+      "meaningVi": "Dài; người đứng đầu",
+      "reviewStatus": "draft",
+      "note": "TRƯỜNG gắn với dài; TRƯỞNG gắn với người đứng đầu."
+    },
+    {
+      "id": "k-u5929",
+      "kanji": "天",
+      "hanViet": "THIÊN",
+      "meaningVi": "Trời; bầu trời",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5e97",
+      "kanji": "店",
+      "hanViet": "ĐIẾM",
+      "meaningVi": "Cửa hàng; tiệm",
+      "reviewStatus": "draft",
+      "note": "ĐIẾM là âm Hán Việt của chữ 店; nghĩa trong mục này là cửa hàng, không phải nghĩa khác của từ đồng âm tiếng Việt."
+    },
+    {
+      "id": "k-u96fb",
+      "kanji": "電",
+      "hanViet": "ĐIỆN",
+      "meaningVi": "Điện",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-20",
+      "kanji": "土",
+      "hanViet": "THỔ",
+      "meaningVi": "Đất",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u6771",
+      "kanji": "東",
+      "hanViet": "ĐÔNG",
+      "meaningVi": "Phía đông",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u9053",
+      "kanji": "道",
+      "hanViet": "ĐẠO",
+      "meaningVi": "Đường; con đường; đạo lý",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u8aad",
+      "kanji": "読",
+      "hanViet": "ĐỘC",
+      "meaningVi": "Đọc",
+      "reviewStatus": "draft",
+      "note": "Chọn ĐỘC cho nghĩa đọc, như trong độc giả; không phải nghĩa chất độc."
+    },
+    {
+      "id": "k-u5357",
+      "kanji": "南",
+      "hanViet": "NAM",
+      "meaningVi": "Phía nam",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-2",
+      "kanji": "二",
+      "hanViet": "NHỊ",
+      "meaningVi": "Hai",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-14",
+      "kanji": "日",
+      "hanViet": "NHẬT",
+      "meaningVi": "Ngày; mặt trời; Nhật Bản",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5165",
+      "kanji": "入",
+      "hanViet": "NHẬP",
+      "meaningVi": "Vào; đưa vào",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5e74",
+      "kanji": "年",
+      "hanViet": "NIÊN",
+      "meaningVi": "Năm; năm tháng",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u8cb7",
+      "kanji": "買",
+      "hanViet": "MÃI",
+      "meaningVi": "Mua",
+      "reviewStatus": "draft",
+      "note": "Phân biệt 買 MÃI là mua với 売 là bán; chữ 売 không nằm trong tập nguồn này."
+    },
+    {
+      "id": "k-u767d",
+      "kanji": "白",
+      "hanViet": "BẠCH",
+      "meaningVi": "Trắng",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-8",
+      "kanji": "八",
+      "hanViet": "BÁT",
+      "meaningVi": "Tám",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u534a",
+      "kanji": "半",
+      "hanViet": "BÁN",
+      "meaningVi": "Một nửa; nửa",
+      "reviewStatus": "draft",
+      "note": "BÁN ở đây nghĩa là nửa, không phải hành động bán hàng."
+    },
+    {
+      "id": "k-11",
+      "kanji": "百",
+      "hanViet": "BÁCH",
+      "meaningVi": "Trăm",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u7236",
+      "kanji": "父",
+      "hanViet": "PHỤ",
+      "meaningVi": "Cha; bố",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5206",
+      "kanji": "分",
+      "hanViet": "PHÂN / PHẬN",
+      "meaningVi": "Phần; phút; hiểu",
+      "reviewStatus": "draft",
+      "note": "PHÂN gắn với phần, phân chia; PHẬN gắn với phần được chia hoặc bổn phận. Các nghĩa phút và hiểu là cách dùng tiếng Nhật."
+    },
+    {
+      "id": "k-u805e",
+      "kanji": "聞",
+      "hanViet": "VĂN",
+      "meaningVi": "Nghe; hỏi",
+      "reviewStatus": "draft",
+      "note": "Chọn VĂN làm nhãn chính; nghĩa hỏi thể hiện trong cách dùng tiếng Nhật của 聞く."
+    },
+    {
+      "id": "k-u6bcd",
+      "kanji": "母",
+      "hanViet": "MẪU",
+      "meaningVi": "Mẹ",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u5317",
+      "kanji": "北",
+      "hanViet": "BẮC",
+      "meaningVi": "Phía bắc",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u672c",
+      "kanji": "本",
+      "hanViet": "BẢN",
+      "meaningVi": "Sách; gốc; chính; đơn vị đếm vật dài",
+      "reviewStatus": "draft",
+      "note": "Nguồn có BỔN và BẢN; chọn BẢN làm nhãn chính. Nghĩa cụ thể phụ thuộc từ ghép hoặc cách đếm."
+    },
+    {
+      "id": "k-u6bce",
+      "kanji": "毎",
+      "hanViet": "MỖI",
+      "meaningVi": "Mỗi; mọi",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-13",
+      "kanji": "万",
+      "hanViet": "VẠN",
+      "meaningVi": "Mười nghìn; vạn",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u540d",
+      "kanji": "名",
+      "hanViet": "DANH",
+      "meaningVi": "Tên; danh tiếng; nổi tiếng",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-18",
+      "kanji": "木",
+      "hanViet": "MỘC",
+      "meaningVi": "Cây; gỗ",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u76ee",
+      "kanji": "目",
+      "hanViet": "MỤC",
+      "meaningVi": "Mắt",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u53cb",
+      "kanji": "友",
+      "hanViet": "HỮU",
+      "meaningVi": "Bạn; bạn bè",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u6765",
+      "kanji": "来",
+      "hanViet": "LAI",
+      "meaningVi": "Đến; tới; tiếp theo",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u7acb",
+      "kanji": "立",
+      "hanViet": "LẬP",
+      "meaningVi": "Đứng; dựng; lập nên",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-6",
+      "kanji": "六",
+      "hanViet": "LỤC",
+      "meaningVi": "Sáu",
+      "reviewStatus": "draft",
+      "note": ""
+    },
+    {
+      "id": "k-u8a71",
+      "kanji": "話",
+      "hanViet": "THOẠI",
+      "meaningVi": "Nói chuyện; câu chuyện",
+      "reviewStatus": "draft",
+      "note": ""
+    }
+  ]
+}

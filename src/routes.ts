@@ -24,6 +24,7 @@ export function tabForPath(path: string) {
   const normalized = path.replace(/\/+$/, '') || '/';
   if (normalized.startsWith('/kanji/')) return 'kanji';
   if (normalized.startsWith('/ngu-phap/')) return 'bunpo';
+  if (normalized.startsWith(`${pagePaths['lifetime-doc-hieu']}/`)) return 'lifetime-doc-hieu';
   return Object.keys(pagePaths).find(tab => pagePaths[tab] === normalized) ?? '';
 }
 

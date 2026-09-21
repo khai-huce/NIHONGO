@@ -2,7 +2,7 @@ import { Calendar, ChevronLeft, ChevronRight, Edit3, Target, Trophy } from 'luci
 import { RoughButton, RoughCard } from './RoughCard';
 import { RoadmapStudyOverlay } from './RoadmapStudyOverlay';
 import { useRoadmapStudy } from '../hooks/useRoadmapStudy';
-import { KANJI_DATABASE } from '../data/kanjiData';
+import { useContentCatalog } from '../hooks/useContentCatalog';
 import type { KanjiItem } from '../types';
 import type { PersonalRoadmap, usePersonalRoadmaps } from '../hooks/usePersonalRoadmaps';
 import { roadmapDayKanji } from '../../shared/roadmap.mjs';
@@ -20,9 +20,9 @@ type Props = {
   onLogin: () => void;
   onDetail: (item: KanjiItem) => void;
 };
-const catalog = new Map(KANJI_DATABASE.map(item => [item.kanji, item]));
 
 export function PersonalRoadmapStudy({ roadmap, day, plans, userId, authBusy, onDay, onBack, onLogin, onDetail }: Props) {
+  const { byCharacter: catalog } = useContentCatalog();
   const study = useRoadmapStudy(roadmap, day, { ...plans, reload: async () => (await plans.reload())?.find(item => item.id === roadmap.id) });
   const { session, notice, setNotice, start, reload } = study;
   const chars = roadmapDayKanji(roadmap.kanjiList, roadmap.perDay, day);

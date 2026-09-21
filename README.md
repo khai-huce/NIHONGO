@@ -1,6 +1,8 @@
 **NIHONGO — chạy frontend và Express backend ở local**
 
-Frontend dùng React/Vite/React Router. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản, phiên đăng nhập, tiến độ flashcard Kanji và thẻ/lịch sử Ôn tập. Bài học Chủ động, lộ trình riêng và bài đọc tự tạo hiện vẫn ở thiết bị.
+Frontend dùng React/Vite/React Router. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản/phiên, tiến độ và Ôn tập, bài học Chủ động, lộ trình, kết quả quiz, kho Kanji/bộ thủ và bài đọc cá nhân/công khai. Bài khách trên thiết bị giữ riêng. Audio Đọc hiểu dùng Edge TTS phía server.
+
+Kho nội dung, API quản trị, nguồn/giấy phép và cài Edge TTS: [CONTENT_PLATFORM.md](docs/CONTENT_PLATFORM.md). Đợt C01/R01/R02 chưa xây giao diện admin hoặc hoàn thiện dữ liệu giáo trình/ngữ pháp.
 
 Kế hoạch hoàn thiện chức năng theo từng task: [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Đọc tài liệu này khi cần chọn việc tiếp theo; ưu tiên đã chốt là dữ liệu học cá nhân. Danh sách URL: [ROUTES.md](docs/ROUTES.md); luồng sao và Ôn tập: [REVIEW.md](docs/REVIEW.md).
 
@@ -15,6 +17,7 @@ npm run setup:env
 npm run db:up
 npm run db:migrate
 npm --prefix server run db:generate
+npm --prefix server run content:seed -- --commit
 ```
 
 `setup:env` tạo `.env`, `server/.env`, `server/.env.test` khi chưa có và sinh SESSION_SECRET ngẫu nhiên. Lệnh không ghi đè cấu hình đã tồn tại. Các file chứa giá trị thật được gitignore; chỉ các file `.example` được lưu trong Git.

@@ -5,6 +5,7 @@ import { rateLimit } from 'express-rate-limit';
 import { HttpError } from './errors.js';
 import { reviewStats, type DailyReview } from './review.stats.js';
 import { setCustomReviewStar } from './vocab-review.js';
+import { getKanji, kanjiReviewSnapshot } from './content.service.js';
 
 const category = z.enum(['kanji', 'vocab', 'grammar']);
 const starInput = z.object({ category, sourceId: z.string().trim().min(1).max(300),
@@ -61,7 +62,22 @@ export function reviewRoutes(db: PrismaClient) {
     const userId = req.session.userId!;
     if (userId !== expectedUserId) throw new HttpError(409,'ACCOUNT_CHANGED','Tài khoản đã đổi. Vui lòng tải lại trang.');
     // Atomic upsert keeps existing due date, interval and history when reactivated.
-    const card = input.category === 'vocab' && input.sourceId.startsWith('custom:')
+    const card = input.category === 'kanji'
+      ? await db.$transaction(async tx => {
+        // Publishing takes the same content lock before updating snapshots. This prevents a star
+        // request from writing an older snapshot after an editor publishes a new revision.
+        await tx.$queryRaw`SELECT id FROM kanji_content WHERE id = ${input.sourceId} FOR UPDATE`;
+        const where = { userId_category_sourceId: { userId, category: 'kanji', sourceId: input.sourceId } };
+        const previous = await tx.reviewCard.findUnique({ where });
+        const data = await getKanji(tx, input.sourceId, { allowArchived: !!previous });
+        if (!data) {
+          if (!input.active && previous) return tx.reviewCard.update({ where, data: { active: false, version: { increment: 1 } } });
+          throw new HttpError(400, 'INVALID_KANJI', 'Kanji chưa được xuất bản hoặc không còn nhận thẻ mới.');
+        }
+        return tx.reviewCard.upsert({ where, create: { userId, category: 'kanji', sourceId: input.sourceId, active: input.active, ...kanjiReviewSnapshot(data) },
+          update: { ...kanjiReviewSnapshot(data), active: input.active, version: { increment: 1 } } });
+      })
+      : input.category === 'vocab' && input.sourceId.startsWith('custom:')
       ? await db.$transaction(tx => setCustomReviewStar(tx,userId,input.sourceId,input.active))
       : await db.reviewCard.upsert({ where: { userId_category_sourceId: { userId, category: input.category, sourceId: input.sourceId } },
       create: { userId, ...input }, update: { ...input, version: { increment: 1 } },

@@ -20,3 +20,6 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+server/.venv-tts/
+server/storage/
+__pycache__/

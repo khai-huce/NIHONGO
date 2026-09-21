@@ -15,6 +15,7 @@ model User {
   googleSub    String?  @unique @map("google_sub") @db.VarChar(255)
   avatarUrl    String?  @map("avatar_url")
   isPremium    Boolean  @default(false) @map("is_premium")
+  role         String   @default("user") @db.VarChar(16)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   kanjiProgress KanjiProgress[]
@@ -25,6 +26,7 @@ model User {
   personalRoadmaps PersonalRoadmap[]
   defaultRoadmapProgress DefaultRoadmapProgress[]
   kanaQuizResults KanaQuizResult[]
+  readingArticles ReadingArticle[]
 
   @@map("users")
 }
@@ -81,6 +83,44 @@ model ReviewEvent {
   card ReviewCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
   @@index([cardId, reviewedAt])
   @@map("review_events")
+}
+
+model ReadingArticle {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  scope String @default("personal") @db.VarChar(16)
+  version Int @default(0)
+  content Json
+  publishedContent Json? @map("published_content")
+  publishedVersion Int? @map("published_version")
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  audio ReadingAudio[]
+  @@index([userId, scope, createdAt])
+  @@map("reading_articles")
+}
+
+model ReadingAudio {
+  id String @id @db.Uuid
+  articleId String @map("article_id") @db.Uuid
+  articleVersion Int @map("article_version")
+  contentHash String @map("content_hash") @db.VarChar(64)
+  voice String @db.VarChar(64)
+  provider String @default("edge-tts") @db.VarChar(32)
+  status String @db.VarChar(16)
+  claimToken String @map("claim_token") @db.Uuid
+  leaseUntil DateTime @map("lease_until") @db.Timestamptz(3)
+  segments Json @default("[]")
+  durationSec Float @default(0) @map("duration_sec")
+  characterCount Int @map("character_count")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  article ReadingArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  @@unique([articleId, articleVersion, voice])
+  @@index([createdAt, status])
+  @@map("reading_audio")
 }
 
 model VocabLesson {
@@ -180,4 +220,70 @@ model KanaQuizResult {
 
   @@index([userId, completedAt])
   @@map("kana_quiz_results")
+}
+
+model ContentSource {
+  id String @id @db.VarChar(64)
+  name String @db.VarChar(200)
+  url String
+  license String @db.VarChar(200)
+  licenseUrl String @map("license_url")
+  version String @db.VarChar(100)
+  checksum String @db.VarChar(64)
+  attribution String @db.VarChar(1000)
+  notes String @db.VarChar(2000)
+  kanji KanjiContent[] @relation("KanjiPublishedSource")
+  kanjiDrafts KanjiContent[] @relation("KanjiDraftSource")
+  radicals RadicalContent[] @relation("RadicalPublishedSource")
+  radicalDrafts RadicalContent[] @relation("RadicalDraftSource")
+  @@map("content_sources")
+}
+
+model KanjiContent {
+  id String @id @db.VarChar(32)
+  character String @unique @db.VarChar(8)
+  level String @db.VarChar(2)
+  hanViet String @map("han_viet") @db.VarChar(500)
+  meaning String @db.VarChar(2000)
+  dictionaryRadicalNumber Int? @map("dictionary_radical_number")
+  sourceId String @map("source_id") @db.VarChar(64)
+  draftSourceId String @map("draft_source_id") @db.VarChar(64)
+  source ContentSource @relation("KanjiPublishedSource", fields: [sourceId], references: [id], onDelete: Restrict)
+  draftSource ContentSource @relation("KanjiDraftSource", fields: [draftSourceId], references: [id], onDelete: Restrict)
+  published Json?
+  draft Json
+  status String @default("draft") @db.VarChar(16)
+  version Int @default(0)
+  sortOrder Int @default(100000) @map("sort_order")
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  @@index([status, level, sortOrder])
+  @@map("kanji_content")
+}
+
+model RadicalContent {
+  number Int @id
+  sourceId String @map("source_id") @db.VarChar(64)
+  draftSourceId String @map("draft_source_id") @db.VarChar(64)
+  source ContentSource @relation("RadicalPublishedSource", fields: [sourceId], references: [id], onDelete: Restrict)
+  draftSource ContentSource @relation("RadicalDraftSource", fields: [draftSourceId], references: [id], onDelete: Restrict)
+  published Json?
+  draft Json
+  status String @default("draft") @db.VarChar(16)
+  version Int @default(0)
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  @@map("radical_content")
+}
+
+// Published roadmap versions are inserted once; existing progress keeps its original day partition.
+model CatalogDefinition {
+  id String @id @db.VarChar(32)
+  level String @db.VarChar(2)
+  perDay Int @map("per_day")
+  kanjiIds String[] @map("kanji_ids")
+  kanjiList String[] @map("kanji_list")
+  @@map("catalog_definitions")
 }

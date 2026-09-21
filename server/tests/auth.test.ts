@@ -388,10 +388,10 @@ describe('starred review decks and preserved history', () => {
   });
   it('saves the hard and easy schedules and allows removal without erasing events', async () => {
     const user=await post('/register',userInput);const sid=cookie(user),id=user.body.user.id;
-    for(const [rating,seconds] of [['hard',360],['easy',345600]] as const){
-      const card=(await star(sid,id,{sourceId:rating})).body.card;
+    for(const [rating,seconds,sourceId] of [['hard',360,'k-1'],['easy',345600,'k-2']] as const){
+      const card=(await star(sid,id,{sourceId}).expect(200)).body.card;
       expect((await rate(sid,id,card,rating).expect(200)).body.card.intervalSeconds).toBe(seconds);
-      await star(sid,id,{sourceId:rating,active:false}).expect(200);
+      await star(sid,id,{sourceId,active:false}).expect(200);
     }
     expect(await api.db.reviewEvent.count()).toBe(2);
     expect((await list(sid)).body.cards.every((c:any)=>!c.active)).toBe(true);

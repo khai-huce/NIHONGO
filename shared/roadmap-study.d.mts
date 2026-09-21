@@ -4,6 +4,6 @@ export type RoadmapProgress = {
   currentDay: number;
 };
 /** Removes invalid entries; preserves valid completed days without inferring completion from global progress. */
-export function roadmapProgress(kanjiList: readonly string[], perDay: number, assessments: unknown, completedDays: unknown): RoadmapProgress;
+export function roadmapProgress(kanjiList: readonly string[], perDay: number, assessments: unknown, completedDays: unknown, catalog?: readonly (readonly [string, string])[]): RoadmapProgress;
 export function assessRoadmapKanji(kanjiList: readonly string[], perDay: number, assessments: unknown, completedDays: unknown,
-  day: number, kanjiId: string, memorized: boolean): RoadmapProgress;
+  day: number, kanjiId: string, memorized: boolean, catalog?: readonly (readonly [string, string])[]): RoadmapProgress;

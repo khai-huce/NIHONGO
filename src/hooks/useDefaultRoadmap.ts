@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useContentCatalog, type RoadmapDefinition } from './useContentCatalog';
 import { api, ApiError } from '../utils/api';
-import { DEFAULT_ROADMAP, studyStreak, vietnamStudyDate } from '../../shared/default-roadmap.mjs';
-import { ROADMAP_KANJI, roadmapDayKanji } from '../../shared/roadmap.mjs';
+import { studyStreak, vietnamStudyDate } from '../../shared/default-roadmap.mjs';
+import { roadmapDayKanji } from '../../shared/roadmap.mjs';
 import { assessRoadmapKanji, roadmapProgress } from '../../shared/roadmap-study.mjs';
 
 export type DefaultRoadmap = {
@@ -31,7 +32,8 @@ type State = {
 type DeviceStore = { serialized: string | null; roadmap: DefaultRoadmap };
 const DEVICE_KEY = 'nhai_kanji_default_roadmap_n5_v1';
 const DAY_MS = 86_400_000;
-const kanjiIds = new Map(ROADMAP_KANJI.map(([id, character]) => [character, id]));
+function createCatalogHelpers(DEFAULT_ROADMAP: RoadmapDefinition, pairs: readonly (readonly [string, string])[]) {
+const kanjiIds = new Map(pairs.map(([id, character]) => [character, id]));
 const memberIds = new Set(DEFAULT_ROADMAP.kanjiList.map(character => kanjiIds.get(character)));
 
 function fail(code: string, message: string): never { throw new ApiError(0, code, message); }
@@ -65,7 +67,7 @@ function parseRoadmap(value: unknown, now: Date, stored = false): DefaultRoadmap
   if ((item.startedAt === null && (assessedCount || completedDays.length || activityDays.length || item.progressVersion)) ||
     (item.startedAt !== null && item.progressVersion < 1) ||
     (assessedCount > 0) !== (activityDays.length > 0)) throw new Error('Tiến độ lộ trình mặc định không hợp lệ.');
-  const progress = roadmapProgress(metadata.kanjiList, metadata.perDay, assessments, completedDays);
+  const progress = roadmapProgress(metadata.kanjiList, metadata.perDay, assessments, completedDays, pairs);
   const assessedDays = Array.from({ length: metadata.totalDays }, (_, index) => index + 1).filter(day =>
     roadmapDayKanji(metadata.kanjiList, metadata.perDay, day).every(character => {
       const id = kanjiIds.get(character);
@@ -108,7 +110,14 @@ function emptyState(owner: string | null): State {
     error: '', errorCode: '', serverNow: null, clockOffset: 0 };
 }
 
+return { kanjiIds, fail, emptyRoadmap, parseRoadmap, readDeviceRoadmap, writeDeviceRoadmap, validateDay, emptyState };
+}
+
 export function useDefaultRoadmap(userId: string | null, authBusy: boolean) {
+  const { pairs, roadmaps } = useContentCatalog();
+  const DEFAULT_ROADMAP = roadmaps.find(item => item.id === 'n5-v1')!;
+  const helpers = useMemo(() => createCatalogHelpers(DEFAULT_ROADMAP, pairs), [DEFAULT_ROADMAP, pairs]);
+  const { kanjiIds, fail, emptyRoadmap, parseRoadmap, readDeviceRoadmap, writeDeviceRoadmap, validateDay, emptyState } = helpers;
   const context = useRef({ userId, authBusy });
   const mounted = useRef(false), pending = useRef(false), revision = useRef(0);
   if (context.current.userId !== userId) { ++revision.current; pending.current = false; }
@@ -128,7 +137,7 @@ export function useDefaultRoadmap(userId: string | null, authBusy: boolean) {
     try { roadmap = parseRoadmap(data.roadmap, new Date(data.serverNow)); }
     catch { return fail('INVALID_RESPONSE', 'Phản hồi tiến độ lộ trình không hợp lệ. Vui lòng tải lại.'); }
     return { roadmap, serverNow: data.serverNow, clockOffset: Date.parse(data.serverNow) - Date.now() };
-  }, [userId]);
+  }, [userId, helpers]);
 
   const reload = useCallback(async (): Promise<DefaultRoadmap | undefined> => {
     if (!mounted.current || context.current.userId !== userId || context.current.authBusy || pending.current) return;
@@ -150,7 +159,7 @@ export function useDefaultRoadmap(userId: string | null, authBusy: boolean) {
         error: err instanceof Error ? err.message : 'Chưa tải được lộ trình. Vui lòng thử lại.',
         errorCode: err instanceof ApiError ? err.code : '' });
     } finally { if (isCurrent(request)) pending.current = false; }
-  }, [userId, apply, isCurrent, parseResponse]);
+  }, [userId, apply, isCurrent, parseResponse, helpers]);
 
   useEffect(() => {
     mounted.current = true;
@@ -178,7 +187,7 @@ export function useDefaultRoadmap(userId: string | null, authBusy: boolean) {
     const elapsedToday = ((now + 7 * 3_600_000) % DAY_MS + DAY_MS) % DAY_MS;
     const timer = window.setTimeout(() => setClockTick(value => value + 1), DAY_MS - elapsedToday + 50);
     return () => window.clearTimeout(timer);
-  }, [state.clockOffset, clockTick]);
+  }, [state.clockOffset, clockTick, helpers]);
 
   const change = useCallback(async (path: string, body: Record<string, unknown>, local: (store: DeviceStore) => DefaultRoadmap) => {
     if (!mounted.current || context.current.userId !== userId || current.current.owner !== userId ||
@@ -217,7 +226,7 @@ export function useDefaultRoadmap(userId: string | null, authBusy: boolean) {
         if (current.current.saving) apply({ ...current.current, saving: false });
       }
     }
-  }, [userId, apply, isCurrent, parseResponse]);
+  }, [userId, apply, isCurrent, parseResponse, helpers]);
 
   const start = useCallback(async (roadmap: DefaultRoadmap, day: number): Promise<DefaultRoadmap | null> => {
     return change('/roadmaps/default/start', { catalogId: roadmap.id, day }, store => {
@@ -227,7 +236,7 @@ export function useDefaultRoadmap(userId: string | null, authBusy: boolean) {
       return writeDeviceRoadmap(store, { ...store.roadmap, startedAt: new Date().toISOString(),
         progressVersion: store.roadmap.progressVersion + 1 });
     });
-  }, [change]);
+  }, [change, helpers, DEFAULT_ROADMAP, pairs]);
   const rate = useCallback(async (roadmap: DefaultRoadmap, day: number, kanjiId: string, memorized: boolean): Promise<DefaultRoadmap | null> => {
     return change('/roadmaps/default/rate', { catalogId: roadmap.id, progressVersion: roadmap.progressVersion, day, kanjiId, memorized }, store => {
       if (roadmap.id !== DEFAULT_ROADMAP.id) fail('VALIDATION_ERROR', 'Lộ trình không hợp lệ.');
@@ -243,16 +252,16 @@ export function useDefaultRoadmap(userId: string | null, authBusy: boolean) {
         fail('VALIDATION_ERROR', 'Chữ được đánh giá không thuộc ngày học này.');
       }
       const now = new Date(), activityDays = [...new Set([...before.activityDays, vietnamStudyDate(now)])].sort();
-      const progress = assessRoadmapKanji(before.kanjiList, before.perDay, before.assessments, before.completedDays, day, kanjiId, memorized);
+      const progress = assessRoadmapKanji(before.kanjiList, before.perDay, before.assessments, before.completedDays, day, kanjiId, memorized, pairs);
       return writeDeviceRoadmap(store, { ...before, ...progress, progressVersion: before.progressVersion + 1,
         activityDays, streak: studyStreak(activityDays, now) });
     });
-  }, [change]);
+  }, [change, helpers, DEFAULT_ROADMAP, pairs]);
 
   const sameOwner = state.owner === userId;
   const roadmap = useMemo(() => sameOwner
     ? { ...state.roadmap, streak: studyStreak(state.roadmap.activityDays, new Date(Date.now() + state.clockOffset)) }
-    : emptyRoadmap(), [sameOwner, state.roadmap, state.clockOffset, clockTick]);
+    : emptyRoadmap(), [sameOwner, state.roadmap, state.clockOffset, clockTick, helpers]);
   return { roadmap, loaded: sameOwner && state.loaded, loading: sameOwner && state.loading,
     saving: sameOwner && state.saving, busy: authBusy || !sameOwner || !state.loaded || state.loading || state.saving,
     error: sameOwner ? state.error : '', errorCode: sameOwner ? state.errorCode : '',
