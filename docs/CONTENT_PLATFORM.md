@@ -8,7 +8,7 @@ Triển khai local theo duyệt ngày 20/09/2026; nghiệm thu ngày 21/09/2026.
 - 50 bộ thủ cũ chuyển vào DB. Ví dụ/gợi nhớ/chiết tự cũ được giữ; mục mới chưa có các phần này để trống, không sinh nội dung thay thế.
 - `n5-v1` vẫn 28 chữ, 10–10–8, ID/thứ tự bất biến bằng ràng buộc DB. Việc mở rộng lộ trình mặc định cần phiên bản và quyết định riêng.
 - Màn Hán tự, chi tiết, luyện viết, thẻ ôn và lộ trình lấy catalog qua API. Các mảng cũ chỉ còn phục vụ đối chiếu/fixture; lỗi API có thông báo, không fallback sang mock.
-- Ngữ pháp, giáo trình từ vựng, phân tích/dịch bài đọc tự động và Shadowing chưa thuộc phần hoàn thành này. M01 bổ sung [giao diện admin Kanji](ADMIN_KANJI.md) ngày 22/09/2026; bộ thủ/bài đọc hiện mới có API quản trị, chưa có UI admin.
+- Ngữ pháp, giáo trình từ vựng, phân tích/dịch bài đọc tự động và Shadowing chưa thuộc phần hoàn thành này. M01 bổ sung [giao diện admin Kanji](ADMIN_KANJI.md); M02 bổ sung [admin Đọc hiểu và cổng riêng 3002](ADMIN_READING.md) ngày 22/09/2026. Bộ thủ mới có API quản trị, chưa có UI.
 
 ## Database và cập nhật
 
@@ -69,7 +69,7 @@ Route trang: `/tron-doi/doc-hieu/:articleId`. Giữ khung/nhãn/kiểu chữ cũ
 - `GET /api/reading/articles`: bài riêng của phiên hiện tại + bài thư viện đã xuất bản.
 - `POST /api/reading/articles`: `{id: UUID, expectedUserId, title, subtitle?, text}`. Tối đa 3000 ký tự Unicode; retry cùng ID và nội dung không tạo trùng.
 - `GET /api/reading/articles/:id`, `PATCH /:id` với văn bản và `{expectedUserId, version}`, `DELETE /:id` với `{expectedUserId, version}`. Xóa là lưu trữ; tài khoản khác không đọc/sửa được.
-- `/api/admin/reading/articles` có list/detail/create/patch và `POST /:id/publish|archive`, kiểm tra admin. Bản nháp sửa không thay bản công khai đến khi publish. Bài riêng của học viên không biến thành bài thư viện.
+- `/api/admin/reading/articles` có list/detail/create/patch và `POST /:id/publish|archive|restore`, kiểm tra admin. M02 thêm preview tách câu, nguồn nháp/public riêng, audio bản nháp và media admin; publish cần nguồn hợp lệ cùng audio ready khớp văn bản/file. Bản nháp sửa không thay bản công khai đến khi publish. Bài riêng của học viên không biến thành bài thư viện.
 - Bản dịch/ruby/từ/ngữ pháp/quiz chỉ hiển thị khi có dữ liệu biên tập hợp lệ. Render text/ruby có cấu trúc, không chèn HTML đầu vào. Dữ liệu mẫu phân tích cũ không được coi là kiến thức đã biên tập.
 - Khách giữ bài thiết bị riêng. Đăng nhập không tự nhập bài khách. Khách có thể đọc/nghe bài công khai đã chuẩn bị; tạo audio cho bài riêng cần tài khoản.
 
@@ -79,7 +79,7 @@ Dùng [edge-tts](https://github.com/rany2/edge-tts) `7.2.8` và `mutagen` `1.48.
 
 - Bấm phát khi chưa có audio gọi `POST /api/reading/articles/:id/audio` với `{expectedUserId,version}`. Chỉ văn bản cần đọc và giọng gửi ra dịch vụ; không gửi email/phiên/tiến độ.
 - MP3 theo câu, thời lượng đo từ file; manifest nối tổng thời lượng và offset. Một `HTMLAudioElement` phát tuần tự; play/pause/seek/chuyển câu/lặp/tốc độ dùng sự kiện media. Có thể có khoảng đệm ngắn giữa các file câu, không cam kết đọc liền mạch như một file thu âm.
-- Audio đúng văn bản/giọng được dùng lại, kể cả đổi tiêu đề. F5/phát lại/đổi tốc độ không tạo file mới. Sửa văn bản làm audio cũ không còn truy cập được ở phiên bản mới.
+- Audio đúng văn bản/giọng được dùng lại, kể cả đổi tiêu đề. F5/phát lại/đổi tốc độ không tạo file mới. M02 tra cache theo bài/hash/giọng và không di chuyển metadata phiên bản tạo file: sửa nháp giữ audio của bản công khai cũ hoạt động; sau xuất bản mới, URL public chỉ phục vụ hash của bài hiện hành.
 - Media `GET /:id/audio/:audioId/:filename` kiểm tra owner hoặc bản công khai hiện hành, hỗ trợ HTTP Range; không cho dùng đường dẫn tùy ý. Lưu trữ/xóa bài chặn URL media cũ.
 - Tối đa 2 job đang tạo toàn hệ thống local, 12 yêu cầu tạo/giờ/tài khoản gọi API, 30.000 ký tự tạo mới/24h theo tài khoản sở hữu bài; tối đa 3000 ký tự và 100 câu/bài. Với thư viện, admin khác tạo audio vẫn dùng hạn mức của chủ bài, tránh đổi người gọi để vượt giới hạn. Timeout tiến trình 180 giây. Quota ký tự đếm các bản audio mới; retry cùng bản không cộng bản quota mới, vẫn chịu giới hạn request/giờ.
 - Single-flight trong process và claim/lease DB chống gọi trùng giữa các process. Ghi metadata ready chỉ sau khi xác minh tất cả file; lỗi giữ bài đọc, dọn phần tạo dở và cho thử lại. Không giữ transaction trong khi gọi mạng và không tắt kiểm tra TLS.

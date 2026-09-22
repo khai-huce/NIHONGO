@@ -36,7 +36,8 @@ export function createApp(config: Config) {
   });
   app.use('/api', (req, _res, next) => {
     if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-      if (req.get('origin') !== config.APP_ORIGIN) throw new HttpError(403, 'INVALID_ORIGIN', 'Nguồn yêu cầu không được phép.');
+      const origins = [config.APP_ORIGIN, config.ADMIN_ORIGIN].filter(Boolean);
+      if (!origins.includes(req.get('origin'))) throw new HttpError(403, 'INVALID_ORIGIN', 'Nguồn yêu cầu không được phép.');
       if (!req.is('application/json')) throw new HttpError(415, 'JSON_REQUIRED', 'API yêu cầu application/json.');
     }
     next();

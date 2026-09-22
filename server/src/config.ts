@@ -6,6 +6,7 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   APP_ORIGIN: z.string().url().refine(value => new URL(value).origin === value, 'Use an origin without a trailing slash or path'),
+  ADMIN_ORIGIN: z.string().url().refine(value => new URL(value).origin === value, 'Use an origin without a trailing slash or path').optional(),
   DATABASE_URL: z.string().url().refine(value => /^postgres(ql)?:/.test(value), 'PostgreSQL URL required'),
   SESSION_SECRET: z.string().min(32).refine(value => !value.startsWith('replace-'), 'Generate a random SESSION_SECRET'),
   GOOGLE_CLIENT_ID: z.string().trim().default('').refine(value => value === '' || value.endsWith('.apps.googleusercontent.com'), 'Invalid Google Web client ID'),

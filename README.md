@@ -2,7 +2,7 @@
 
 Frontend dùng React/Vite/React Router. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản/phiên, tiến độ và Ôn tập, bài học Chủ động, lộ trình, kết quả quiz, kho Kanji/bộ thủ và bài đọc cá nhân/công khai. Bài khách trên thiết bị giữ riêng. Audio Đọc hiểu dùng Edge TTS phía server.
 
-Kho nội dung, API quản trị, nguồn/giấy phép và cài Edge TTS: [CONTENT_PLATFORM.md](docs/CONTENT_PLATFORM.md). Đợt C01/R01/R02 chưa xây giao diện admin hoặc hoàn thiện dữ liệu giáo trình/ngữ pháp.
+Kho nội dung, API quản trị, nguồn/giấy phép và cài Edge TTS: [CONTENT_PLATFORM.md](docs/CONTENT_PLATFORM.md). Quản trị Kanji: [ADMIN_KANJI.md](docs/ADMIN_KANJI.md); admin riêng và biên tập Đọc hiểu: [ADMIN_READING.md](docs/ADMIN_READING.md). Dữ liệu giáo trình/ngữ pháp làm ở task riêng.
 
 Kế hoạch hoàn thiện chức năng theo từng task: [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Đọc tài liệu này khi cần chọn việc tiếp theo; ưu tiên đã chốt là dữ liệu học cá nhân. Danh sách URL: [ROUTES.md](docs/ROUTES.md); luồng sao và Ôn tập: [REVIEW.md](docs/REVIEW.md).
 
@@ -38,7 +38,17 @@ Terminal 2:
 npm run dev
 ```
 
-Mở [NIHONGO local](http://localhost:3000). Express nghe tại `127.0.0.1:3001`; Vite proxy `/api` sang Express. Dùng hostname `localhost` thống nhất với APP_ORIGIN và Google config. Chưa cấu hình phục vụ bản build frontend hoặc triển khai online trong đợt này.
+Terminal 3 (trang admin riêng):
+
+```powershell
+npm run dev:admin
+```
+
+Mở [NIHONGO local](http://localhost:3000) và [Admin](http://localhost:3002/admin/reading). Express nghe tại `127.0.0.1:3001`; cả hai Vite proxy `/api` sang Express. Dùng hostname `localhost` thống nhất với APP_ORIGIN/ADMIN_ORIGIN và Google config. Trong `server/.env`, thêm `ADMIN_ORIGIN=http://localhost:3002` nếu nâng cấp từ bản cũ. Giữ backend chạy khi dùng một trong hai giao diện.
+
+Admin email/mật khẩu dùng phiên hiện có. Nút Google của admin mở trang học để đăng nhập bằng origin 3000 đã cấu hình; quay lại admin sẽ nhận cùng phiên. Cookie dùng chung hostname, đăng xuất một bên kết thúc phiên cả hai; mọi API admin vẫn kiểm tra role từ database. Link `/admin/*` cũ ở cổng 3000 chuyển sang cổng 3002.
+
+`npm run build` tạo `dist` (trang học) và `dist-admin` (admin); `npm run build:admin` / `npm run preview:admin` hỗ trợ build/xem admin riêng. Chưa triển khai hosting online trong đợt này.
 
 Kiểm tra [API health qua Vite](http://localhost:3000/api/health): trả `{"status":"ok"}` khi PostgreSQL hoạt động. Khi không có DB, trả HTTP 503.
 
@@ -84,7 +94,7 @@ Schema: `server/prisma/schema.prisma`; migration: `server/prisma/migrations/2026
 | `POST /api/auth/google/nonce` | `{}`; chuẩn bị lượt đăng nhập Google |
 | `POST /api/auth/google` | `{ credential }`; xác minh và đăng nhập |
 
-POST yêu cầu `Content-Type: application/json` và `Origin: http://localhost:3000`, kể cả khi gọi từ công cụ kiểm thử. Cookie được gửi tự động khi frontend gọi cùng origin. API chỉ trả các trường hồ sơ công khai cho UI, không trả password hash.
+POST yêu cầu `Content-Type: application/json` và Origin thuộc `APP_ORIGIN`/`ADMIN_ORIGIN` đã cấu hình, kể cả khi gọi từ công cụ kiểm thử. Cookie được gửi tự động khi frontend gọi cùng origin qua proxy. API chỉ trả các trường hồ sơ công khai cho UI, không trả password hash.
 
 Mật khẩu đăng ký dài 15–128 ký tự và không bị trim. Đăng nhập sai trả thông báo chung. Request đăng nhập/đăng ký được giới hạn theo IP và email chuẩn hóa; lỗi API có dạng `{ error: { code, message } }`.
 

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useBlocker, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, FileUp, LogOut, Plus, RefreshCw, Search, ShieldCheck } from 'lucide-react';
-import { AuthModal } from '../components/AuthModal';
+import { AdminLogin } from './AdminLogin';
 import type { useAuth } from '../hooks/useAuth';
 import { createAdminRequest } from './api';
 import { filterKanji, hasUnpublishedDraft } from './catalog';
 import { KanjiEditor } from './KanjiEditor';
 import { KanjiImportPanel } from './KanjiImportPanel';
+import { ReadingWorkspace } from './ReadingWorkspace';
 import type { AdminRequest, ContentSource, KanjiRecord } from './types';
 
 const button = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
@@ -17,9 +18,9 @@ type Auth = ReturnType<typeof useAuth>;
 
 export default function AdminApp({ auth }: { auth: Auth }) {
   const [showLogin, setShowLogin] = useState(false);
-  const navigate = useNavigate();
   const user = auth.currentUser;
   const [dirty, setDirty] = useState(false);
+  const blocker = useBlocker(({ historyAction }) => dirty && historyAction === 'POP');
   const [leaveAction, setLeaveAction] = useState<null | (() => void)>(null);
   const leave = useCallback((action: () => void) => {
     if (dirty) setLeaveAction(() => action); else action();
@@ -36,7 +37,7 @@ export default function AdminApp({ auth }: { auth: Auth }) {
     <header className="sticky top-0 z-20 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-7">
       <div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-600 text-xl text-white">漢</span><div><p className="text-sm font-bold tracking-wide">NIHONGO</p><p className="text-xs text-slate-500">Quản trị nội dung</p></div></div>
       <div className="flex flex-wrap items-center gap-3">
-        <button className={button} onClick={() => leave(() => navigate('/kanji'))}><ArrowLeft size={15} />Trang học</button>
+        <button className={button} onClick={() => leave(() => { window.location.assign(`${import.meta.env.VITE_APP_ORIGIN || 'http://localhost:3000'}/kanji`); })}><ArrowLeft size={15} />Trang học</button>
         {user && <><span className="hidden max-w-64 truncate text-xs text-slate-500 sm:block">{user.email}</span><button className={button} disabled={auth.checking || auth.loggingOut} onClick={() => leave(() => { void auth.logout(); })}><LogOut size={15} />Đăng xuất</button></>}
       </div>
     </header>
@@ -48,8 +49,9 @@ export default function AdminApp({ auth }: { auth: Auth }) {
       {auth.checking ? <p role="status">Đang kiểm tra phiên đăng nhập…</p> : <button className={primary} disabled={!!auth.error} onClick={() => setShowLogin(true)}>Đăng nhập</button>}
     </section> : user.role !== 'admin' ? <section className="mx-auto max-w-xl px-5 py-20 text-center"><ShieldCheck className="mx-auto mb-5 text-slate-400" size={40} /><h1 className="mb-3 text-2xl font-semibold">Tài khoản chưa có quyền quản trị</h1><p className="mb-6 text-sm leading-6 text-slate-600">Quyền quản trị được cấp riêng cho tài khoản. Gói Premium không bao gồm quyền này.</p><button className={button} onClick={() => void auth.refresh()} disabled={auth.checking}>Kiểm tra lại quyền</button></section> :
       <Workspace key={user.id} auth={auth} leave={leave} onDirtyChange={setDirty} />}
-    {showLogin && <AuthModal initialMode="login" onClose={() => setShowLogin(false)} onLoginSuccess={auth.acceptUser} />}
+    {showLogin && !user && <AdminLogin onClose={() => setShowLogin(false)} onSuccess={auth.acceptUser} />}
     {leaveAction && <LeaveDialog onCancel={() => setLeaveAction(null)} onConfirm={() => { const action = leaveAction; setLeaveAction(null); setDirty(false); action(); }} />}
+    {blocker.state === 'blocked' && <LeaveDialog onCancel={() => blocker.reset()} onConfirm={() => { setDirty(false); blocker.proceed(); }} />}
   </div>;
 }
 
@@ -93,7 +95,8 @@ function Workspace({ auth, leave, onDirtyChange }: { auth: Auth; leave: (action:
     } catch (err) { if (mounted.current && id === revision.current) setError(err instanceof Error ? err.message : 'Chưa tải được kho nội dung.'); }
     finally { if (mounted.current && id === revision.current) setLoading(false); }
   }, [scope]);
-  useEffect(() => { void reload(); }, [reload]);
+  const inKanji = location.pathname.startsWith('/admin/kanji');
+  useEffect(() => { if (inKanji) void reload(); }, [reload, inKanji]);
   const listSearch = useRef('');
   if (location.pathname.replace(/\/$/, '') === '/admin/kanji') listSearch.current = location.search;
   const back = () => leave(() => navigate(`/admin/kanji${listSearch.current}`));
@@ -105,13 +108,15 @@ function Workspace({ auth, leave, onDirtyChange }: { auth: Auth; leave: (action:
   const sourceAdded = (source: ContentSource) => setSources(previous => previous.some(item => item.id === source.id) ? previous : [...previous, source]);
 
   return <div className="mx-auto flex max-w-[1600px] flex-col md:flex-row">
-    <aside className="shrink-0 border-b border-slate-200 bg-white p-4 md:min-h-[calc(100vh-65px)] md:w-52 md:border-b-0 md:border-r"><p className="mb-3 hidden px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400 md:block">Nội dung học</p><button className="flex w-full items-center gap-3 rounded-lg bg-blue-50 px-3 py-2.5 text-sm font-semibold text-blue-700" onClick={back}><BookOpen size={18} />Kanji</button><p className="mt-6 hidden px-3 text-xs leading-5 text-slate-500 md:block">Chỉ nội dung đã xuất bản mới xuất hiện trong kho học.</p></aside>
+    <aside className="shrink-0 border-b border-slate-200 bg-white p-4 md:min-h-[calc(100vh-65px)] md:w-52 md:border-b-0 md:border-r"><p className="mb-3 hidden px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400 md:block">Nội dung học</p>{[{path:'/admin/kanji',label:'Kanji'}, {path:'/admin/reading',label:'Đọc hiểu'}].map(item => <button key={item.path} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${location.pathname.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`} onClick={() => leave(() => navigate(item.path))}><BookOpen size={18} />{item.label}</button>)}<p className="mt-6 hidden px-3 text-xs leading-5 text-slate-500 md:block">Chỉ nội dung đã xuất bản mới xuất hiện trong kho học.</p></aside>
     <main className="min-w-0 flex-1 px-4 py-6 sm:px-7">
       <fieldset disabled={auth.checking || auth.loggingOut || !!auth.error} className="min-w-0">
         {auth.checking && <p role="status" className="mb-3 text-xs text-slate-500">Đang kiểm tra phiên quản trị…</p>}
-        {error && <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error} <button className="font-semibold underline" onClick={() => void reload()}>Thử tải lại</button></div>}
+        {inKanji && error && <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error} <button className="font-semibold underline" onClick={() => void reload()}>Thử tải lại</button></div>}
         <Routes>
+          <Route path="/" element={<Navigate to="/admin/kanji" replace />} />
           <Route path="/admin" element={<Navigate to="/admin/kanji" replace />} />
+          <Route path="/admin/reading/*" element={<ReadingWorkspace request={scope.request} onDirtyChange={onDirtyChange} />} />
           <Route path="/admin/kanji" element={<KanjiList items={items} loading={loading} error={error} onReload={() => void reload()} onOpen={id => leave(() => navigate(`/admin/kanji/${encodeURIComponent(id)}`))} />} />
           <Route path="/admin/kanji/new" element={loaded ? <KanjiEditor key="new" record={null} sources={sources} request={scope.request} onSaved={saved} onClose={editorClose} onSourcesChanged={sourceAdded} onDirtyChange={onDirtyChange} /> : <p role="status">Đang chuẩn bị dữ liệu…</p>} />
           <Route path="/admin/kanji/import" element={loaded ? <KanjiImportPanel request={scope.request} sources={sources} onImported={() => { void reload(); }} onClose={back} onDirtyChange={onDirtyChange} /> : <p role="status">Đang chuẩn bị dữ liệu…</p>} />

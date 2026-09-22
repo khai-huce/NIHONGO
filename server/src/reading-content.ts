@@ -8,7 +8,7 @@ const quiz = z.object({ id: z.number().int().positive(), question: z.string().mi
   .refine(item => item.correctIndex < item.options.length, 'Đáp án bài tập không hợp lệ.');
 export const readingInput = z.object({ title: z.string().trim().min(1).max(200), subtitle: z.string().trim().max(500).default(''), text }).strict();
 export const editorialInput = readingInput.extend({
-  annotations: z.array(z.object({ sentenceId: z.string().max(32), ruby: ruby.optional(), translation: z.string().max(3000).optional() }).strict()).max(300).default([]),
+  annotations: z.array(z.object({ sentenceId: z.string().max(32), japanese: z.string().max(3000).optional(), ruby: ruby.optional(), translation: z.string().max(3000).optional() }).strict()).max(300).default([]),
   vocabList: z.array(vocab).max(100).default([]), grammarList: z.array(grammar).max(100).default([]), quizList: z.array(quiz).max(100).default([]),
 }).strict();
 export type ReadingSentence = { id: string; japanese: string; ruby?: z.infer<typeof ruby>; translation: string };
@@ -31,7 +31,8 @@ export function makeReadingContent(raw: unknown, editorial = false): ReadingCont
   const seen = new Set<string>();
   for (const annotation of additions.annotations) {
     const sentence = paragraphs.flatMap(p => p.sentences).find(item => item.id === annotation.sentenceId);
-    if (!sentence || seen.has(annotation.sentenceId) || (annotation.ruby && annotation.ruby.map(item => item.text).join('') !== sentence.japanese)) {
+    if (!sentence || seen.has(annotation.sentenceId) || (annotation.japanese !== undefined && annotation.japanese !== sentence.japanese)
+      || (annotation.ruby && annotation.ruby.map(item => item.text).join('') !== sentence.japanese)) {
       throw new z.ZodError([{ code: 'custom', path: ['annotations'], message: 'Chú thích phải khớp chính xác câu trong bài và không lặp.' }]);
     }
     seen.add(annotation.sentenceId);
@@ -43,4 +44,43 @@ export function makeReadingContent(raw: unknown, editorial = false): ReadingCont
   }
   return { title: input.title, subtitle: input.subtitle, text: input.text, paragraphs,
     vocabList: additions.vocabList, grammarList: additions.grammarList, quizList: additions.quizList };
+}
+
+export const readingEditorialPatch = readingInput.extend({
+  subtitle: readingInput.shape.subtitle.removeDefault().optional(),
+  annotations: editorialInput.shape.annotations.removeDefault().optional(),
+  vocabList: editorialInput.shape.vocabList.removeDefault().optional(),
+  grammarList: editorialInput.shape.grammarList.removeDefault().optional(),
+  quizList: editorialInput.shape.quizList.removeDefault().optional(),
+  translationsReviewed: z.boolean().optional(),
+}).strict();
+
+/** Editing a title/translation must not discard other curated fields. Changed
+ * Japanese text requires an explicit review and exact new sentence text. */
+export function updateReadingEditorial(prior: ReadingContent, raw: unknown): ReadingContent {
+  const input = readingEditorialPatch.parse(raw);
+  const changedText = input.text !== prior.text;
+  if (changedText && input.translationsReviewed !== true) throw new z.ZodError([
+    { code: 'custom', path: ['translationsReviewed'], message: 'Văn bản tiếng Nhật đã thay đổi. Hãy rà soát bản dịch từng câu và xác nhận trước khi lưu.' },
+  ]);
+  if (changedText && input.annotations?.some(annotation => annotation.japanese === undefined)) throw new z.ZodError([
+    { code: 'custom', path: ['annotations'], message: 'Bản dịch đã rà soát phải kèm nguyên văn câu tiếng Nhật tương ứng; không ghép theo số thứ tự cũ.' },
+  ]);
+  if (input.annotations && new Set(input.annotations.map(item => item.sentenceId)).size !== input.annotations.length) throw new z.ZodError([
+    { code: 'custom', path: ['annotations'], message: 'Mỗi câu chỉ nhận một chú thích.' },
+  ]);
+  const priorAnnotations = prior.paragraphs.flatMap(paragraph => paragraph.sentences).map(sentence => ({
+    sentenceId: sentence.id, japanese: sentence.japanese, translation: sentence.translation,
+    ...(sentence.ruby ? { ruby: sentence.ruby } : {}),
+  }));
+  const annotations = changedText ? input.annotations ?? [] : input.annotations === undefined ? priorAnnotations
+    : priorAnnotations.map(annotation => ({ ...annotation, ...input.annotations!.find(item => item.sentenceId === annotation.sentenceId) }))
+      .concat(input.annotations.filter(item => !priorAnnotations.some(priorItem => priorItem.sentenceId === item.sentenceId)) as typeof priorAnnotations);
+  // M02 edits text/translations, not richer analysis. Text changes deliberately
+  // invalidate old ruby/vocab/grammar/quiz unless ruby is explicitly reviewed.
+  return makeReadingContent({ title: input.title, subtitle: input.subtitle ?? prior.subtitle, text: input.text, annotations,
+    vocabList: changedText ? [] : input.vocabList ?? prior.vocabList,
+    grammarList: changedText ? [] : input.grammarList ?? prior.grammarList,
+    quizList: changedText ? [] : input.quizList ?? prior.quizList,
+  }, true);
 }

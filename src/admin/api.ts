@@ -24,12 +24,12 @@ export function createAdminRequest(userId: string, options: {
     if (!current()) throw changed();
     const requestGeneration = generation;
     const requestCurrent = () => current() && requestGeneration === generation;
-    if (!path.startsWith('/admin/content/')) throw new Error('Unsupported admin endpoint');
+    if (!path.startsWith('/admin/content/') && !/^\/admin\/reading\/articles(?:\/|$)/.test(path)) throw new Error('Unsupported admin endpoint');
     const method = input.method ?? (input.body ? 'POST' : 'GET');
     const controller = new AbortController();
     controllers.add(controller);
     try {
-      const signals = [controller.signal, AbortSignal.timeout(45000), ...(input.signal ? [input.signal] : [])];
+      const signals = [controller.signal, AbortSignal.timeout(input.timeoutMs ?? 45000), ...(input.signal ? [input.signal] : [])];
       const response = await (options.fetcher ?? fetch)(`/api${path}`, {
         method, credentials: 'same-origin', signal: AbortSignal.any(signals),
         headers: method === 'GET' ? undefined : { 'Content-Type': 'application/json' },

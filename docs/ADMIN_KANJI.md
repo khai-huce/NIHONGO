@@ -4,7 +4,7 @@ Hoàn thành local ngày 22/09/2026. Người dùng duyệt trang admin riêng, 
 
 ## Sử dụng
 
-1. Mở `http://localhost:3000/admin/kanji`, đăng nhập tài khoản được cấp role `admin`. Dùng phiên email/Google hiện có; Premium không cấp quyền quản trị.
+1. Mở `http://localhost:3002/admin/kanji` (từ M02, chạy `npm run dev:admin`), đăng nhập tài khoản được cấp role `admin`. Dùng phiên email/Google hiện có; Premium không cấp quyền quản trị. Link cũ ở cổng 3000 tự chuyển sang admin. [Cách chạy và đăng nhập](ADMIN_READING.md).
 2. Danh sách tìm theo chữ, Hán Việt, nghĩa, cách đọc hoặc ID; lọc JLPT/trạng thái, 25 mục/trang. Tìm kiếm/bộ lọc/trang nằm trong URL. Nội dung bảng là bản nháp mới nhất; mục đã xuất bản nhưng có thay đổi nháp có nhãn riêng.
 3. **Thêm Kanji** hoặc **Biên tập**: nhập chữ, nghĩa, Hán Việt, cách đọc, số nét, gợi nhớ, bộ/thành phần, ví dụ và nguồn. Dữ liệu từ điển/nét SVG nằm trong nhóm mở rộng. Không tự tạo nghĩa, số nét hay ví dụ bằng AI.
 4. **Lưu bản nháp** chưa đổi trang học. **Xem trước / Xuất bản… → Xác nhận xuất bản** mới đưa bản đã lưu vào catalog học và đồng bộ nội dung thẻ sao. Chưa lưu hoặc có xung đột thì chưa được xuất bản.
@@ -46,7 +46,7 @@ Không cần migration cho M01. Dùng các bảng C01 đã có:
 
 Mọi thao tác ghi gắn `expectedUserId` của phiên UI và version/hash tương ứng. FE hủy phản hồi cũ khi đổi tài khoản/rời khu quản trị, chặn gửi lặp; server kiểm tra phiên, Origin và quyền. Không nhận dữ liệu localStorage vào quản trị.
 
-Giao diện admin tải thành bundle riêng, dùng lại React Router/Express/Prisma hiện có; không thêm CMS hoặc dependency. Chưa có quản trị tài khoản, bộ thủ, bài đọc, giáo trình/ngữ pháp, sửa metadata nguồn tại chỗ hoặc xuất bản hàng loạt.
+Giao diện admin có entry/build và cổng riêng từ M02, dùng lại React Router/Express/Prisma hiện có; không thêm CMS hoặc dependency. M02 bổ sung [quản trị bài đọc](ADMIN_READING.md). Chưa có quản trị tài khoản, bộ thủ, giáo trình/ngữ pháp, sửa metadata nguồn tại chỗ hoặc xuất bản hàng loạt.
 
 ## Kiểm thử
 

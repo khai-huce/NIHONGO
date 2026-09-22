@@ -91,12 +91,16 @@ model ReadingArticle {
   scope String @default("personal") @db.VarChar(16)
   version Int @default(0)
   content Json
+  sourceId String? @map("source_id") @db.VarChar(64)
+  publishedSourceId String? @map("published_source_id") @db.VarChar(64)
   publishedContent Json? @map("published_content")
   publishedVersion Int? @map("published_version")
   archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source ContentSource? @relation("ReadingDraftSource", fields: [sourceId], references: [id], onDelete: Restrict)
+  publishedSource ContentSource? @relation("ReadingPublishedSource", fields: [publishedSourceId], references: [id], onDelete: Restrict)
   audio ReadingAudio[]
   @@index([userId, scope, createdAt])
   @@map("reading_articles")
@@ -119,6 +123,7 @@ model ReadingAudio {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   article ReadingArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
   @@unique([articleId, articleVersion, voice])
+  @@index([articleId, contentHash, voice, status])
   @@index([createdAt, status])
   @@map("reading_audio")
 }
@@ -236,6 +241,8 @@ model ContentSource {
   kanjiDrafts KanjiContent[] @relation("KanjiDraftSource")
   radicals RadicalContent[] @relation("RadicalPublishedSource")
   radicalDrafts RadicalContent[] @relation("RadicalDraftSource")
+  readings ReadingArticle[] @relation("ReadingDraftSource")
+  publishedReadings ReadingArticle[] @relation("ReadingPublishedSource")
   @@map("content_sources")
 }
 

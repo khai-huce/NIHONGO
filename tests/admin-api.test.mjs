@@ -48,6 +48,24 @@ test('uncertain network writes remain errors rather than reporting a saved draft
   await assert.rejects(scope.request('/admin/content/kanji/k-1',{method:'PUT',body:{}}),{code:'NETWORK_ERROR'});
 });
 
+test('reading draft writes use the admin scope and stop on session disposal during audio', async () => {
+  let captured, done;
+  const scope = createAdminRequest('owner-a', { isCurrent: () => true, fetcher: async (url, options) => {
+    captured = {url,...options};
+    if (url.endsWith('/audio')) return new Promise(resolve => { done=resolve; });
+    return Response.json({article:{version:3}});
+  }});
+  await scope.request('/admin/reading/articles/one',{method:'PATCH',body:{version:2}});
+  assert.equal(captured.method,'PATCH');
+  assert.equal(JSON.parse(captured.body).expectedUserId,'owner-a');
+  await assert.rejects(scope.request('/reading/articles/one'),/Unsupported admin endpoint/);
+  const pending=scope.request('/admin/reading/articles/one/audio',{body:{version:3},timeoutMs:210000});
+  scope.dispose();
+  assert.equal(captured.signal.aborted,true);
+  done(Response.json({audio:{id:'stale'}}));
+  await assert.rejects(pending,{code:'ACCOUNT_CHANGED'});
+});
+
 test('draft indicators compare source and content without confusing JSONB key order',()=>{
   const draft={id:'k-1',kanji:'一',hanViet:'NHẤT',meaning:'Một',level:'N5',onyomi:['イチ'],kunyomi:[]};
   const item={id:'k-1',status:'published',draft,published:Object.fromEntries(Object.entries(draft).reverse()),sourceId:'a',draftSourceId:'a'};

@@ -29,7 +29,13 @@ import { useAuth } from './hooks/useAuth';
 import { ContentCatalogProvider, CatalogGate } from './hooks/useContentCatalog';
 import { ReviewProvider } from './hooks/useReview';
 
-const AdminApp = React.lazy(() => import('./admin/AdminApp'));
+function AdminRedirect() {
+  const location = useLocation();
+  useEffect(() => {
+    window.location.replace(`${import.meta.env.VITE_ADMIN_ORIGIN || 'http://localhost:3002'}${location.pathname}${location.search}${location.hash}`);
+  }, [location.pathname, location.search, location.hash]);
+  return <p className="p-8" role="status">Đang chuyển sang cổng quản trị…</p>;
+}
 
 export const App: React.FC = () => {
   const navigate = useNavigate(), location = useLocation();
@@ -51,7 +57,7 @@ export const App: React.FC = () => {
   }, [location.pathname, auth.currentUser?.id]);
 
   if (location.pathname === '/admin' || location.pathname.startsWith('/admin/')) {
-    return <React.Suspense fallback={<div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-600" role="status">Đang tải trang quản trị…</div>}><AdminApp auth={auth} /></React.Suspense>;
+    return <AdminRedirect />;
   }
 
   return (

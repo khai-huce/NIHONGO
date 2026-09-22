@@ -22,6 +22,7 @@ const mutation = (user: Learner, method: 'post' | 'patch' | 'delete', path: stri
 const get = (path: string, user?: Learner) => user ? request(api.app).get(path).set('Cookie', user.sid) : request(api.app).get(path);
 const articlePath = '/api/reading/articles';
 const adminPath = '/api/admin/reading/articles';
+const sourceId = 'reading-test-editorial-v1';
 async function register(admin = false): Promise<Learner> {
   const response = await request(api.app).post('/api/auth/register').set('Origin', baseConfig.APP_ORIGIN)
     .send({ name: 'Reading QA', email: `reading-${randomUUID()}@example.com`, password: 'test-only reading password 123' }).expect(201);
@@ -30,7 +31,8 @@ async function register(admin = false): Promise<Learner> {
   return user;
 }
 async function create(user: Learner, extra: Record<string, unknown> = {}, library = false) {
-  const response = await mutation(user, 'post', library ? adminPath : articlePath, { id: randomUUID(), title: '日本の学校', text: '学校に行きます。\n日本語を勉強します。', ...extra }).expect(201);
+  const response = await mutation(user, 'post', library ? adminPath : articlePath, { id: randomUUID(), title: '日本の学校', text: '学校に行きます。\n日本語を勉強します。',
+    ...(library ? { sourceId } : {}), ...extra }).expect(201);
   return response.body.article;
 }
 async function fakeMedia(input: Parameters<tts.ReadingTts>[0]) {
@@ -48,6 +50,8 @@ beforeEach(async () => {
   api = createApp({ ...baseConfig, TTS_STORAGE_DIR: storage });
   await api.db.session.deleteMany();
   await api.db.user.deleteMany();
+  await api.db.contentSource.createMany({ data: [{ id: sourceId, name: 'Reading test fixture', url: 'urn:nihongo:reading-test',
+    license: 'Test fixture', licenseUrl: 'urn:nihongo:test-license', version: 'v1', checksum: '', attribution: 'Test suite', notes: 'Not learning content' }], skipDuplicates: true });
 });
 afterEach(async () => {
   await api.close();
@@ -110,18 +114,20 @@ describe('R01 reading articles', () => {
     const admin = await register(true), user = await register();
     const article = await create(admin, { text: '日本語。', annotations: [{ sentenceId: 'p1-s1', ruby: [{ text: '日本語', reading: 'にほんご' }, { text: '。' }], translation: 'Tiếng Nhật.' }] }, true);
     expect((await get(`${adminPath}/${article.id}`, admin).expect(200)).body.article).toEqual(article);
-    await mutation(admin, 'post', adminPath, { id: article.id, title: article.title, text: '日本語。', annotations: [{ sentenceId: 'p1-s1', ruby: [{ text: '日本語', reading: 'にほんご' }, { text: '。' }], translation: 'Tiếng Nhật.' }] }).expect(200);
+    await mutation(admin, 'post', adminPath, { id: article.id, title: article.title, sourceId, text: '日本語。', annotations: [{ sentenceId: 'p1-s1', ruby: [{ text: '日本語', reading: 'にほんご' }, { text: '。' }], translation: 'Tiếng Nhật.' }] }).expect(200);
     await mutation(admin, 'post', adminPath, { id: article.id, title: 'Khác', text: '日本語。' }).expect(409);
     await get(`${articlePath}/${article.id}`, admin).expect(404);
     expect((await get(articlePath)).body.articles).toEqual([]);
     await mutation(user, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(403);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).expect(200);
     await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(200);
     const published = (await get(`${articlePath}/${article.id}`).expect(200)).body.article;
     expect(published).toMatchObject({ version: 1, visibility: 'public', text: '日本語。' });
     expect(published.paragraphs[0].sentences[0].ruby[0]).toEqual({ text: '日本語', reading: 'にほんご' });
-    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 1, title: 'Draft', text: '学校。' }).expect(200);
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 1, title: 'Draft', text: '学校。', translationsReviewed: true }).expect(200);
     expect((await get(`${articlePath}/${article.id}`)).body.article.text).toBe('日本語。');
     await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 1 }).expect(409);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 2 }).expect(200);
     await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 2 }).expect(200);
     expect((await get(`${articlePath}/${article.id}`)).body.article).toMatchObject({ text: '学校。', version: 3 });
     await api.db.user.update({ where: { id: admin.id }, data: { role: 'user' } });
@@ -140,6 +146,108 @@ describe('R01 reading articles', () => {
       { quizList: [{ id: 1, question: '?', options: ['A', 'B'], correctIndex: 2, explanation: '' }] },
     ]) await mutation(admin, 'post', adminPath, { ...fields, ...extra }).expect(400);
     expect(await api.db.readingArticle.count()).toBe(0);
+  });
+});
+
+describe('M02 library editorial and private draft audio', () => {
+  it('requires a real source and complete matching files before publishing, without inventing translations', async () => {
+    const admin = await register(true);
+    const preview = await mutation(admin, 'post', `${adminPath}/preview`, { title: 'Nháp', text: '学校。\n日本語。' }).expect(200);
+    expect(preview.body.content.paragraphs[0].sentences[0].translation).toBe('');
+    expect(await api.db.readingArticle.count()).toBe(0);
+    const article = await create(admin, { sourceId: null }, true);
+    expect((await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(400)).body.error.code).toBe('SOURCE_REQUIRED');
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 0, title: article.title, text: article.text, sourceId: 'source-does-not-exist' }).expect(400);
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 0, title: article.title, text: article.text, sourceId }).expect(200);
+    expect((await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 1 }).expect(409)).body.error.code).toBe('AUDIO_REQUIRED');
+    const manifest = (await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 1 }).expect(200)).body.audio;
+    await get(manifest.segments[0].url).expect(401);
+    const ordinary = await register();
+    await get(manifest.segments[0].url, ordinary).expect(403);
+    await get(manifest.segments[0].url.replace('/admin/', '/')).expect(404);
+    await get(manifest.segments[0].url, admin).set('Range', 'bytes=0-2').expect(206);
+    const file = await api.db.readingAudio.findUniqueOrThrow({ where: { id: manifest.id } });
+    // This path is one file inside the mkdtemp fixture created by this test.
+    await rm(join(storage, file.id, file.claimToken, '0.mp3'));
+    await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 1 }).expect(409);
+    await get(`${articlePath}/${article.id}`).expect(404);
+  });
+
+  it('keeps published source and audio alive while preparing a new draft; publishes a version only once', async () => {
+    const admin = await register(true), article = await create(admin, {}, true);
+    const oldAudio = (await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).expect(200)).body.audio;
+    await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(200);
+    const oldPublic = (await get(`${articlePath}/${article.id}`).expect(200)).body.article;
+    const newSource = `${sourceId}-new`;
+    const originalSource = await api.db.contentSource.findUniqueOrThrow({ where: { id: sourceId } });
+    await api.db.contentSource.upsert({ where: { id: newSource }, create: { ...originalSource, id: newSource }, update: {} });
+    const titleOnly = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 1, title: 'New title', text: article.text, sourceId: newSource }).expect(200)).body.article;
+    expect(titleOnly.audio.id).toBe(oldAudio.id);
+    expect(titleOnly.audio.version).toBe(2);
+    expect(titleOnly.hasUnpublishedChanges).toBe(true);
+    expect((await get(`${articlePath}/${article.id}`)).body.article.sourceId).toBe(sourceId);
+    await get(oldPublic.audio.segments[0].url).expect(200);
+    const changed = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 2, title: 'New title', text: '今日は雨です。', translationsReviewed: true }).expect(200)).body.article;
+    expect(changed.audio).toBeNull();
+    await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 3 }).expect(200);
+    expect(synthesize).toHaveBeenCalledTimes(2);
+    await get(oldPublic.audio.segments[0].url).expect(200);
+    const attempts = await Promise.all([1, 2].map(() => mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 3 })));
+    expect(attempts.map(value => value.status).sort()).toEqual([200, 409]);
+    const published = (await get(`${articlePath}/${article.id}`)).body.article;
+    expect(published).toMatchObject({ text: '今日は雨です。', sourceId: newSource, version: 4 });
+    await get(published.audio.segments[0].url).expect(200);
+    await get(oldPublic.audio.segments[0].url).expect(404);
+    expect(await api.db.readingAudio.count()).toBe(2);
+  });
+
+  it('preserves existing editorial fields until Japanese text is explicitly reviewed and replaced', async () => {
+    const admin = await register(true), article = await create(admin, { text: '学校。',
+      annotations: [{ sentenceId: 'p1-s1', translation: 'Trường học.', ruby: [{ text: '学校', reading: 'がっこう' }, { text: '。' }] }],
+      vocabList: [{ word: '学校', reading: 'がっこう', hanViet: 'HỌC HIỆU', meaning: 'Trường học' }] }, true);
+    const edited = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 0, title: 'Title only', text: article.text,
+      annotations: [{ sentenceId: 'p1-s1', translation: 'Một ngôi trường.' }] }).expect(200)).body.article;
+    expect(edited.vocabList).toEqual(article.vocabList);
+    expect(edited.paragraphs[0].sentences[0].ruby).toEqual(article.paragraphs[0].sentences[0].ruby);
+    const next = { version: 1, title: 'New Japanese', text: '図書館。', annotations: [{ sentenceId: 'p1-s1', translation: 'Thư viện.' }] };
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, next).expect(400);
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { ...next, translationsReviewed: true }).expect(400);
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { ...next, translationsReviewed: true, annotations: [{ sentenceId: 'p1-s1', japanese: '学校。', translation: 'Thư viện.' }] }).expect(400);
+    const saved = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, { ...next, translationsReviewed: true,
+      annotations: [{ sentenceId: 'p1-s1', japanese: '図書館。', translation: 'Thư viện.' }] }).expect(200)).body.article;
+    expect(saved.vocabList).toEqual([]);
+    expect(saved.paragraphs[0].sentences[0]).toEqual({ id: 'p1-s1', japanese: '図書館。', translation: 'Thư viện.' });
+  });
+
+  it('archives without deleting files and restores only a draft, leaving private learner articles separate', async () => {
+    const admin = await register(true), article = await create(admin, {}, true), personal = await create(admin);
+    await get(`${adminPath}/${personal.id}`, admin).expect(404);
+    await mutation(admin, 'post', `${adminPath}/${personal.id}/audio`, { version: 0 }).expect(404);
+    const audio = (await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).expect(200)).body.audio;
+    await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(200);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/archive`, { version: 1 }).expect(200);
+    await get(audio.segments[0].url, admin).expect(404);
+    const restored = (await mutation(admin, 'post', `${adminPath}/${article.id}/restore`, { version: 2 }).expect(200)).body.article;
+    expect(restored).toMatchObject({ archived: false, publishedVersion: null, version: 3 });
+    expect(restored.audio.id).toBe(audio.id);
+    await get(`${articlePath}/${article.id}`).expect(404);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 3 }).expect(200);
+    expect(synthesize).toHaveBeenCalledTimes(1);
+    expect(await api.db.readingArticle.count()).toBe(2);
+  });
+
+  it('rechecks admin permission when a long draft audio request finishes', async () => {
+    const admin = await register(true), article = await create(admin, {}, true);
+    let entered!: () => void, release!: () => void;
+    const started = new Promise<void>(resolve => { entered = resolve; }), gate = new Promise<void>(resolve => { release = resolve; });
+    synthesize.mockImplementationOnce(async input => { entered(); await gate; return fakeMedia(input); });
+    const pending = mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).then(result => result);
+    await started;
+    await api.db.user.update({ where: { id: admin.id }, data: { role: 'user' } });
+    release(); expect((await pending).status).toBe(403);
+    const audio = await api.db.readingAudio.findFirstOrThrow({ where: { articleId: article.id } });
+    await get(`${adminPath}/${article.id}/audio/${audio.id}/0.mp3`, admin).expect(403);
+    await get(`${articlePath}/${article.id}`).expect(404);
   });
 });
 
@@ -270,12 +378,14 @@ describe('R02 server audio', () => {
 
   it('only lets admins generate public audio; published files are readable by guests until archive', async () => {
     const admin = await register(true), user = await register(), article = await create(admin, {}, true);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).expect(200);
     await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(200);
     await mutation(user, 'post', `${articlePath}/${article.id}/audio`, { version: 1 }).expect(403);
     const audio = (await mutation(admin, 'post', `${articlePath}/${article.id}/audio`, { version: 1 }).expect(200)).body.audio;
     await get(audio.segments[0].url).expect(200);
-    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 1, title: 'Nháp mới', text: '新しい文章。' }).expect(200);
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 1, title: 'Nháp mới', text: '新しい文章。', translationsReviewed: true }).expect(200);
     await get(audio.segments[0].url).expect(200);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 2 }).expect(200);
     await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 2 }).expect(200);
     await get(audio.segments[0].url).expect(404);
   });
@@ -303,14 +413,13 @@ describe('R02 server audio', () => {
 
   it('keeps the library owner character budget when another admin generates its audio', async () => {
     const owner = await register(true), editor = await register(true), article = await create(owner, {}, true);
-    await mutation(owner, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(200);
     const content = makeReadingContent({ title: 'Quota fixture', text: '字'.repeat(3000) });
     for (let index = 0; index < 10; index++) {
       const fixture = await api.db.readingArticle.create({ data: { id: randomUUID(), userId: owner.id, scope: 'library', content } });
       await api.db.readingAudio.create({ data: { id: randomUUID(), articleId: fixture.id, articleVersion: 0, contentHash: 'a'.repeat(64), voice: tts.READING_VOICE,
         status: 'failed', claimToken: randomUUID(), leaseUntil: new Date(0), characterCount: 3000 } });
     }
-    const limited = await mutation(editor, 'post', `${articlePath}/${article.id}/audio`, { version: 1 }).expect(429);
+    const limited = await mutation(editor, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).expect(429);
     expect(limited.body.error.code).toBe('AUDIO_LIMIT');
     expect(synthesize).not.toHaveBeenCalled();
     const ownArticle = await create(editor);

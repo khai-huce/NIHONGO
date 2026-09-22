@@ -18,4 +18,4 @@ export interface ImportPreview {
   previewHash: string; canCommit: boolean;
   rows: { id: string; version: number | null; action: 'source_missing' | 'identity_conflict' | 'unchanged' | 'version_conflict' | 'update_draft' | 'create_draft' }[];
 }
-export type AdminRequest = <T>(path: string, options?: { method?: 'GET' | 'POST' | 'PUT'; body?: Record<string, unknown>; signal?: AbortSignal }) => Promise<T>;
+export type AdminRequest = <T>(path: string, options?: { method?: 'GET' | 'POST' | 'PUT' | 'PATCH'; body?: Record<string, unknown>; signal?: AbortSignal; timeoutMs?: number }) => Promise<T>;

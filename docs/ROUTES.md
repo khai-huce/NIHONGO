@@ -23,4 +23,6 @@ Dùng React Router với BrowserRouter. URL là nguồn xác định trang và m
 
 Local Vite đã hỗ trợ SPA fallback cho truy cập trực tiếp/F5. Khi triển khai frontend, cấu hình hosting trả `index.html` cho đường dẫn ứng dụng không phải file; giữ `/api` trỏ backend Express, không rewrite API thành HTML. Chưa thay đổi cấu hình deploy vì dự án hiện chạy local.
 
+Admin chạy bằng entry Vite riêng tại `http://localhost:3002` (`npm run dev:admin`): `/admin/kanji`, `/admin/kanji/new`, `/admin/kanji/import`, `/admin/kanji/:id`; `/admin/reading`, `/admin/reading/new`, `/admin/reading/:id`. `/` và `/admin` chuyển về Kanji. Cổng học 3000 chuyển các link `/admin/*` cũ sang cổng 3002. Admin dùng data router để chặn Back/Forward khi có nội dung chưa lưu, phần học giữ BrowserRouter hiện có. [M02](ADMIN_READING.md).
+
 Kiểm tra: `npm run test:routes`, `npm run test:review`, `npm run build`.
