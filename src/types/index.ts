@@ -80,4 +80,5 @@ export interface UserProfile {
   email: string;
   avatarUrl?: string;
   isPremium?: boolean;
+  role?: 'user' | 'admin';
 }

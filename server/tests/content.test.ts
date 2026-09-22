@@ -47,6 +47,61 @@ beforeEach(async () => {
 afterEach(async () => { vi.restoreAllMocks(); await restoreCatalog(); await api.close(); });
 
 describe('C01 published content and future admin API', () => {
+  it('creates immutable source revisions with safe concurrent exact retries and uses them for drafts', async () => {
+    const admin = await register(true);
+    const source = { id: 'nihongo-editorial-test-v1', name: 'Biên tập NIHONGO',
+      url: 'urn:nihongo:editorial:test:v1', license: 'Nội dung tự biên soạn', licenseUrl: 'urn:nihongo:license:editorial',
+      version: 'v1', checksum: '', attribution: 'Nhóm biên tập NIHONGO', notes: 'Nguồn tự biên soạn cho kiểm thử.' };
+    const responses = await Promise.all([adminPost(admin, '/sources', { source }), adminPost(admin, '/sources', { source })]);
+    expect(responses.map(response => response.status).sort()).toEqual([200, 201]);
+    expect(responses.map(response => response.body.created).sort()).toEqual([false, true]);
+    for (const response of responses) expect(response.body.source).toMatchObject(source);
+    const stored = await api.db.contentSource.findUniqueOrThrow({ where: { id: source.id } });
+    const conflict = await adminPost(admin, '/sources', { source: { ...source, attribution: 'Different author' } }).expect(409);
+    expect(conflict.body.error.code).toBe('CONTENT_SOURCE_CONFLICT');
+    expect(await api.db.contentSource.findUniqueOrThrow({ where: { id: source.id } })).toEqual(stored);
+    const saved = await draft(admin, { ...base.data, meaning: 'Nghĩa do nhóm biên tập sửa' }, 0, source.id).expect(200);
+    expect(saved.body.item.draftSourceId).toBe(source.id);
+    expect(saved.body.item.sourceId).toBe(base.sourceId);
+    await adminPost(admin, '/kanji/k-1/publish', { expectedVersion: 1 }).expect(200);
+    expect((await api.db.kanjiContent.findUniqueOrThrow({ where: { id: base.data.id } })).sourceId).toBe(source.id);
+  });
+
+  it('rejects source creation without a live admin, matching account or same-origin JSON', async () => {
+    const source = { ...fixture.sources[0], id: 'new-source-forbidden' };
+    const user = await register(), admin = await register(true);
+    await request(api.app).post('/api/admin/content/sources').set('Origin', config.APP_ORIGIN)
+      .send({ expectedUserId: user.id, source }).expect(401);
+    await adminPost(user, '/sources', { source }).expect(403);
+    await adminPost(admin, '/sources', { source, expectedUserId: user.id }).expect(409);
+    await request(api.app).post('/api/admin/content/sources').set('Cookie', admin.cookie)
+      .send({ expectedUserId: admin.id, source }).expect(403);
+    await api.db.user.update({ where: { id: admin.id }, data: { role: 'user' } });
+    await adminPost(admin, '/sources', { source }).expect(403);
+    expect(await api.db.contentSource.findUnique({ where: { id: source.id } })).toBeNull();
+  });
+
+  it('returns field paths for invalid editor fields and indexed import entries without leaking internals', async () => {
+    const admin = await register(true);
+    const invalidData = { ...base.data, meaning: '', strokeCount: 0 };
+    const editor = await draft(admin, invalidData).expect(400);
+    expect(editor.body.error.code).toBe('VALIDATION_ERROR');
+    expect(editor.body.error.issues.map((issue: { path: (string | number)[] }) => issue.path))
+      .toEqual(expect.arrayContaining([['data', 'meaning'], ['data', 'strokeCount']]));
+    const imported = await adminPost(admin, '/imports/preview', { input: { kind: 'kanji', entries: [
+      { sourceId: base.sourceId, expectedVersion: 0, data: invalidData },
+    ] } }).expect(400);
+    expect(imported.body.error.issues.map((issue: { path: (string | number)[] }) => issue.path))
+      .toEqual(expect.arrayContaining([['input', 'entries', 0, 'data', 'meaning'], ['input', 'entries', 0, 'data', 'strokeCount']]));
+    for (const issue of imported.body.error.issues) {
+      expect(Object.keys(issue).sort()).toEqual(['message', 'path']);
+      expect(issue.message).toEqual(expect.any(String));
+    }
+    const invalidSource = await adminPost(admin, '/sources', { source: { ...fixture.sources[0], attribution: '' } }).expect(400);
+    expect(invalidSource.body.error.issues[0].path).toEqual(['source', 'attribution']);
+    expect((await api.db.kanjiContent.findUniqueOrThrow({ where: { id: base.data.id } })).version).toBe(0);
+  });
+
   it('normalizes legacy stars from the published revision on seed without resetting learning or repeating versions', async () => {
     const user = await register(), dueAt = new Date('2027-01-01T00:00:00Z');
     const card = await api.db.reviewCard.create({ data: { userId: user.id, category: 'kanji', sourceId: 'k-1',

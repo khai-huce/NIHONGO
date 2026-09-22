@@ -43,6 +43,17 @@ export async function loadPublicContent(db: PrismaClient) {
 }
 export const kanjiReviewSnapshot = (data: KanjiContentData) => ({ front: data.kanji, back: data.meaning, reading: data.hanViet, hint: data.mnemonic });
 
+export async function createContentSource(db: ContentDb, raw: unknown) {
+  const data = contentSourceSchema.parse(raw);
+  // Source revisions are append-only: changing an existing ID would silently
+  // relabel provenance on every draft and published item referring to it.
+  const result = await db.contentSource.createMany({ data: [data], skipDuplicates: true });
+  const source = await db.contentSource.findUniqueOrThrow({ where: { id: data.id } });
+  const matches = (Object.keys(data) as (keyof typeof data)[]).every(key => source[key] === data[key]);
+  if (!matches) throw new HttpError(409, 'CONTENT_SOURCE_CONFLICT', 'ID nguồn đã tồn tại với thông tin khác. Hãy dùng ID mới cho phiên bản nguồn mới.');
+  return { source, created: result.count === 1 };
+}
+
 export async function saveKanjiDraft(tx: ContentDb, data: KanjiContentData, sourceId: string, expectedVersion: number | null) {
   data = kanjiContentSchema.parse(data);
   if (!await tx.contentSource.findUnique({ where: { id: sourceId } })) throw new HttpError(400, 'SOURCE_NOT_FOUND', 'Nguồn nội dung không tồn tại.');

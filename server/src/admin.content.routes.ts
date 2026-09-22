@@ -1,11 +1,12 @@
 import { Router, json } from 'express';
+import type { ErrorRequestHandler } from 'express';
 import type { PrismaClient } from '@prisma/client';
 import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
 import { requireAdmin } from './admin.auth.js';
 import { HttpError } from './errors.js';
 import { contentId, kanjiContentSchema, radicalContentSchema, contentImportSchema, contentSourceSchema } from './content.schema.js';
-import { changeContentStatus, commitContentImport, previewContentImport, saveKanjiDraft, saveRadicalDraft } from './content.service.js';
+import { changeContentStatus, commitContentImport, createContentSource, previewContentImport, saveKanjiDraft, saveRadicalDraft } from './content.service.js';
 
 const owner = { expectedUserId: z.string().uuid() };
 const version = z.number().int().nonnegative();
@@ -23,6 +24,12 @@ export function adminContentRoutes(db: PrismaClient) {
   router.get('/sources', async (req, res) => {
     z.object({}).strict().parse(req.query);
     res.json({ sources: await db.contentSource.findMany({ orderBy: { id: 'asc' } }) });
+  });
+  router.post('/sources', async (req, res) => {
+    const input = z.object({ ...owner, source: contentSourceSchema }).strict().parse(req.body);
+    checkOwner(input.expectedUserId, req.session.userId!);
+    const result = await createContentSource(db, input.source);
+    res.status(result.created ? 201 : 200).json(result);
   });
   router.post('/imports/preview', async (req, res) => {
     const input = z.object({ ...owner, input: contentImportSchema }).strict().parse(req.body);
@@ -69,5 +76,13 @@ export function adminContentRoutes(db: PrismaClient) {
       res.json({ item: await changeContentStatus(db, kind, id, input.expectedVersion, action === 'publish' ? 'published' : 'archived') });
     });
   }
+  const validationErrors: ErrorRequestHandler = (error: unknown, _req, res, next) => {
+    if (!(error instanceof z.ZodError) || res.headersSent) return next(error);
+    res.status(400).json({ error: {
+      code: 'VALIDATION_ERROR', message: error.issues[0]?.message ?? 'Dữ liệu không hợp lệ.',
+      issues: error.issues.map(issue => ({ path: issue.path, message: issue.message })),
+    } });
+  };
+  router.use(validationErrors);
   return router;
 }

@@ -8,7 +8,7 @@ Triển khai local theo duyệt ngày 20/09/2026; nghiệm thu ngày 21/09/2026.
 - 50 bộ thủ cũ chuyển vào DB. Ví dụ/gợi nhớ/chiết tự cũ được giữ; mục mới chưa có các phần này để trống, không sinh nội dung thay thế.
 - `n5-v1` vẫn 28 chữ, 10–10–8, ID/thứ tự bất biến bằng ràng buộc DB. Việc mở rộng lộ trình mặc định cần phiên bản và quyết định riêng.
 - Màn Hán tự, chi tiết, luyện viết, thẻ ôn và lộ trình lấy catalog qua API. Các mảng cũ chỉ còn phục vụ đối chiếu/fixture; lỗi API có thông báo, không fallback sang mock.
-- Ngữ pháp, giáo trình từ vựng, phân tích/dịch bài đọc tự động và Shadowing chưa thuộc phần hoàn thành này. Admin UI sẽ làm riêng; backend hiện có quyền, kho nội dung và API quản trị cho Kanji/bộ thủ/bài đọc.
+- Ngữ pháp, giáo trình từ vựng, phân tích/dịch bài đọc tự động và Shadowing chưa thuộc phần hoàn thành này. M01 bổ sung [giao diện admin Kanji](ADMIN_KANJI.md) ngày 22/09/2026; bộ thủ/bài đọc hiện mới có API quản trị, chưa có UI admin.
 
 ## Database và cập nhật
 
@@ -45,7 +45,7 @@ API đọc công khai:
 
 Các route dưới `/api/admin/content` kiểm tra phiên và role mới nhất từ DB:
 
-- `GET /sources`, `GET /kanji`, `GET /kanji/:id`, `GET /radicals`.
+- `GET /sources`, `GET /kanji`, `GET /kanji/:id`, `GET /radicals`. M01 thêm `POST /sources` để tạo nguồn bất biến với `{expectedUserId, source}`; trùng ID khác metadata bị từ chối, retry đúng nội dung không tạo trùng.
 - `PUT /kanji/:id`, `PUT /radicals/:number`: `{ expectedUserId, expectedVersion: number|null, sourceId, data }`; `null` dùng cho mục mới.
 - `POST /kanji/:id/publish|archive`, `POST /radicals/:number/publish|archive`: `{ expectedUserId, expectedVersion }`.
 - `POST /imports/preview`: `{ expectedUserId, input }`; `input` có `kind: kanji|radicals`, `entries: [{sourceId, expectedVersion, data}]`.
@@ -60,7 +60,7 @@ npm --prefix server run admin:role -- grant <UUID-tai-khoan-duoc-chi-dinh>
 npm --prefix server run admin:role -- revoke <UUID-tai-khoan-duoc-chi-dinh>
 ```
 
-Không tự cấp admin cho tài khoản nào. Người dùng chỉ rõ UUID khi cần cấp. CLI quản trị là công cụ của người vận hành trên máy; API không có chức năng tự thăng quyền.
+Chỉ cấp admin cho tài khoản được người dùng chỉ định rõ; nếu chỉ định email thì tra đúng UUID của email trước khi cấp. CLI quản trị là công cụ của người vận hành trên máy; API không có chức năng tự thăng quyền. M01 dùng đăng nhập hiện có và `users.role` để vào `/admin/kanji`.
 
 ## R01 — bài đọc
 

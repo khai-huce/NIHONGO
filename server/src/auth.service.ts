@@ -9,7 +9,8 @@ const hashOptions = { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, par
 let dummyHash: Promise<string> | undefined;
 
 export function publicUser(user: User) {
-  return { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl ?? undefined, isPremium: user.isPremium };
+  return { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl ?? undefined,
+    isPremium: user.isPremium, role: user.role as 'user' | 'admin' };
 }
 
 export async function register(db: PrismaClient, input: { name: string; email: string; password: string }) {

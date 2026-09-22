@@ -56,7 +56,7 @@ describe('email login and PostgreSQL sessions', () => {
   it('reports DB health and creates only a hashed, non-premium account', async () => {
     await request(api.app).get('/api/health').expect(200);
     const response = await post('/register', { ...userInput, email: '  Learner@Example.COM  ' }).expect(201);
-    expect(response.body.user).toMatchObject({ name: userInput.name, email: userInput.email, isPremium: false });
+    expect(response.body.user).toMatchObject({ name: userInput.name, email: userInput.email, isPremium: false, role: 'user' });
     expect(response.body.user).not.toHaveProperty('passwordHash');
     expect(response.body.user).not.toHaveProperty('googleSub');
     const user = await api.db.user.findUniqueOrThrow({ where: { id: response.body.user.id } });
@@ -70,6 +70,7 @@ describe('email login and PostgreSQL sessions', () => {
   it('rejects password policy violations, extra privilege fields and malformed JSON', async () => {
     await post('/register', { ...userInput, password: 'short' }).expect(400);
     await post('/register', { ...userInput, isPremium: true }).expect(400);
+    await post('/register', { ...userInput, role: 'admin' }).expect(400);
     await post('/register', { ...userInput, name: '  ' }).expect(400);
     await request(api.app).post('/api/auth/login').set('Origin', config.APP_ORIGIN).set('Content-Type', 'application/json').send('{').expect(400);
     expect(await api.db.user.count()).toBe(0);
@@ -111,11 +112,17 @@ describe('email login and PostgreSQL sessions', () => {
   it('keeps accounts isolated and gets current privileges from the database', async () => {
     const a = await post('/register', userInput).expect(201);
     const b = await post('/register', { ...userInput, email: 'second@example.com' }).expect(201);
-    await api.db.user.update({ where: { id: a.body.user.id }, data: { isPremium: true } });
+    await api.db.user.update({ where: { id: a.body.user.id }, data: { isPremium: true, role: 'admin' } });
     const meA = await request(api.app).get('/api/auth/me').set('Cookie', cookie(a)).expect(200);
     const meB = await request(api.app).get('/api/auth/me').set('Cookie', cookie(b)).expect(200);
-    expect(meA.body.user).toMatchObject({ id: a.body.user.id, isPremium: true });
-    expect(meB.body.user).toMatchObject({ id: b.body.user.id, isPremium: false });
+    expect(meA.body.user).toMatchObject({ id: a.body.user.id, isPremium: true, role: 'admin' });
+    expect(meB.body.user).toMatchObject({ id: b.body.user.id, isPremium: false, role: 'user' });
+    const login = await post('/login', { email: userInput.email, password }).expect(200);
+    expect(login.body.user.role).toBe('admin');
+    await post('/login', { email: userInput.email, password, role: 'admin' }).expect(400);
+    await api.db.user.update({ where: { id: a.body.user.id }, data: { role: 'user' } });
+    expect((await request(api.app).get('/api/auth/me').set('Cookie', cookie(a)).expect(200)).body.user.role).toBe('user');
+    expect((await request(api.app).get('/api/auth/me').set('Cookie', cookie(login)).expect(200)).body.user.role).toBe('user');
     await api.db.user.delete({ where: { id: a.body.user.id } });
     await request(api.app).get('/api/auth/me').set('Cookie', cookie(a)).expect(401);
   });
@@ -138,8 +145,9 @@ describe('email login and PostgreSQL sessions', () => {
 
 describe('Google token verification', () => {
   it('creates a user from a signed token and reuses the Google subject on later login', async () => {
-    const first = await googleAttempt();
+    const first = await googleAttempt({ role: 'admin' });
     expect(first.status).toBe(200);
+    expect(first.body.user.role).toBe('user');
     const second = await googleAttempt();
     expect(second.status).toBe(200);
     expect(second.body.user.id).toBe(first.body.user.id);

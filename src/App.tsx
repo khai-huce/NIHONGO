@@ -29,6 +29,8 @@ import { useAuth } from './hooks/useAuth';
 import { ContentCatalogProvider, CatalogGate } from './hooks/useContentCatalog';
 import { ReviewProvider } from './hooks/useReview';
 
+const AdminApp = React.lazy(() => import('./admin/AdminApp'));
+
 export const App: React.FC = () => {
   const navigate = useNavigate(), location = useLocation();
   const activeTab = tabForPath(location.pathname);
@@ -47,6 +49,10 @@ export const App: React.FC = () => {
     setSpeechError(null);
     return () => cancelJapaneseSpeech();
   }, [location.pathname, auth.currentUser?.id]);
+
+  if (location.pathname === '/admin' || location.pathname.startsWith('/admin/')) {
+    return <React.Suspense fallback={<div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-600" role="status">Đang tải trang quản trị…</div>}><AdminApp auth={auth} /></React.Suspense>;
+  }
 
   return (
     <LearningSettingsContext.Provider value={settings}>
