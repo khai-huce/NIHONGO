@@ -7,7 +7,7 @@ import { ReviewPage } from './pages/ReviewPage';
 import { ChuDongPage } from './pages/ChuDongPage';
 import { AlphabetPage } from './pages/AlphabetPage';
 import { CurriculumPage } from './pages/CurriculumPage';
-import { BunpoPage } from './pages/BunpoPage';
+import { GrammarPage } from './pages/GrammarPage';
 import { AccentPage } from './pages/AccentPage';
 import { WritePage } from './pages/WritePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
@@ -17,7 +17,7 @@ import { DocHieuPage } from './pages/DocHieuPage';
 import { ShadowingPage } from './pages/ShadowingPage';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { pagePaths, pathForTab, tabForPath, kanjiPath, grammarPath } from './routes';
-import { KanjiRoute, GrammarRoute } from './pages/DetailRoutes';
+import { KanjiRoute } from './pages/DetailRoutes';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 import { SettingsModal } from './components/SettingsModal';
@@ -109,10 +109,9 @@ export const App: React.FC = () => {
               onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
             /></CatalogGate>} />
             <Route path="/kanji/:id" element={<CatalogGate><KanjiRoute /></CatalogGate>} />
-            <Route path="/ngu-phap/:id" element={<GrammarRoute />} />
-            <Route path={pagePaths['vocab-giao-trinh']} element={<CurriculumPage />} />
+            <Route path={`${pagePaths['vocab-giao-trinh']}/*`} element={<CurriculumPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={pagePaths['vocab-bang-chu-cai']} element={<AlphabetPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
-            <Route path={pagePaths.bunpo} element={<BunpoPage />} />
+            <Route path={`${pagePaths.bunpo}/*`} element={<GrammarPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={pagePaths['personal-lo-trinh']} element={<CatalogGate><PersonalRoadmapPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error}
               onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} onDetail={item => openDetail(kanjiPath(item.id))} /></CatalogGate>} />
             <Route path={pagePaths['personal-on-tap']} element={<ReviewPage

@@ -17,6 +17,11 @@ import { kanaResultsRoutes } from './kana-results.routes.js';
 import { contentRoutes } from './content.routes.js';
 import { adminContentRoutes } from './admin.content.routes.js';
 import { readingRoutes } from './reading.routes.js';
+import { curriculumStudyRoutes } from './curriculum-study.routes.js';
+import { curriculumRoutes } from './curriculum.routes.js';
+import { grammarRoutes } from './grammar.routes.js';
+import { grammarStudyRoutes } from './grammar-study.routes.js';
+import { curriculumReviewRoutes, curriculumReviewPreviewRoutes } from './curriculum-review.routes.js';
 
 export function createApp(config: Config) {
   const db = new PrismaClient({ datasources: { db: { url: config.DATABASE_URL } } });
@@ -50,6 +55,16 @@ export function createApp(config: Config) {
   const reading = readingRoutes(db, { python: config.TTS_PYTHON, storageDir: config.TTS_STORAGE_DIR });
   app.use('/api/reading/articles', middleware, reading.public);
   app.use('/api/admin/reading/articles', middleware, reading.admin);
+  const curriculum = curriculumRoutes(db);
+  app.use('/api/curriculum/courses', middleware, curriculumReviewPreviewRoutes(db));
+  app.use('/api/curriculum/courses', middleware, curriculum.public);
+  app.use('/api/admin/curriculum/courses', middleware, curriculum.admin);
+  app.use('/api/curriculum/review-sets', middleware, curriculumReviewRoutes(db));
+  app.use('/api/curriculum', middleware, curriculumStudyRoutes(db));
+  const grammar = grammarRoutes(db);
+  app.use('/api/grammar', middleware, grammar.public);
+  app.use('/api/admin/grammar/courses', middleware, grammar.admin);
+  app.use('/api/grammar', middleware, grammarStudyRoutes(db, config));
   app.use(express.json({ limit: '16kb' }));
   app.use('/api/auth', middleware, authRoutes(config, db, pool));
   app.use('/api/progress', middleware, progressRoutes(db));

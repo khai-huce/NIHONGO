@@ -8,6 +8,8 @@ import { filterKanji, hasUnpublishedDraft } from './catalog';
 import { KanjiEditor } from './KanjiEditor';
 import { KanjiImportPanel } from './KanjiImportPanel';
 import { ReadingWorkspace } from './ReadingWorkspace';
+import { CurriculumWorkspace } from './CurriculumWorkspace';
+import { GrammarWorkspace } from './GrammarWorkspace';
 import type { AdminRequest, ContentSource, KanjiRecord } from './types';
 
 const button = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
@@ -108,7 +110,7 @@ function Workspace({ auth, leave, onDirtyChange }: { auth: Auth; leave: (action:
   const sourceAdded = (source: ContentSource) => setSources(previous => previous.some(item => item.id === source.id) ? previous : [...previous, source]);
 
   return <div className="mx-auto flex max-w-[1600px] flex-col md:flex-row">
-    <aside className="shrink-0 border-b border-slate-200 bg-white p-4 md:min-h-[calc(100vh-65px)] md:w-52 md:border-b-0 md:border-r"><p className="mb-3 hidden px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400 md:block">Nội dung học</p>{[{path:'/admin/kanji',label:'Kanji'}, {path:'/admin/reading',label:'Đọc hiểu'}].map(item => <button key={item.path} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${location.pathname.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`} onClick={() => leave(() => navigate(item.path))}><BookOpen size={18} />{item.label}</button>)}<p className="mt-6 hidden px-3 text-xs leading-5 text-slate-500 md:block">Chỉ nội dung đã xuất bản mới xuất hiện trong kho học.</p></aside>
+    <aside className="shrink-0 border-b border-slate-200 bg-white p-4 md:min-h-[calc(100vh-65px)] md:w-52 md:border-b-0 md:border-r"><p className="mb-3 hidden px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400 md:block">Nội dung học</p>{[{path:'/admin/kanji',label:'Kanji'}, {path:'/admin/reading',label:'Đọc hiểu'}, {path:'/admin/curriculum',label:'Giáo trình'}, {path:'/admin/grammar',label:'Ngữ pháp'}].map(item => <button key={item.path} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${location.pathname.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`} onClick={() => leave(() => navigate(item.path))}><BookOpen size={18} />{item.label}</button>)}<p className="mt-6 hidden px-3 text-xs leading-5 text-slate-500 md:block">Chỉ nội dung đã xuất bản mới xuất hiện trong kho học.</p></aside>
     <main className="min-w-0 flex-1 px-4 py-6 sm:px-7">
       <fieldset disabled={auth.checking || auth.loggingOut || !!auth.error} className="min-w-0">
         {auth.checking && <p role="status" className="mb-3 text-xs text-slate-500">Đang kiểm tra phiên quản trị…</p>}
@@ -117,6 +119,8 @@ function Workspace({ auth, leave, onDirtyChange }: { auth: Auth; leave: (action:
           <Route path="/" element={<Navigate to="/admin/kanji" replace />} />
           <Route path="/admin" element={<Navigate to="/admin/kanji" replace />} />
           <Route path="/admin/reading/*" element={<ReadingWorkspace request={scope.request} onDirtyChange={onDirtyChange} />} />
+          <Route path="/admin/curriculum/*" element={<CurriculumWorkspace request={scope.request} onDirtyChange={onDirtyChange} />} />
+          <Route path="/admin/grammar/*" element={<GrammarWorkspace request={scope.request} onDirtyChange={onDirtyChange} />} />
           <Route path="/admin/kanji" element={<KanjiList items={items} loading={loading} error={error} onReload={() => void reload()} onOpen={id => leave(() => navigate(`/admin/kanji/${encodeURIComponent(id)}`))} />} />
           <Route path="/admin/kanji/new" element={loaded ? <KanjiEditor key="new" record={null} sources={sources} request={scope.request} onSaved={saved} onClose={editorClose} onSourcesChanged={sourceAdded} onDirtyChange={onDirtyChange} /> : <p role="status">Đang chuẩn bị dữ liệu…</p>} />
           <Route path="/admin/kanji/import" element={loaded ? <KanjiImportPanel request={scope.request} sources={sources} onImported={() => { void reload(); }} onClose={back} onDirtyChange={onDirtyChange} /> : <p role="status">Đang chuẩn bị dữ liệu…</p>} />

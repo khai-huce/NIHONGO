@@ -1,0 +1,11 @@
+{
+  "id": "openjlpt-n5-c42fd9fa-vi-v1",
+  "name": "Từ vựng N5 — OpenJLPT, bản dịch Việt nháp v1",
+  "url": "https://github.com/evanclan/OpenJLPT/tree/c42fd9fa3777bfc1775446f7c418d549dfd6e4cf",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "version": "c42fd9fa3777bfc1775446f7c418d549dfd6e4cf / NIHONGO vi-v1",
+  "checksum": "3e606fc15fd5d177fa7c3928c17f28b0d34ac84ec6bdbfe0947b339d9d815a6d",
+  "attribution": "Nguồn: OpenJLPT; Jonathan Waller (Tanos); JMdict/EDICT — James William Breen và EDRDG. Chuyển đổi, chia bài và bản dịch tiếng Việt: NIHONGO (AI hỗ trợ, cần rà soát). CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/. Nguồn: https://github.com/evanclan/OpenJLPT",
+  "notes": "662 mục từ. Giữ bản gốc và NOTICE/giấy phép kèm file. Bản dịch Việt do AI hỗ trợ biên soạn, chưa được người dùng duyệt từng mục. Cách phân nhóm kana do NIHONGO thêm; lấy dạng viết/cách đọc đầu tiên cho bài tập, sửa 9 mục có ghi chú trong review.json. Không nhập ví dụ/audio Tatoeba; chưa có Hán Việt/từ loại. sourceId của JSON giáo trình để null để người dùng tạo/chọn nguồn trong admin. Giấy phép dữ liệu không thay giấy phép mã nguồn ứng dụng."
+}

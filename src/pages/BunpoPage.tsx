@@ -6,11 +6,13 @@ import {
   Volume2, 
   ChevronRight, 
   Crown, 
-  X,
-  ArrowRight
+  X
 } from 'lucide-react';
 import { speakJapanese } from '../utils/speech';
 import { RoughCard, RoughButton } from '../components/RoughCard';
+import { useCurriculum } from '../hooks/useCurriculum';
+import { GrammarCourseCards, GrammarNotice, GrammarProgress } from '../components/grammar/GrammarContent';
+import type { GrammarSummary } from '../utils/grammar';
 
 interface WordToken {
   text: string;
@@ -47,14 +49,18 @@ interface SentenceAnalysisData {
   }[];
 }
 
-export const BunpoPage: React.FC = () => {
+export const BunpoPage: React.FC<{ userId: string | null; authBusy: boolean }> = ({ userId, authBusy }) => {
+  const catalog = useCurriculum<{ courses: GrammarSummary[] }>('/grammar/courses', userId, authBusy);
+  const progress = useCurriculum<{ completedPatternIds: string[] }>(userId ? '/grammar/progress' : null, userId, authBusy);
+  const courses = catalog.data?.courses ?? [];
+  const total = courses.reduce((count, course) => count + course.patternCount, 0);
+  const completedCount = progress.data?.completedPatternIds.length ?? 0;
   // Sentence input and analysis state
   const [inputText, setInputText] = useState('');
   const [isAnalyzed, setIsAnalyzed] = useState(false);
   const [selectedTokenIdx, setSelectedTokenIdx] = useState<number>(0);
   const [showAiStructure, setShowAiStructure] = useState(false);
   const [isConjugationModalOpen, setIsConjugationModalOpen] = useState(false);
-  const [selectedCourseLesson, setSelectedCourseLesson] = useState<string | null>(null);
 
   // Pre-configured sentence database for interactive testing
   const sampleSentences: Record<string, SentenceAnalysisData> = {
@@ -676,123 +682,13 @@ export const BunpoPage: React.FC = () => {
         </div>
       </RoughCard>
 
-      {/* Progress Bar */}
-      <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 shadow-sketch">
-        <div className="flex items-center justify-between text-xs font-bold text-[#78716c] mb-1.5">
-          <span>Tiến độ tổng</span>
-          <span>0/548 mẫu · 0%</span>
-        </div>
-        <div className="w-full bg-[#eae3d5] h-1.5 rounded-full overflow-hidden">
-          <div className="bg-[#0094ff] h-full w-[2%]" />
-        </div>
-      </RoughCard>
-
-      {/* ============================================================ */}
-      {/* 4. COURSE SECTIONS (Giáo trình quốc dân & Ngữ pháp chuyên sâu) */}
-      {/* ============================================================ */}
-      <div className="space-y-6">
-        
-        {/* Section 1: Giáo trình quốc dân Sơ cấp I - II */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-6 bg-[#0094ff] rounded-full" />
-            <div>
-              <h3 className="text-base font-black text-[#292524] font-sketch">
-                Giáo trình quốc dân
-              </h3>
-              <p className="text-[11px] font-bold text-[#78716c]">Sơ cấp I · II</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* N5 */}
-            <div onClick={() => setSelectedCourseLesson('N5 - Sơ cấp 1')} className="cursor-pointer group">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={14} roughness={0.7} className="p-5 flex flex-col justify-between min-h-[140px] shadow-sketch hover:scale-[1.01] transition-transform">
-                <div>
-                  <div className="text-xs font-bold text-[#78716c]">Giáo trình quốc dân Sơ cấp I</div>
-                  <div className="text-3xl font-black font-kanji text-[#292524]">N5</div>
-                </div>
-                <div className="mt-3 py-1.5 px-3 rounded-lg bg-[#2a9d8f] text-white flex items-center justify-between text-xs font-bold">
-                  <span>25 bài học</span>
-                  <span className="text-[11px] opacity-90">120 mẫu ngữ pháp · Sơ cấp 1</span>
-                </div>
-              </RoughCard>
-            </div>
-
-            {/* N4 */}
-            <div onClick={() => setSelectedCourseLesson('N4 - Sơ cấp 2')} className="cursor-pointer group">
-              <RoughCard fill="#7ba899" stroke="#292524" borderRadius={14} roughness={0.7} className="p-5 flex flex-col justify-between min-h-[140px] shadow-sketch hover:scale-[1.01] transition-transform">
-                <div>
-                  <div className="text-xs font-bold text-[#292524]/80">Giáo trình quốc dân Sơ cấp II</div>
-                  <div className="text-3xl font-black font-kanji text-[#292524]">N4</div>
-                </div>
-                <div className="mt-3 py-1.5 px-3 rounded-lg bg-[#2a9d8f] text-white flex items-center justify-between text-xs font-bold">
-                  <span>25 bài học</span>
-                  <span className="text-[11px] opacity-90">90 mẫu ngữ pháp · Sơ cấp 2</span>
-                </div>
-              </RoughCard>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Ngữ pháp chuyên sâu N3 - N2 - N1 */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-6 bg-amber-600 rounded-full" />
-            <div>
-              <h3 className="text-base font-black text-[#292524] font-sketch">
-                Ngữ pháp chuyên sâu
-              </h3>
-              <p className="text-[11px] font-bold text-[#78716c]">N3 · N2 · N1</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* N3 */}
-            <div onClick={() => setSelectedCourseLesson('N3 - Chuyên sâu')} className="cursor-pointer group">
-              <RoughCard fill="#588157" stroke="#292524" borderRadius={14} roughness={0.7} className="p-5 flex flex-col justify-between min-h-[140px] shadow-sketch hover:scale-[1.01] transition-transform text-white">
-                <div>
-                  <div className="text-xs font-bold text-white/90">Ngữ pháp chuyên sâu N3</div>
-                  <div className="text-3xl font-black font-kanji">N3</div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-white/20 flex items-center justify-between text-xs font-bold">
-                  <span>19 bài học</span>
-                  <span className="text-white/80 text-[11px]">Luyện ngữ pháp N3 chuyên sâu</span>
-                </div>
-              </RoughCard>
-            </div>
-
-            {/* N2 */}
-            <div onClick={() => setSelectedCourseLesson('N2 - Chuyên sâu')} className="cursor-pointer group">
-              <RoughCard fill="#2d6a4f" stroke="#292524" borderRadius={14} roughness={0.7} className="p-5 flex flex-col justify-between min-h-[140px] shadow-sketch hover:scale-[1.01] transition-transform text-white">
-                <div>
-                  <div className="text-xs font-bold text-white/90">Ngữ pháp chuyên sâu N2</div>
-                  <div className="text-3xl font-black font-kanji">N2</div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-white/20 flex items-center justify-between text-xs font-bold">
-                  <span>26 bài học</span>
-                  <span className="text-white/80 text-[11px]">Luyện ngữ pháp N2 chuyên sâu</span>
-                </div>
-              </RoughCard>
-            </div>
-
-            {/* N1 */}
-            <div onClick={() => setSelectedCourseLesson('N1 - Chuyên sâu')} className="cursor-pointer group sm:col-span-2">
-              <RoughCard fill="#606c38" stroke="#292524" borderRadius={14} roughness={0.7} className="p-5 flex flex-col justify-between min-h-[140px] shadow-sketch hover:scale-[1.01] transition-transform text-white">
-                <div>
-                  <div className="text-xs font-bold text-white/90">Ngữ pháp chuyên sâu N1</div>
-                  <div className="text-3xl font-black font-kanji">N1</div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-white/20 flex items-center justify-between text-xs font-bold">
-                  <span>20 bài học</span>
-                  <span className="text-white/80 text-[11px]">Luyện ngữ pháp N1 chuyên sâu</span>
-                </div>
-              </RoughCard>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <GrammarNotice {...catalog} />
+      <GrammarNotice {...progress} />
+      <GrammarProgress title="Tiến độ tổng" completed={completedCount} total={total} loading={catalog.loading || progress.loading} />
+      {!catalog.loading && !catalog.error && <div className="space-y-6">
+        <GrammarCourseCards courses={courses} levels={['N5', 'N4']} title="Giáo trình quốc dân" subtitle="Sơ cấp I · II" />
+        <GrammarCourseCards courses={courses} levels={['N3', 'N2', 'N1']} title="Ngữ pháp chuyên sâu" subtitle="N3 · N2 · N1" />
+      </div>}
 
       {/* ============================================================ */}
       {/* MODAL: BẢNG CHIA THỂ ĐỘNG TỪ & TÍNH TỪ */}
@@ -850,52 +746,6 @@ export const BunpoPage: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* MODAL: LESSON EXPLORER MODAL */}
-      {/* ============================================================ */}
-      {selectedCourseLesson && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setSelectedCourseLesson(null)}>
-          <div className="w-full max-w-xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <RoughCard fill="#ffffff" stroke="#78716c" borderRadius={16} roughness={0.7} className="p-6 space-y-4 shadow-2xl bg-white">
-              <div className="flex items-center justify-between border-b border-[#78716c]/20 pb-3">
-                <h3 className="text-base font-black text-[#292524] font-sketch">
-                  📖 Danh sách bài học: {selectedCourseLesson}
-                </h3>
-                <button onClick={() => setSelectedCourseLesson(null)} className="p-1 rounded hover:bg-slate-100 cursor-pointer">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1 text-xs font-bold">
-                {Array.from({ length: 10 }).map((_, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-[#fdfbf7] border border-[#78716c]/30 flex items-center justify-between hover:bg-blue-50/50 transition-colors cursor-pointer">
-                    <div>
-                      <div className="font-black text-[#292524]">Bài {idx + 1}: Ngữ pháp trọng tâm phần {idx + 1}</div>
-                      <div className="text-[11px] text-[#78716c]">Bao gồm 4-6 mẫu ngữ pháp có bài tập ứng dụng</div>
-                    </div>
-                    <span className="text-[#0094ff] flex items-center gap-1 font-bold">
-                      Học ngay <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="text-center pt-2">
-                <RoughButton
-                  onClick={() => setSelectedCourseLesson(null)}
-                  fill="#0094ff"
-                  stroke="#0369a1"
-                  borderRadius={8}
-                  roughness={0.7}
-                  className="text-white px-5 py-2 text-xs font-bold"
-                >
-                  Đóng
-                </RoughButton>
-              </div>
-            </RoughCard>
-          </div>
-        </div>
-      )}
 
     </div>
   );

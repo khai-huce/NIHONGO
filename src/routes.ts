@@ -24,9 +24,10 @@ export function tabForPath(path: string) {
   const normalized = path.replace(/\/+$/, '') || '/';
   if (normalized.startsWith('/kanji/')) return 'kanji';
   if (normalized.startsWith('/ngu-phap/')) return 'bunpo';
+  if (normalized.startsWith(`${pagePaths['vocab-giao-trinh']}/`)) return 'vocab-giao-trinh';
   if (normalized.startsWith(`${pagePaths['lifetime-doc-hieu']}/`)) return 'lifetime-doc-hieu';
   return Object.keys(pagePaths).find(tab => pagePaths[tab] === normalized) ?? '';
 }
 
 export const kanjiPath = (id: string) => `/kanji/${encodeURIComponent(id)}`;
-export const grammarPath = (id: string) => `/ngu-phap/${encodeURIComponent(id)}`;
+export const grammarPath = (id: string) => `/ngu-phap/mau/${encodeURIComponent(id.replace(/^grammar:/, ''))}`;

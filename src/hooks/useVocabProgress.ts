@@ -32,6 +32,8 @@ type Options = {
   authBusy: boolean;
   words: VocabWord[];
   lessonVersion: number;
+  studyScope?: 'personal' | 'catalog' | 'curriculum-review';
+  onSaved?: () => void;
 };
 
 function readSnapshot(data: ProgressResponse, userId: string, lessonId: string): ProgressSnapshot {
@@ -59,8 +61,11 @@ function readSnapshot(data: ProgressResponse, userId: string, lessonId: string):
   };
 }
 
-export function useVocabProgress({ lessonId, userId, authBusy, words, lessonVersion }: Options) {
-  const owner = JSON.stringify([userId, lessonId]);
+export function useVocabProgress({ lessonId, userId, authBusy, words, lessonVersion, studyScope = 'personal', onSaved }: Options) {
+  const owner = JSON.stringify([studyScope, userId, lessonId]);
+  const endpoint = studyScope === 'curriculum-review' ? '/curriculum/review-sets/progress' : studyScope === 'catalog' ? '/curriculum/progress' : '/vocab/progress';
+  const savedCallback = useRef(onSaved);
+  savedCallback.current = onSaved;
   // Invalidate immediately during render, before effects, including content edits with the same IDs.
   const key = JSON.stringify([owner, authBusy, lessonVersion, words]);
   const context = useRef({ key, owner, authBusy, words, lessonVersion });
@@ -109,7 +114,7 @@ export function useVocabProgress({ lessonId, userId, authBusy, words, lessonVers
     });
     try {
       const next = userId
-        ? readSnapshot(await api<ProgressResponse>(`/vocab/progress?lessonId=${encodeURIComponent(lessonId)}`), userId, lessonId)
+        ? readSnapshot(await api<ProgressResponse>(`${endpoint}?lessonId=${encodeURIComponent(lessonId)}`), userId, lessonId)
         : { ...current.current.snapshot, words: context.current.words, progress: guestProgress,
           lessonVersion: context.current.lessonVersion };
       if (!isCurrent(request)) return null;
@@ -126,7 +131,7 @@ export function useVocabProgress({ lessonId, userId, authBusy, words, lessonVers
         apply({ ...current.current, loading: false });
       }
     }
-  }, [key, owner, userId, lessonId, authBusy, apply, isCurrent]);
+  }, [key, owner, userId, lessonId, authBusy, endpoint, apply, isCurrent]);
 
   useEffect(() => {
     mounted.current = true;
@@ -149,7 +154,7 @@ export function useVocabProgress({ lessonId, userId, authBusy, words, lessonVers
           lessonVersion: before.lessonVersion, progressVersion: before.progressVersion,
           ...(rating ?? { confirmedCount: Object.keys(before.progress).length }),
         };
-        const data = await api<ProgressResponse>(`/vocab/progress/${rating ? 'rate' : 'reset'}`, body);
+        const data = await api<ProgressResponse>(`${endpoint}/${rating ? 'rate' : 'reset'}`, body);
         next = readSnapshot(data, userId, lessonId);
       } else {
         next = { ...before,
@@ -159,6 +164,7 @@ export function useVocabProgress({ lessonId, userId, authBusy, words, lessonVers
       }
       if (!isCurrent(request)) return null;
       apply({ ...current.current, snapshot: next });
+      savedCallback.current?.();
       return next;
     } catch (err) {
       if (isCurrent(request)) apply({ ...current.current,
@@ -171,7 +177,7 @@ export function useVocabProgress({ lessonId, userId, authBusy, words, lessonVers
         apply({ ...current.current, saving: false });
       }
     }
-  }, [userId, lessonId, canActNow, isCurrent, apply]);
+  }, [userId, lessonId, endpoint, canActNow, isCurrent, apply]);
 
   const rate = useCallback((wordId: string, memorized: boolean) => change({ wordId, memorized }), [change]);
   const reset = useCallback(() => change(), [change]);

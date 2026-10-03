@@ -1,0 +1,434 @@
+{
+  "meta": {
+    "status": 200
+  },
+  "data": [
+    {
+      "slug": "石鹸",
+      "is_common": true,
+      "tags": [],
+      "jlpt": [
+        "jlpt-n2",
+        "jlpt-n5"
+      ],
+      "japanese": [
+        {
+          "word": "石鹸",
+          "reading": "せっけん"
+        },
+        {
+          "word": "石けん",
+          "reading": "せっけん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "soap"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "Soap"
+          ],
+          "parts_of_speech": [
+            "Wikipedia definition"
+          ],
+          "links": [
+            {
+              "text": "Read “Soap” on English Wikipedia",
+              "url": "http://en.wikipedia.org/wiki/Soap?oldid=495323767"
+            },
+            {
+              "text": "Read “石鹸” on Japanese Wikipedia",
+              "url": "http://ja.wikipedia.org/wiki/石鹸?oldid=42427956"
+            }
+          ],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [],
+          "sentences": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": "http://dbpedia.org/resource/Soap"
+      }
+    },
+    {
+      "slug": "接見",
+      "is_common": true,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "接見",
+          "reading": "せっけん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "(official) audience",
+            "interview",
+            "reception"
+          ],
+          "parts_of_speech": [
+            "Noun",
+            "Suru verb",
+            "Intransitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "meeting with one's lawyer (while detained or imprisoned)"
+          ],
+          "parts_of_speech": [
+            "Noun",
+            "Suru verb",
+            "Intransitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "席巻",
+      "is_common": true,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "席巻",
+          "reading": "せっけん"
+        },
+        {
+          "word": "席捲",
+          "reading": "せっけん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "sweeping (over, across)",
+            "conquering",
+            "overwhelming"
+          ],
+          "parts_of_speech": [
+            "Noun",
+            "Suru verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "石剣",
+      "is_common": false,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "石剣",
+          "reading": "せっけん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "sword-shaped stoneware found in archeological sites in eastern Japan dating to the end of the Jomon period"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "節倹",
+      "is_common": false,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "節倹",
+          "reading": "せっけん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "economy",
+            "thrift"
+          ],
+          "parts_of_speech": [
+            "Noun",
+            "Suru verb",
+            "Transitive verb",
+            "Intransitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "尺縑",
+      "is_common": false,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "尺縑",
+          "reading": "せっけん"
+        },
+        {
+          "word": "尺けん",
+          "reading": "せっけん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "small amount of silk (i.e. only one foot of cloth)"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "unimportant painting",
+            "trivial work of art"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "石鹸置き",
+      "is_common": false,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "石鹸置き",
+          "reading": "せっけんおき"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "soap dish or box"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "石鹸工場",
+      "is_common": false,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "石鹸工場",
+          "reading": "せっけんこうじょう"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "soap works"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "接見交通",
+      "is_common": false,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "接見交通",
+          "reading": "せっけんこうつう"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "(defendant's) access to a lawyer"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [
+            "Law"
+          ],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "石鹸入れ",
+      "is_common": false,
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "word": "石鹸入れ",
+          "reading": "せっけんいれ"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "soap dish or box"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    }
+  ]
+}

@@ -10,8 +10,8 @@ import {
   XCircle 
 } from 'lucide-react';
 import type { VocabWord } from '../../hooks/useVocabLessons';
-import { useVocabStudy } from '../../hooks/useVocabStudy';
-import { getQuizOptions, type StudyMode } from '../../../shared/vocab-study.mjs';
+import { useVocabStudy, type StudyLeaveState } from '../../hooks/useVocabStudy';
+import { getQuizOptions, getStudyTarget, shuffleStudyWords, type StudyMode } from '../../../shared/vocab-study.mjs';
 import { StudyStatus } from './StudyStatus';
 import { StudyModeDialog } from './StudyModeDialog';
 import { speakJapanese, cancelJapaneseSpeech } from '../../utils/speech';
@@ -28,6 +28,12 @@ interface QuizStudyProps {
   onExit: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  studyScope?: 'personal' | 'catalog' | 'curriculum-review';
+  embedded?: boolean;
+  onSaved?: () => void;
+  onCompletion?: (info: { kind: 'quiz'; total: number }) => void;
+  onExitGuardChange?: (guard: (() => boolean) | null) => void;
+  onExitStateChange?: (getState: (() => StudyLeaveState) | null) => void;
 }
 
 export const QuizStudy: React.FC<QuizStudyProps> = ({
@@ -39,9 +45,15 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
   authBusy,
   onExit,
   isFullscreen,
-  onToggleFullscreen
+  onToggleFullscreen,
+  studyScope = 'personal',
+  embedded = false,
+  onSaved,
+  onCompletion,
+  onExitGuardChange,
+  onExitStateChange
 }) => {
-  const study = useVocabStudy({ lessonId, lessonName, lessonVersion, words, userId, authBusy, kind: 'quiz', initialMode: 'meaning' });
+  const study = useVocabStudy({ lessonId, lessonName, lessonVersion, words, userId, authBusy, kind: 'quiz', initialMode: 'meaning', studyScope, onSaved });
   const { mode: questionMode, index: currentIndex, currentWord, deck, score, total, finished: isFinished } = study;
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -53,9 +65,38 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
   const hasGivenUp = answer?.answer === null;
   const blocked = study.busy || Boolean(study.error) || study.completionPending;
 
-  const currentOptions = useMemo(() => currentWord
-    ? getQuizOptions(currentWord, deck, questionMode)
-    : [], [currentWord?.id, questionMode, study.roundId]);
+  const currentOptions = useMemo(() => {
+    if (!currentWord) return [];
+    if (studyScope === 'personal') return getQuizOptions(currentWord, deck, questionMode);
+    const target = getStudyTarget(currentWord, 'quiz', questionMode);
+    const seen = new Set([target.normalize('NFKC').trim()]);
+    const distractors = shuffleStudyWords(deck).flatMap(word => {
+      const text = getStudyTarget(word, 'quiz', questionMode);
+      const key = text.normalize('NFKC').trim();
+      if (!key || seen.has(key)) return [];
+      seen.add(key);
+      return [{ id: word.id, text, isCorrect: false }];
+    }).slice(0, 3);
+    return shuffleStudyWords([{ id: 'correct', text: target, isCorrect: true }, ...distractors]);
+  }, [currentWord?.id, questionMode, study.roundId, studyScope, deck]);
+
+  useEffect(() => {
+    onExitGuardChange?.(study.requestExit);
+    return () => onExitGuardChange?.(null);
+  }, [onExitGuardChange, study.requestExit]);
+  useEffect(() => {
+    onExitStateChange?.(study.getLeaveState);
+  }, [onExitStateChange, study.getLeaveState, study.loading, study.saving, study.completionPending, study.finished, study.answers]);
+  useEffect(() => () => onExitStateChange?.(null), [onExitStateChange]);
+  const completionCallback = useRef(onCompletion);
+  completionCallback.current = onCompletion;
+  const reportedRound = useRef('');
+  useEffect(() => {
+    if (isFinished && reportedRound.current !== study.roundId) {
+      reportedRound.current = study.roundId;
+      completionCallback.current?.({ kind: 'quiz', total });
+    }
+  }, [isFinished, study.roundId, total]);
 
   const cancelAutoNext = useCallback(() => {
     if (autoNextTimer.current !== null) clearTimeout(autoNextTimer.current);
@@ -172,7 +213,9 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
     <div className={`w-full relative transition-all duration-200 ${
       isFullscreen 
         ? 'fixed inset-0 z-50 bg-[#171f34] flex flex-col justify-between p-4 md:p-8 overflow-y-auto' 
-        : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
+        : embedded && studyScope !== 'personal'
+          ? 'rounded-md bg-[#2d3755] border border-[#334155] shadow-sm overflow-hidden flex flex-col'
+          : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
     }`}>
       
       <StudyStatus study={study} />
@@ -183,14 +226,14 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
         
         {/* Left: Back button + "Bí quá thì nghe" audio button */}
         <div className="flex items-center gap-3">
-          <button
+          {!embedded && <button
             onClick={handleExit}
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             title="Quay lại danh sách từ"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Quay lại</span>
-          </button>
+          </button>}
 
           <button
             onClick={handlePlayAudio}
@@ -348,8 +391,8 @@ export const QuizStudy: React.FC<QuizStudyProps> = ({
 
               {questionMode === 'reading' && (
                 <div className="space-y-1">
-                  <h2 className="text-3xl md:text-4xl font-black text-white tracking-wide font-kanji">
-                    {currentWord?.word}
+                  <h2 className={`text-3xl md:text-4xl font-black text-white tracking-wide ${studyScope === 'personal' ? 'font-kanji' : ''}`}>
+                    {studyScope === 'personal' ? currentWord?.word : currentWord?.meaning}
                   </h2>
                   <p className="text-xs md:text-sm text-slate-400">
                     Chọn cách đọc Kana đúng

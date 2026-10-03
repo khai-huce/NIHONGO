@@ -1,8 +1,8 @@
 **NIHONGO — chạy frontend và Express backend ở local**
 
-Frontend dùng React/Vite/React Router. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản/phiên, tiến độ và Ôn tập, bài học Chủ động, lộ trình, kết quả quiz, kho Kanji/bộ thủ và bài đọc cá nhân/công khai. Bài khách trên thiết bị giữ riêng. Audio Đọc hiểu dùng Edge TTS phía server.
+Frontend dùng React/Vite/React Router. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản/phiên, tiến độ và Ôn tập, bài học Chủ động, lộ trình, kết quả quiz, kho Kanji/bộ thủ, bài đọc cá nhân/công khai, giáo trình từ vựng và Review theo nhóm bài. Bài khách trên thiết bị giữ riêng. Audio Đọc hiểu dùng Edge TTS phía server.
 
-Kho nội dung, API quản trị, nguồn/giấy phép và cài Edge TTS: [CONTENT_PLATFORM.md](docs/CONTENT_PLATFORM.md). Quản trị Kanji: [ADMIN_KANJI.md](docs/ADMIN_KANJI.md); admin riêng và biên tập Đọc hiểu: [ADMIN_READING.md](docs/ADMIN_READING.md). Dữ liệu giáo trình/ngữ pháp làm ở task riêng.
+Kho nội dung, API quản trị, nguồn/giấy phép và cài Edge TTS: [CONTENT_PLATFORM.md](docs/CONTENT_PLATFORM.md). Quản trị Kanji: [ADMIN_KANJI.md](docs/ADMIN_KANJI.md); admin riêng và biên tập Đọc hiểu: [ADMIN_READING.md](docs/ADMIN_READING.md). Giáo trình, từ vựng và Review gộp: [CURRICULUM.md](docs/CURRICULUM.md). Kho giáo trình chờ nội dung người dùng nhập/duyệt, chưa nhập Tango. Ngữ pháp thuộc task riêng.
 
 Kế hoạch hoàn thiện chức năng theo từng task: [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Đọc tài liệu này khi cần chọn việc tiếp theo; ưu tiên đã chốt là dữ liệu học cá nhân. Danh sách URL: [ROUTES.md](docs/ROUTES.md); luồng sao và Ôn tập: [REVIEW.md](docs/REVIEW.md).
 
@@ -141,3 +141,7 @@ Chi tiết rà soát localStorage, schema, API và nghiệm thu đợt tiến đ
 Mở `/ca-nhan/chu-dong`: tạo/đổi tên/xóa bài, nhập/sửa/xóa từ và dùng demo bằng giao diện hiện có. Khi đăng nhập, bài cùng mảng từ được lưu trong `vocab_lessons`; F5 hoặc đăng nhập lại cùng tài khoản vẫn đọc được. Guest giữ dữ liệu thiết bị riêng, không tự nhập vào tài khoản.
 
 API `/api/vocab/lessons` kiểm tra owner, chống tạo lặp và dùng version để tránh hai tab ghi đè nhau. Lỗi lưu giữ nguyên form. P02 đồng bộ từ/cách đọc/nghĩa đã sửa vào thẻ sao trong cùng transaction và giữ lịch/lịch sử. Xóa từ/bài giữ thẻ; nút ⭐ cạnh phát âm trên thẻ Ôn tập cho phép bỏ sao khi nguồn đã xóa. P02 không cần migration mới. Chưa lưu tiến độ flashcard/kết quả quiz Chủ động hoặc tích hợp AI Format. Schema, giới hạn, API và kiểm thử: [VOCAB_LESSONS.md](docs/VOCAB_LESSONS.md).
+
+**Kho ngữ pháp và bài tập (C03/C04)**
+
+Admin: `http://localhost:3002/admin/grammar`; trang học: `http://localhost:3000/ngu-phap`. Nhập tay hoặc JSON có xem trước, lưu nháp rồi xuất bản. Ba dạng bài tập chấm/lưu theo tài khoản bằng API; Gemini cần cấu hình key/model trong `server/.env`, chưa có key vẫn dùng Kiểm tra theo đáp án. Không tự tạo giáo trình mẫu. Xem [hướng dẫn ngữ pháp](docs/GRAMMAR.md) để nhập nội dung và cấu hình Gemini miễn phí.

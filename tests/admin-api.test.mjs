@@ -9,6 +9,15 @@ const base = moduleUrl(readFileSync(new URL('../src/utils/api.ts', import.meta.u
 const code = readFileSync(new URL('../src/admin/api.ts', import.meta.url), 'utf8').replace('../utils/api.ts', base);
 const { createAdminRequest, AdminApiError } = await import(moduleUrl(code));
 
+test('curriculum preview/save/publish use account-bound admin requests',async()=>{
+  const requests=[];
+  const scope=createAdminRequest('owner-a',{isCurrent:()=>true,fetcher:async(url,options)=>{requests.push({url,...options});return Response.json({course:{id:'course'}});}});
+  for(const path of ['/admin/curriculum/courses/preview','/admin/curriculum/courses','/admin/curriculum/courses/course/publish'])await scope.request(path,{body:{version:1}});
+  assert.equal(requests.length,3);
+  assert.ok(requests.every(request=>request.method==='POST'&&JSON.parse(request.body).expectedUserId==='owner-a'));
+  scope.dispose();
+});
+
 test('admin writes bind the mounted account even if a child supplies another owner', async () => {
   let captured;
   const scope = createAdminRequest('owner-a', { isCurrent: () => true, fetcher: async (url, options) => {

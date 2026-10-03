@@ -1,0 +1,524 @@
+{
+  "meta": {
+    "status": 200
+  },
+  "data": [
+    {
+      "slug": "上げる",
+      "is_common": true,
+      "tags": [
+        "wanikani1",
+        "wanikani23",
+        "wanikani42"
+      ],
+      "jlpt": [
+        "jlpt-n4",
+        "jlpt-n2",
+        "jlpt-n5"
+      ],
+      "japanese": [
+        {
+          "word": "上げる",
+          "reading": "あげる"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "to raise",
+            "to elevate"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [
+            "手を上げる",
+            "挙げる"
+          ],
+          "antonyms": [
+            "下げる"
+          ],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to move something (to a higher place)",
+            "to put onto (e.g. a shelf)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to increase (price, quality, status, etc.)",
+            "to raise (a wage)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [
+            "occ. 騰げる in ref. to price"
+          ]
+        },
+        {
+          "english_definitions": [
+            "to show someone (into a room)",
+            "to let in (e.g. a guest)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to give"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [
+            "Polite (teineigo) language",
+            "Usually written using kana alone"
+          ],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to enrol (one's child in school)",
+            "to enroll",
+            "to send (one's child; e.g. to college)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to develop (talent, skill, etc.)",
+            "to improve"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to earn (something desirable)",
+            "to achieve (e.g. a good result)",
+            "to obtain"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [
+            "挙げる"
+          ],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to promote (someone)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to complete",
+            "to finish"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to make (a loud sound)",
+            "to raise (one's voice)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [
+            "声を上げる",
+            "挙げる"
+          ],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to raise (one's gaze)",
+            "to lift up (one's face)",
+            "to look up"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to do up (one's hair)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [
+            "髪を上げる"
+          ],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to offer up (incense, a prayer, etc.) to the gods (or Buddha, etc.)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to praise",
+            "to commend",
+            "to flatter"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to make do (with less expenses than expected)",
+            "to cover expenses (with a given amount)",
+            "to set costs"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to finish (one's studies)",
+            "to complete (a lesson)",
+            "to pass (e.g. a class)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to upload (e.g. an image)",
+            "to publish (on the internet)",
+            "to post"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to raise someone's spirits",
+            "to cheer someone up",
+            "to enhance a mood"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [
+            "Colloquial"
+          ],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [
+            "esp. as アゲる"
+          ]
+        },
+        {
+          "english_definitions": [
+            "(of the tide) to come in",
+            "to rise"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Intransitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to increase (of market price)",
+            "to rise (of stock prices)"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Intransitive verb"
+          ],
+          "links": [],
+          "tags": [
+            "Finance"
+          ],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to vomit",
+            "to throw up"
+          ],
+          "parts_of_speech": [
+            "Ichidan verb",
+            "Intransitive verb",
+            "Transitive verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": []
+        },
+        {
+          "english_definitions": [
+            "to do for (the sake of someone else)"
+          ],
+          "parts_of_speech": [
+            "Auxiliary verb",
+            "Ichidan verb"
+          ],
+          "links": [],
+          "tags": [
+            "Usually written using kana alone",
+            "Polite (teineigo) language"
+          ],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [
+            "after the -te form of a verb"
+          ]
+        },
+        {
+          "english_definitions": [
+            "to complete ..."
+          ],
+          "parts_of_speech": [
+            "Suffix",
+            "Ichidan verb"
+          ],
+          "links": [],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [
+            "作り上げる"
+          ],
+          "antonyms": [],
+          "source": [],
+          "info": [
+            "after the -masu stem of a verb"
+          ]
+        },
+        {
+          "english_definitions": [
+            "to humbly do ..."
+          ],
+          "parts_of_speech": [
+            "Suffix",
+            "Ichidan verb"
+          ],
+          "links": [],
+          "tags": [
+            "Humble (kenjougo) language"
+          ],
+          "restrictions": [],
+          "see_also": [
+            "申し上げる"
+          ],
+          "antonyms": [],
+          "source": [],
+          "info": [
+            "after the -masu stem of a humble verb to increase the level of humility"
+          ]
+        },
+        {
+          "english_definitions": [
+            "Deep frying"
+          ],
+          "parts_of_speech": [
+            "Wikipedia definition"
+          ],
+          "links": [
+            {
+              "text": "Read “Deep frying” on English Wikipedia",
+              "url": "http://en.wikipedia.org/wiki/Deep_frying?oldid=489981393"
+            },
+            {
+              "text": "Read “揚げる” on Japanese Wikipedia",
+              "url": "http://ja.wikipedia.org/wiki/揚げる?oldid=42769777"
+            }
+          ],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [],
+          "sentences": []
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": "http://dbpedia.org/resource/Deep_frying"
+      }
+    }
+  ]
+}

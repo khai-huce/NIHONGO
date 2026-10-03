@@ -1,0 +1,81 @@
+{
+  "sourceCommit": "c42fd9fa3777bfc1775446f7c418d549dfd6e4cf",
+  "sourceSha256": "3e606fc15fd5d177fa7c3928c17f28b0d34ac84ec6bdbfe0947b339d9d815a6d",
+  "topicCount": 10,
+  "lessonCount": 31,
+  "wordCount": 662,
+  "translationStatus": "draft-needs-human-review",
+  "sourceCorrectionCount": 9,
+  "topics": [
+    {
+      "title": "Hàng あ — A, I, U, E, O",
+      "lessons": 6,
+      "words": 135
+    },
+    {
+      "title": "Hàng か — Ka/Ga đến Ko/Go",
+      "lessons": 5,
+      "words": 117
+    },
+    {
+      "title": "Hàng さ — Sa/Za đến So/Zo",
+      "lessons": 4,
+      "words": 87
+    },
+    {
+      "title": "Hàng た — Ta/Da đến To/Do",
+      "lessons": 4,
+      "words": 95
+    },
+    {
+      "title": "Hàng な — Na đến No",
+      "lessons": 2,
+      "words": 35
+    },
+    {
+      "title": "Hàng は — Ha/Ba/Pa đến Ho/Bo/Po",
+      "lessons": 4,
+      "words": 91
+    },
+    {
+      "title": "Hàng ま — Ma đến Mo",
+      "lessons": 2,
+      "words": 50
+    },
+    {
+      "title": "Hàng や — Ya, Yu, Yo",
+      "lessons": 2,
+      "words": 27
+    },
+    {
+      "title": "Hàng ら — Ra đến Ro",
+      "lessons": 1,
+      "words": 17
+    },
+    {
+      "title": "Hàng わ — Wa",
+      "lessons": 1,
+      "words": 8
+    }
+  ],
+  "outputSha256": "091f0496452c585a7b0025a7e00f750b349090b55ee3f337c072aa21f5e13afa",
+  "validation": {
+    "frontendImportParser": "pass",
+    "backendCurriculumSchema": "pass",
+    "contentSourceSchema": "pass",
+    "uniqueIds": 703,
+    "sourceMapping": "662/662",
+    "quizReading": "662/662",
+    "quizKanji": "662/662",
+    "quizMeaning": "662/662",
+    "cramReading": "662/662",
+    "hanViet": "not provided",
+    "examples": "not provided",
+    "lessonWordRange": [
+      8,
+      25
+    ],
+    "bytes": 325961,
+    "databaseWrites": 0
+  }
+}

@@ -1,6 +1,6 @@
 import { ReviewStar } from '../ReviewStar';
 import { useReview } from '../../hooks/useReview';
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, useId } from 'react';
 import { 
   ArrowLeft, 
   Volume2, 
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { VocabWord } from '../../hooks/useVocabLessons';
 import { useVocabProgress, type ProgressSnapshot } from '../../hooks/useVocabProgress';
+import type { StudyLeaveState } from '../../hooks/useVocabStudy';
 import { summarizeVocabProgress, nextUnratedIndex } from '../../utils/vocab-progress';
 import { speakJapanese, cancelJapaneseSpeech } from '../../utils/speech';
 
@@ -32,7 +33,15 @@ interface FlashcardStudyProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   onSelectWordDetail?: (word: VocabWord) => void;
+  studyScope?: 'personal' | 'catalog' | 'curriculum-review';
+  embedded?: boolean;
+  onSaved?: () => void;
+  onCompletion?: (info: { kind: 'flashcard'; total: number; known: number }) => void;
+  onExitGuardChange?: (guard: (() => boolean) | null) => void;
+  onExitStateChange?: (getState: (() => StudyLeaveState) | null) => void;
 }
+
+type FlashcardWord = VocabWord & { exampleJp?: string; exampleVi?: string };
 
 export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   words,
@@ -43,9 +52,15 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   lessonName,
   onExit,
   isFullscreen,
-  onToggleFullscreen
+  onToggleFullscreen,
+  studyScope = 'personal',
+  embedded = false,
+  onSaved,
+  onCompletion,
+  onExitGuardChange,
+  onExitStateChange
 }) => {
-  const progressStore = useVocabProgress({ lessonId, lessonVersion, userId, authBusy, words });
+  const progressStore = useVocabProgress({ lessonId, lessonVersion, userId, authBusy, words, studyScope, onSaved });
   const [order, setOrder] = useState(words.map(word => word.id));
   const deck = useMemo(() => {
     const byId = new Map(progressStore.words.map(word => [word.id, word]));
@@ -63,9 +78,18 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
 
   // Study direction: jp-vi (default) or vi-jp
   const [direction, setDirection] = useState<'jp-vi' | 'vi-jp'>('jp-vi');
+  const [contentMode, setContentMode] = useState<'word' | 'example'>('word');
   const [isAutoPlay, setIsAutoPlay] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [autoSpeechOnFlip, setAutoSpeechOnFlip] = useState(true);
+  const [resetOpen, setResetOpen] = useState(false);
+  const resetDialog = useRef<HTMLDialogElement>(null);
+  const resetTitleId = useId();
+  useEffect(() => {
+    const dialog = resetDialog.current;
+    if (resetOpen && dialog && !dialog.open) dialog.showModal();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, [resetOpen]);
 
   // Statistics
   const summary = summarizeVocabProgress(progressStore.words, progressStore.progress);
@@ -77,6 +101,33 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   const actionPending = useRef(false);
   const busy = progressStore.busy;
   const blocked = busy || !!progressStore.error;
+  const exitBlocked = useRef(false);
+  exitBlocked.current = progressStore.saving;
+  const handleExit = () => { if (!actionPending.current && !exitBlocked.current) onExit(); };
+  useEffect(() => {
+    onExitGuardChange?.(() => !actionPending.current && !exitBlocked.current);
+    return () => onExitGuardChange?.(null);
+  }, [onExitGuardChange]);
+  const getLeaveState = useCallback((): StudyLeaveState => actionPending.current || exitBlocked.current ? 'saving' : 'ready', []);
+  useEffect(() => {
+    onExitStateChange?.(getLeaveState);
+  }, [onExitStateChange, getLeaveState, progressStore.saving, progressStore.loading, resetOpen]);
+  useEffect(() => () => onExitStateChange?.(null), [onExitStateChange]);
+  const completionCallback = useRef(onCompletion);
+  completionCallback.current = onCompletion;
+  const reportedCompletion = useRef('');
+  useEffect(() => {
+    if (!isFinished || !progressStore.loaded || summary.rated !== progressStore.words.length) {
+      reportedCompletion.current = '';
+      return;
+    }
+    const completedKey = JSON.stringify([studyScope, userId, lessonId, lessonVersion, summary.rated, knownCount]);
+    if (summary.rated > 0 && reportedCompletion.current !== completedKey) {
+      reportedCompletion.current = completedKey;
+      completionCallback.current?.({ kind: 'flashcard', total: summary.rated, known: knownCount });
+    }
+  }, [isFinished, progressStore.loaded, progressStore.words.length, summary.rated, knownCount, studyScope, userId, lessonId, lessonVersion]);
+  const reviewPrefix = studyScope === 'personal' ? 'custom:' : 'curriculum:';
 
   // A fresh load opens the first word with no saved assessment. False is assessed too.
   useEffect(() => {
@@ -114,17 +165,21 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
     } finally { actionPending.current = false; }
   };
 
-  const currentWord = deck[currentIndex] || null;
+  const currentWord = (deck[currentIndex] || null) as FlashcardWord | null;
+  const showExample = studyScope !== 'personal' && contentMode === 'example';
+  const exampleJp = currentWord?.exampleJp?.trim() ?? '';
+  const exampleVi = currentWord?.exampleVi?.trim() ?? '';
+  const spokenText = showExample ? exampleJp : currentWord?.reading || currentWord?.word;
   const toggleStar = useCallback(() => {
-    if (canInteract() && !isFinished && currentWord) void review.toggle({category:'vocab',sourceId:'custom:'+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading});
-  }, [currentWord, review, blocked, isFinished, progressStore.canActNow]);
+    if (canInteract() && !isFinished && currentWord) void review.toggle({category:'vocab',sourceId:reviewPrefix+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading});
+  }, [currentWord, review, blocked, isFinished, progressStore.canActNow, reviewPrefix]);
 
   // Viewing, moving and automatic playback never save an assessment.
   const handleFlip = () => {
     if (!canInteract() || isFinished) return;
     const next = !isFlipped;
     setIsFlipped(next);
-    if (next && autoSpeechOnFlip && currentWord) speakJapanese(currentWord.reading || currentWord.word);
+    if (next && autoSpeechOnFlip && spokenText) speakJapanese(spokenText);
   };
   const handleNext = () => {
     if (!canInteract() || isFinished) return;
@@ -162,14 +217,34 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
   const handleKnown = (event?: React.MouseEvent) => { if (!event || event.detail <= 1) void handleAssessment(true); };
   const handleUnknown = (event?: React.MouseEvent) => { if (!event || event.detail <= 1) void handleAssessment(false); };
   const handleAudio = () => {
-    if (currentWord && canInteract() && !isFinished) speakJapanese(currentWord.reading || currentWord.word);
+    if (spokenText && canInteract() && !isFinished) speakJapanese(spokenText);
+  };
+  const changeContentMode = (mode: 'word' | 'example') => {
+    if (!canInteract() || isFinished || mode === contentMode) return;
+    cancelJapaneseSpeech();
+    setContentMode(mode);
+    setIsFlipped(false);
+    setIsAutoPlay(false);
   };
   const handleRestart = async () => {
     if (!canInteract()) return;
     setIsAutoPlay(false);
     actionPending.current = true;
+    if (studyScope !== 'personal') {
+      setResetOpen(true);
+      return;
+    }
     try {
       if (!window.confirm(`Học lại từ đầu bài “${lessonName}”? Đặt lại kết quả của ${summary.rated} từ đã đánh giá. Sao và lịch Ôn tập vẫn được giữ nguyên.`)) return;
+      const snapshot = await progressStore.reset();
+      if (snapshot) resumeSnapshot(snapshot);
+    } finally { actionPending.current = false; }
+  };
+  const cancelReset = () => { setResetOpen(false); actionPending.current = false; };
+  const confirmReset = async () => {
+    if (!resetOpen || !actionPending.current || !progressStore.canActNow()) return;
+    setResetOpen(false);
+    try {
       const snapshot = await progressStore.reset();
       if (snapshot) resumeSnapshot(snapshot);
     } finally { actionPending.current = false; }
@@ -193,7 +268,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
       else handleFlip();
     }, 2800);
     return () => window.clearTimeout(timer);
-  }, [isAutoPlay, isFinished, blocked, isFlipped, currentIndex, deck, autoSpeechOnFlip]);
+  }, [isAutoPlay, isFinished, blocked, isFlipped, currentIndex, deck, autoSpeechOnFlip, spokenText]);
   useEffect(() => { if (blocked) setIsAutoPlay(false); }, [blocked]);
   useEffect(() => () => { cancelJapaneseSpeech(); }, []);
 
@@ -243,7 +318,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
       <div className="w-full p-8 text-center bg-[#232d4b] text-white rounded-2xl">
         {statusNotice}
         {progressStore.loaded && <p className="text-sm">Chưa có từ vựng nào trong bài học này.</p>}
-        <button onClick={onExit} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-bold">
+        <button onClick={handleExit} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-bold">
           Quay lại
         </button>
       </div>
@@ -254,22 +329,34 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
     <div className={`w-full relative transition-all duration-200 ${
       isFullscreen 
         ? 'fixed inset-0 z-50 bg-[#171f34] flex flex-col justify-between p-4 md:p-8 overflow-y-auto' 
-        : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
+        : embedded && studyScope !== 'personal'
+          ? 'rounded-md bg-[#2d3755] border border-[#334155] shadow-sm overflow-hidden flex flex-col'
+          : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
     }`}>
       
       {statusNotice}
+      {resetOpen && <dialog ref={resetDialog} aria-labelledby={resetTitleId}
+        onCancel={event => { event.preventDefault(); cancelReset(); }}
+        className="w-[calc(100%-2rem)] max-w-md rounded-xl border border-slate-600 bg-[#232d4b] p-5 text-slate-100 shadow-2xl backdrop:bg-black/60">
+        <h2 id={resetTitleId} className="text-lg font-bold">Học lại từ đầu?</h2>
+        <p className="mt-3 text-sm text-slate-300">Đặt lại kết quả của {summary.rated} từ đã đánh giá trong bài “{lessonName}”. Sao và lịch Ôn tập vẫn được giữ nguyên.</p>
+        <div className="mt-5 flex justify-end gap-3">
+          <button autoFocus onClick={cancelReset} className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-bold hover:bg-slate-600">Hủy</button>
+          <button disabled={busy} onClick={() => { void confirmReset(); }} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold hover:bg-blue-500 disabled:opacity-50">Học lại từ đầu</button>
+        </div>
+      </dialog>}
       {/* 1. TOP BAR */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2 text-slate-300">
-        <button
-          onClick={onExit}
+        {!embedded ? <button
+          onClick={handleExit}
           className="flex items-center gap-1.5 text-xs md:text-sm font-medium hover:text-white transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Quay lại</span>
-        </button>
+        </button> : <span aria-hidden="true" />}
 
         <div className="flex items-center gap-3">
-          {currentWord && <ReviewStar source={{category:'vocab',sourceId:'custom:'+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading}} />}
+          {currentWord && <ReviewStar source={{category:'vocab',sourceId:reviewPrefix+currentWord.id,front:currentWord.word,back:currentWord.meaning,reading:currentWord.reading}} />}
 
           {/* Fullscreen Toggle */}
           <button
@@ -327,7 +414,7 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
                 Học lại từ đầu
               </button>
               <button
-                onClick={onExit}
+                onClick={handleExit}
                 className="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-black shadow-md cursor-pointer"
               >
                 Quay lại danh sách từ
@@ -339,8 +426,20 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
             onClick={handleFlip}
             className="w-full max-w-lg cursor-pointer select-none flex flex-col items-center justify-center text-center p-6 md:p-10 transition-transform active:scale-[0.99]"
           >
-            {/* Front View */}
-            {!isFlipped ? (
+            {showExample ? (
+              !exampleJp ? <p className="text-base leading-relaxed text-slate-300">Chưa có câu ví dụ cho từ này</p> : <div className="flex flex-col items-center space-y-4 animate-in fade-in duration-200">
+                {!isFlipped ? <p className={`whitespace-pre-wrap text-2xl leading-relaxed md:text-3xl ${direction === 'jp-vi' ? 'font-kanji text-white' : 'text-amber-200'}`}>
+                  {direction === 'jp-vi' ? exampleJp : exampleVi || 'Chưa có bản dịch cho câu ví dụ này'}
+                </p> : <>
+                  <p className="whitespace-pre-wrap font-kanji text-2xl leading-relaxed text-white md:text-3xl">{exampleJp}</p>
+                  <p className="whitespace-pre-wrap text-lg leading-relaxed text-amber-200">{exampleVi || 'Chưa có bản dịch cho câu ví dụ này'}</p>
+                </>}
+                <button onClick={event => { event.stopPropagation(); handleAudio(); }}
+                  className="rounded-full p-2.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white" title="Nghe câu ví dụ (R)">
+                  <Volume2 className="h-6 w-6" />
+                </button>
+              </div>
+            ) : !isFlipped ? (
               <div className="space-y-4 animate-in fade-in duration-200 flex flex-col items-center">
                 {direction === 'jp-vi' ? (
                   <>
@@ -450,6 +549,11 @@ export const FlashcardStudy: React.FC<FlashcardStudyProps> = ({
 
       {/* 4. BOTTOM CONTROLS (Image 1) */}
       <div className="bg-[#1b243d] px-5 py-3 flex items-center justify-between border-t border-[#2a3654] flex-wrap gap-3">
+        {studyScope !== 'personal' && <div role="group" aria-label="Nội dung Flashcard" className="inline-flex rounded-lg border border-slate-400 p-0.5 text-[11px]">
+          {([{ value: 'word', label: 'Từ đơn' }, { value: 'example', label: 'Ví dụ' }] as const).map(item => <button key={item.value} type="button"
+            disabled={blocked || isFinished} aria-pressed={contentMode === item.value} onClick={() => changeContentMode(item.value)}
+            className={`rounded-md px-2 py-1.5 disabled:opacity-50 ${contentMode === item.value ? 'bg-[#f7f0dc] text-slate-800' : 'text-slate-300 hover:text-white'}`}>{item.label}</button>)}
+        </div>}
         
         {/* Left: Unknown X and Known Check buttons */}
         <div className="flex items-center gap-4">

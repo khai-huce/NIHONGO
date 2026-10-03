@@ -27,6 +27,13 @@ model User {
   defaultRoadmapProgress DefaultRoadmapProgress[]
   kanaQuizResults KanaQuizResult[]
   readingArticles ReadingArticle[]
+  curriculumProgress CurriculumProgress[]
+  curriculumStudyResults CurriculumStudyResult[]
+  curriculumReviewSets CurriculumReviewSet[]
+  curriculumReviewResults CurriculumReviewResult[]
+  grammarProgress GrammarProgress[]
+  grammarAttempts GrammarAttempt[]
+  grammarAiRequests GrammarAiRequest[]
 
   @@map("users")
 }
@@ -243,6 +250,10 @@ model ContentSource {
   radicalDrafts RadicalContent[] @relation("RadicalDraftSource")
   readings ReadingArticle[] @relation("ReadingDraftSource")
   publishedReadings ReadingArticle[] @relation("ReadingPublishedSource")
+  curriculumDrafts CurriculumCourse[] @relation("CurriculumDraftSource")
+  curricula CurriculumCourse[] @relation("CurriculumPublishedSource")
+  grammarDrafts GrammarCourse[] @relation("GrammarDraftSource")
+  grammarCourses GrammarCourse[] @relation("GrammarPublishedSource")
   @@map("content_sources")
 }
 
@@ -293,4 +304,247 @@ model CatalogDefinition {
   kanjiIds String[] @map("kanji_ids")
   kanjiList String[] @map("kanji_list")
   @@map("catalog_definitions")
+}
+
+// The draft tree is an atomic editorial document. Published rows keep their IDs after removal.
+model CurriculumCourse {
+  id String @id @db.Uuid
+  slug String @unique @db.VarChar(80)
+  version Int @default(0)
+  draft Json
+  sourceId String? @map("source_id") @db.VarChar(64)
+  publishedSourceId String? @map("published_source_id") @db.VarChar(64)
+  publishedVersion Int? @map("published_version")
+  title String @default("") @db.VarChar(100)
+  subtitle String @default("") @db.VarChar(200)
+  description String @default("") @db.VarChar(2000)
+  level String @default("N5") @db.VarChar(2)
+  style String @default("custom") @db.VarChar(16)
+  topicCount Int @default(0) @map("topic_count")
+  lessonCount Int @default(0) @map("lesson_count")
+  wordCount Int @default(0) @map("word_count")
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  source ContentSource? @relation("CurriculumDraftSource", fields: [sourceId], references: [id], onDelete: Restrict)
+  publishedSource ContentSource? @relation("CurriculumPublishedSource", fields: [publishedSourceId], references: [id], onDelete: Restrict)
+  topics CurriculumTopic[]
+  lessons CurriculumLesson[]
+  reviewSets CurriculumReviewSet[]
+  @@index([archivedAt, publishedVersion])
+  @@map("curriculum_courses")
+}
+
+model CurriculumTopic {
+  id String @id @db.Uuid
+  courseId String @map("course_id") @db.Uuid
+  title String @default("") @db.VarChar(100)
+  japanese String @default("") @db.VarChar(200)
+  sortOrder Int @default(0) @map("sort_order")
+  active Boolean @default(false)
+  course CurriculumCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  lessons CurriculumLesson[]
+  @@index([courseId, active, sortOrder])
+  @@map("curriculum_topics")
+}
+
+model CurriculumLesson {
+  id String @id @db.Uuid
+  courseId String @map("course_id") @db.Uuid
+  topicId String @map("topic_id") @db.Uuid
+  title String @default("") @db.VarChar(100)
+  sortOrder Int @default(0) @map("sort_order")
+  active Boolean @default(false)
+  version Int @default(0)
+  words Json @default("[]")
+  wordCount Int @default(0) @map("word_count")
+  // A compact identity ledger prevents moving or reusing a removed word UUID in another lesson.
+  retainedWordIds String[] @default([]) @map("retained_word_ids") @db.Uuid
+  course CurriculumCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  topic CurriculumTopic @relation(fields: [topicId], references: [id], onDelete: Restrict)
+  progress CurriculumProgress[]
+  studyResults CurriculumStudyResult[]
+  @@index([courseId, active])
+  @@index([topicId, active, sortOrder])
+  @@index([retainedWordIds], type: Gin)
+  @@map("curriculum_lessons")
+}
+
+model CurriculumProgress {
+  userId String @map("user_id") @db.Uuid
+  lessonId String @map("lesson_id") @db.Uuid
+  progress Json @default("{}")
+  version Int @default(0)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson CurriculumLesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+  @@id([userId, lessonId])
+  @@index([lessonId])
+  @@map("curriculum_progress")
+}
+
+model CurriculumStudyResult {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  lessonId String @map("lesson_id") @db.Uuid
+  lessonName String @map("lesson_name") @db.VarChar(200)
+  lessonVersion Int @map("lesson_version")
+  kind String @db.VarChar(8)
+  mode String @db.VarChar(8)
+  total Int
+  correct Int
+  answers Json
+  submissionHash String @map("submission_hash") @db.VarChar(64)
+  completedAt DateTime @default(now()) @map("completed_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson CurriculumLesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+  @@index([userId, lessonId, kind, completedAt])
+  @@index([lessonId])
+  @@map("curriculum_study_results")
+}
+
+// One review set per account and exact normalized selection, independent from source-lesson progress.
+model CurriculumReviewSet {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  courseId String @map("course_id") @db.Uuid
+  lessonIds String[] @map("lesson_ids") @db.Uuid
+  selectionHash String @map("selection_hash") @db.VarChar(64)
+  progress Json @default("{}")
+  progressVersion Int @default(0) @map("progress_version")
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course CurriculumCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  results CurriculumReviewResult[]
+  @@unique([userId, courseId, selectionHash], map: "curriculum_review_sets_selection_key")
+  @@index([courseId])
+  @@map("curriculum_review_sets")
+}
+
+model CurriculumReviewResult {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  reviewSetId String @map("review_set_id") @db.Uuid
+  lessonName String @map("lesson_name") @db.VarChar(200)
+  lessonVersion Int @map("lesson_version")
+  kind String @db.VarChar(8)
+  mode String @db.VarChar(8)
+  total Int
+  correct Int
+  answers Json
+  submissionHash String @map("submission_hash") @db.VarChar(64)
+  completedAt DateTime @default(now()) @map("completed_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewSet CurriculumReviewSet @relation(fields: [reviewSetId], references: [id], onDelete: Cascade)
+  @@index([userId, reviewSetId, kind, completedAt], map: "curriculum_review_results_latest_idx")
+  @@index([reviewSetId])
+  @@map("curriculum_review_results")
+}
+
+// Drafts are saved atomically; published rows retain identity after removal or archive.
+model GrammarCourse {
+  id String @id @db.Uuid
+  slug String @unique @db.VarChar(80)
+  version Int @default(0)
+  draft Json
+  sourceId String? @map("source_id") @db.VarChar(64)
+  publishedSourceId String? @map("published_source_id") @db.VarChar(64)
+  publishedVersion Int? @map("published_version")
+  title String @default("") @db.VarChar(100)
+  subtitle String @default("") @db.VarChar(200)
+  description String @default("") @db.VarChar(2000)
+  level String @default("N5") @db.VarChar(2)
+  lessonCount Int @default(0) @map("lesson_count")
+  patternCount Int @default(0) @map("pattern_count")
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  source ContentSource? @relation("GrammarDraftSource", fields: [sourceId], references: [id], onDelete: Restrict)
+  publishedSource ContentSource? @relation("GrammarPublishedSource", fields: [publishedSourceId], references: [id], onDelete: Restrict)
+  lessons GrammarLesson[]
+  @@index([archivedAt, publishedVersion])
+  @@map("grammar_courses")
+}
+
+model GrammarLesson {
+  id String @id @db.Uuid
+  courseId String @map("course_id") @db.Uuid
+  title String @default("") @db.VarChar(100)
+  japanese String @default("") @db.VarChar(200)
+  sortOrder Int @default(0) @map("sort_order")
+  active Boolean @default(false)
+  course GrammarCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  patterns GrammarPattern[]
+  @@index([courseId, active, sortOrder])
+  @@map("grammar_lessons")
+}
+
+model GrammarPattern {
+  id String @id @db.Uuid
+  lessonId String @map("lesson_id") @db.Uuid
+  content Json @default("{}")
+  version Int @default(0)
+  active Boolean @default(false)
+  sortOrder Int @default(0) @map("sort_order")
+  retainedExerciseIds String[] @default([]) @map("retained_exercise_ids") @db.Uuid
+  retainedExampleIds String[] @default([]) @map("retained_example_ids") @db.Uuid
+  lesson GrammarLesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+  progress GrammarProgress[]
+  attempts GrammarAttempt[]
+  aiRequests GrammarAiRequest[]
+  @@index([lessonId, active, sortOrder])
+  @@index([retainedExerciseIds], type: Gin)
+  @@index([retainedExampleIds], type: Gin)
+  @@map("grammar_patterns")
+}
+
+model GrammarProgress {
+  userId String @map("user_id") @db.Uuid
+  patternId String @map("pattern_id") @db.Uuid
+  version Int @default(0)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  answers Json @default("{}")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pattern GrammarPattern @relation(fields: [patternId], references: [id], onDelete: Restrict)
+  @@id([userId, patternId])
+  @@index([patternId])
+  @@map("grammar_progress")
+}
+
+model GrammarAttempt {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  patternId String @map("pattern_id") @db.Uuid
+  exerciseId String @map("exercise_id") @db.Uuid
+  patternVersion Int @map("pattern_version")
+  action String @db.VarChar(8)
+  requestHash String @map("request_hash") @db.VarChar(64)
+  result Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pattern GrammarPattern @relation(fields: [patternId], references: [id], onDelete: Restrict)
+  @@index([userId, patternId])
+  @@map("grammar_attempts")
+}
+
+model GrammarAiRequest {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  patternId String @map("pattern_id") @db.Uuid
+  exerciseId String @map("exercise_id") @db.Uuid
+  patternVersion Int @map("pattern_version")
+  requestHash String @map("request_hash") @db.VarChar(64)
+  status String @default("pending") @db.VarChar(16)
+  result Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pattern GrammarPattern @relation(fields: [patternId], references: [id], onDelete: Restrict)
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("grammar_ai_requests")
 }

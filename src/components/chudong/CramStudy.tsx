@@ -10,7 +10,7 @@ import {
   XCircle 
 } from 'lucide-react';
 import type { VocabWord } from '../../hooks/useVocabLessons';
-import { useVocabStudy } from '../../hooks/useVocabStudy';
+import { useVocabStudy, type StudyLeaveState } from '../../hooks/useVocabStudy';
 import { getStudyTarget, isStudyAnswerCorrect } from '../../../shared/vocab-study.mjs';
 import { TypingCrowMascot } from './StudyMascots';
 import { StudyStatus } from './StudyStatus';
@@ -27,6 +27,12 @@ interface CramStudyProps {
   onExit: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  studyScope?: 'personal' | 'catalog' | 'curriculum-review';
+  embedded?: boolean;
+  onSaved?: () => void;
+  onCompletion?: (info: { kind: 'cram'; total: number }) => void;
+  onExitGuardChange?: (guard: (() => boolean) | null) => void;
+  onExitStateChange?: (getState: (() => StudyLeaveState) | null) => void;
 }
 
 type CramMode = 'reading' | 'hanViet';
@@ -40,11 +46,17 @@ export const CramStudy: React.FC<CramStudyProps> = ({
   authBusy,
   onExit,
   isFullscreen,
-  onToggleFullscreen
+  onToggleFullscreen,
+  studyScope = 'personal',
+  embedded = false,
+  onSaved,
+  onCompletion,
+  onExitGuardChange,
+  onExitStateChange
 }) => {
   const study = useVocabStudy({
     lessonId, lessonName, lessonVersion, words, userId, authBusy,
-    kind: 'cram', initialMode: 'reading',
+    kind: 'cram', initialMode: 'reading', studyScope, onSaved,
   });
   const cramMode = study.mode;
   const currentIndex = study.index;
@@ -68,6 +80,29 @@ export const CramStudy: React.FC<CramStudyProps> = ({
   const targetAnswer = currentWord ? getStudyTarget(currentWord, 'cram', cramMode) : '';
   const targetChars = Array.from(targetAnswer);
   const maxHints = targetChars.length;
+  const inputState = useRef({value:inputValue,finished:isFinished});
+  inputState.current = {value:inputValue,finished:isFinished};
+  const getLeaveState = useCallback(():StudyLeaveState => {
+    const state = study.getLeaveState();
+    return state==='ready' && !inputState.current.finished && inputState.current.value.trim() ? 'dirty' : state;
+  },[study.getLeaveState]);
+  useEffect(() => {
+    onExitGuardChange?.(study.requestExit);
+    return () => onExitGuardChange?.(null);
+  }, [onExitGuardChange, study.requestExit]);
+  useEffect(() => {
+    onExitStateChange?.(getLeaveState);
+  }, [onExitStateChange, getLeaveState, study.loading, study.saving, study.completionPending, study.finished, study.answers, inputValue]);
+  useEffect(() => () => onExitStateChange?.(null), [onExitStateChange]);
+  const completionCallback = useRef(onCompletion);
+  completionCallback.current = onCompletion;
+  const reportedRound = useRef('');
+  useEffect(() => {
+    if (isFinished && reportedRound.current !== study.roundId) {
+      reportedRound.current = study.roundId;
+      completionCallback.current?.({ kind: 'cram', total: study.total });
+    }
+  }, [isFinished, study.roundId, study.total]);
 
   const resetWordState = useCallback(() => {
     setInputValue('');
@@ -184,7 +219,9 @@ export const CramStudy: React.FC<CramStudyProps> = ({
     <div className={`w-full relative transition-all duration-200 ${
       isFullscreen 
         ? 'fixed inset-0 z-50 bg-[#171f34] flex flex-col justify-between p-4 md:p-8 overflow-y-auto' 
-        : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
+        : embedded && studyScope !== 'personal'
+          ? 'rounded-md bg-[#2d3755] border border-[#334155] shadow-sm overflow-hidden flex flex-col'
+          : 'rounded-2xl bg-[#232d4b] border border-[#334155] shadow-2xl overflow-hidden flex flex-col'
     }`}>
       
       <StudyStatus study={study} />
@@ -196,14 +233,14 @@ export const CramStudy: React.FC<CramStudyProps> = ({
         
         {/* Top-Left: Back button + Typing Crow Mascot (Images 4 & 5) */}
         <div className="flex items-center gap-3">
-          <button
+          {!embedded && <button
             onClick={handleExit}
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             title="Quay lại danh sách từ"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Quay lại</span>
-          </button>
+          </button>}
           <TypingCrowMascot className="w-16 h-14 md:w-20 md:h-16" />
         </div>
 
@@ -321,12 +358,12 @@ export const CramStudy: React.FC<CramStudyProps> = ({
             
             {/* Word & Meaning */}
             <div className="space-y-1">
-              <h2 className="text-4xl md:text-5xl font-black text-white tracking-wide font-kanji">
-                {currentWord?.word}
+              <h2 className={`text-4xl md:text-5xl font-black text-white tracking-wide ${studyScope === 'personal' ? 'font-kanji' : ''}`}>
+                {studyScope === 'personal' ? currentWord?.word : currentWord?.meaning}
               </h2>
-              <p className="text-xs md:text-sm text-slate-300 font-medium pt-1">
+              {studyScope === 'personal' && <p className="text-xs md:text-sm text-slate-300 font-medium pt-1">
                 {currentWord?.meaning}
-              </p>
+              </p>}
             </div>
 
             {/* Letter placeholders / dashes (Images 4 & 5) */}

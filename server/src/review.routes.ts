@@ -6,6 +6,8 @@ import { HttpError } from './errors.js';
 import { reviewStats, type DailyReview } from './review.stats.js';
 import { setCustomReviewStar } from './vocab-review.js';
 import { getKanji, kanjiReviewSnapshot } from './content.service.js';
+import { setCurriculumReviewStar } from './curriculum-study.routes.js';
+import { setGrammarReviewStar } from './grammar.service.js';
 
 const category = z.enum(['kanji', 'vocab', 'grammar']);
 const starInput = z.object({ category, sourceId: z.string().trim().min(1).max(300),
@@ -79,6 +81,10 @@ export function reviewRoutes(db: PrismaClient) {
       })
       : input.category === 'vocab' && input.sourceId.startsWith('custom:')
       ? await db.$transaction(tx => setCustomReviewStar(tx,userId,input.sourceId,input.active))
+      : input.category === 'vocab' && input.sourceId.startsWith('curriculum:')
+      ? await db.$transaction(tx => setCurriculumReviewStar(tx,userId,input.sourceId,input.active))
+      : input.category === 'grammar' && input.sourceId.startsWith('grammar:')
+      ? await db.$transaction(tx => setGrammarReviewStar(tx,userId,input.sourceId,input.active))
       : await db.reviewCard.upsert({ where: { userId_category_sourceId: { userId, category: input.category, sourceId: input.sourceId } },
       create: { userId, ...input }, update: { ...input, version: { increment: 1 } },
     });

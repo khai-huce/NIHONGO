@@ -12,6 +12,10 @@ const schema = z.object({
   GOOGLE_CLIENT_ID: z.string().trim().default('').refine(value => value === '' || value.endsWith('.apps.googleusercontent.com'), 'Invalid Google Web client ID'),
   TTS_PYTHON: z.string().min(1).optional(),
   TTS_STORAGE_DIR: z.string().min(1).optional(),
+  GEMINI_API_KEY: z.string().trim().optional(),
+  GEMINI_MODEL: z.string().regex(/^gemini-[a-z0-9.-]+$/).optional(),
+  GEMINI_DAILY_LIMIT: z.coerce.number().int().min(1).max(1000).optional(),
+  GEMINI_GLOBAL_DAILY_LIMIT: z.coerce.number().int().min(1).max(10000).optional(),
 });
 
 export type Config = z.infer<typeof schema>;

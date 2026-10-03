@@ -18,7 +18,6 @@ import { RoughCard, RoughButton } from '../components/RoughCard';
 import { ReviewStar } from '../components/ReviewStar';
 import { useContentCatalog } from '../hooks/useContentCatalog';
 import { KanjiItem } from '../types';
-import { GrammarDetailItem, SAMPLE_GRAMMAR_ITEMS } from '../components/GrammarDetailView';
 
 interface ReviewItem {
   id: string;
@@ -33,7 +32,7 @@ interface ReviewItem {
 
 interface ReviewPageProps {
   onSelectKanji?: (item: KanjiItem) => void;
-  onSelectGrammar?: (item: GrammarDetailItem) => void;
+  onSelectGrammar?: (item: { id: string }) => void;
 }
 
 export const ReviewPage: React.FC<ReviewPageProps> = ({ onSelectKanji, onSelectGrammar }) => {
@@ -70,7 +69,7 @@ export const ReviewPage: React.FC<ReviewPageProps> = ({ onSelectKanji, onSelectG
     const latest = review.cards.find(c => c.id === current.id);
     if (!latest?.active || latest.version !== current.version) setIsReviewing(false);
   }, [isReviewing, current, review.cards, review.busy, review.loaded]);
-  const grammar = current?.category === 'grammar' ? Object.values(SAMPLE_GRAMMAR_ITEMS).find(g => g.pattern === current.sourceId) : undefined;
+  const grammar = current?.category === 'grammar' && /^grammar:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(current.sourceId) ? { id: current.sourceId.slice('grammar:'.length) } : undefined;
   const kanji = current?.category === 'kanji' ? KANJI_DATABASE.find(k => k.id === current.sourceId) : undefined;
   const currentCard: ReviewItem | undefined = current && { id: current.id, type: current.category, mainText: current.front, subText: current.reading ?? '', meaning: current.back, hint: current.hint };
   const day = new Date(clock + 7*3600000).toISOString().slice(0,10);

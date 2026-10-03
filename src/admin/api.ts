@@ -24,7 +24,7 @@ export function createAdminRequest(userId: string, options: {
     if (!current()) throw changed();
     const requestGeneration = generation;
     const requestCurrent = () => current() && requestGeneration === generation;
-    if (!path.startsWith('/admin/content/') && !/^\/admin\/reading\/articles(?:\/|$)/.test(path)) throw new Error('Unsupported admin endpoint');
+    if (!path.startsWith('/admin/content/') && !/^\/admin\/(?:reading\/articles|curriculum\/courses|grammar\/courses)(?:\/|$)/.test(path)) throw new Error('Unsupported admin endpoint');
     const method = input.method ?? (input.body ? 'POST' : 'GET');
     const controller = new AbortController();
     controllers.add(controller);

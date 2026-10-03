@@ -1,0 +1,662 @@
+0|Ngày kia
+1|Đằng kia; chỗ kia
+2|Đằng kia; phía kia (lịch sự)
+3|Đằng kia; phía kia (thân mật)
+4|Bạn; anh; chị (ngôi thứ hai)
+5|Kia; đó (đứng trước danh từ, chỉ vật ở xa)
+6|Căn hộ; nhà chung cư
+7|Tắm; dội nước
+8|Không … lắm (thường đi với phủ định)
+9|Có; tồn tại (đồ vật, sự việc)
+10|Cái kia; cái đó ở đằng kia
+11|Tốt; hay; được
+12|Không; không phải
+13|Thế nào; ra sao (lịch sự)
+14|Bao nhiêu cái; bao nhiêu tuổi
+15|Bao nhiêu tiền
+16|Ghế
+17|Nhất; đứng đầu; số một
+18|Khi nào; bao giờ
+19|Luôn luôn; lúc nào cũng
+20|Nhiều loại; đa dạng
+21|Vâng; ừ
+22|Thang máy
+23|Ngon
+24|Bụng
+25|Bà; cụ bà
+26|Chú cảnh sát; anh cảnh sát (cách gọi thân thiện)
+27|Thú vị; hay
+28|Bánh kẹo; đồ ngọt
+29|Tiền
+30|Anh trai (cách gọi lịch sự)
+31|Đĩa
+32|Chị gái (cách gọi lịch sự)
+33|Nhà vệ sinh (lịch sự)
+34|Rượu; đồ uống có cồn
+35|Trà; trà xanh
+36|Bố; cha (cách gọi lịch sự)
+37|Bồn tắm; việc tắm bồn
+38|Cơm hộp
+39|Mẹ (cách gọi lịch sự)
+40|Tốn; mất (thời gian, tiền bạc)
+41|Chìa khóa
+42|Gọi điện thoại
+43|Cốc; tách
+44|Túi; cặp
+45|Máy ảnh
+46|Cà ri
+47|Lịch
+48|Dễ thương; đáng yêu
+49|Đàn ghi-ta
+50|Đẹp; sạch sẽ
+51|Ki-lô-gam; cân
+52|Ki-lô-mét; cây số
+53|Xin; làm ơn; hãy …
+54|Lớp học
+55|Gam
+56|Áo khoác; sân (ví dụ sân quần vợt)
+57|Cà phê
+58|Ở đây; chỗ này
+59|Phía này; vị này (lịch sự)
+60|Phía này; người này (thân mật)
+61|Cốc uống nước
+62|Này (đứng trước danh từ)
+63|Sao chép; phô-tô
+64|Cái này
+65|Như thế này; loại này
+66|Nào; ừm (thán từ, tùy ngữ cảnh)
+67|Năm sau nữa
+68|Tuy nhiên; nhưng
+69|Vậy thì; thế thì
+70|Áo sơ mi
+71|Vòi sen; việc tắm vòi sen
+72|Nước tương; xì dầu
+73|Váy
+74|Ngay; ngay lập tức
+75|Lò sưởi; máy sưởi
+76|Thìa; muỗng
+77|Thể thao
+78|Quần dài
+79|Dép đi trong nhà
+80|Làm
+81|Áo len
+82|Xà phòng
+83|Số không
+84|Và; rồi; sau đó
+85|Chỗ đó; ở đó
+86|Phía đó; đằng đó (lịch sự)
+87|Phía đó; đằng đó (thân mật)
+88|Đó (đứng trước danh từ)
+89|Bên cạnh; gần
+90|Cái đó
+91|Sau đó; rồi
+92|Vậy thì; nếu vậy
+93|Rất; vô cùng
+94|Nhiều
+95|Xe taxi
+96|Chiều dọc; chiều cao
+97|Thuốc lá
+98|Có lẽ; chắc là
+99|Dần dần
+100|Bát cơm; chén cơm
+101|Đúng; vừa đúng; vừa khít
+102|Một chút; hơi
+103|Bật (đèn, thiết bị)
+104|Chán; không thú vị
+105|Băng (ghi âm, dán… tùy ngữ cảnh)
+106|Bàn
+107|Máy ghi âm dùng băng
+108|Có thể; làm được
+109|Bài kiểm tra
+110|Vậy thì; thế thì
+111|Cửa hàng bách hóa
+112|Nhưng; tuy nhiên
+113|Ti-vi; truyền hình
+114|Cửa ra vào kiểu phương Tây
+115|Nhà vệ sinh
+116|Thế nào; bằng cách nào
+117|Tại sao; vì sao
+118|Xin mời; xin cứ
+119|Cảm ơn (cách nói ngắn)
+120|Ở đâu
+121|Phía nào; bên nào (trong hai phía, lịch sự)
+122|Bên nào; cái nào (trong hai, thân mật)
+123|Rất; lắm
+124|Ai; vị nào (lịch sự)
+125|Nào (đứng trước danh từ)
+126|Thịt gà
+127|Cái nào (trong từ ba lựa chọn trở lên)
+128|Dao
+129|Tại sao
+130|Vân vân; những thứ như …
+131|Trở thành; trở nên
+132|Tin tức
+133|Cà vạt
+134|Vở; sổ ghi chép
+135|Bữa tiệc
+136|Vâng; có
+137|Mặc; mang (quần, giày và đồ từ thắt lưng trở xuống)
+138|Đũa
+139|Xe buýt
+140|Bơ
+141|Bánh mì
+142|Khăn tay
+143|Phim chụp ảnh; cuộn phim
+144|Bể bơi; hồ bơi
+145|Nĩa; dĩa
+146|Bồn tắm; việc tắm bồn
+147|Trang sách
+148|Giường
+149|Thú cưng
+150|Bút
+151|Bút bi
+152|Khác; phần còn lại
+153|Túi áo; túi quần
+154|Hòm thư; thùng thư
+155|Nút; khuy áo
+156|Khách sạn
+157|Sự thật; thật
+158|Dở; không ngon; không ổn
+159|Lại; nữa; và
+160|Vẫn; chưa (khi đi với phủ định)
+161|Thẳng; thẳng phía trước
+162|Diêm; que diêm
+163|Mọi người; tất cả
+164|Mét
+165|Đã; rồi
+166|Một lần nữa; lại lần nữa
+167|Hơn; thêm nữa
+168|Làm
+169|Chậm rãi; thong thả
+170|Thường xuyên; tốt; giỏi
+171|Hơn; so với (dùng trong so sánh)
+172|Đài; ra-đi-ô
+173|Máy ra-đi-ô kiêm cassette
+174|Tuyệt vời; xuất sắc; đáng khâm phục
+175|Đĩa hát
+176|Nhà hàng
+177|Áo sơ mi công sở
+178|Xấu; không tốt
+179|Kẹo
+180|Rẻ
+181|Tối; u ám
+182|Ý nghĩa
+183|Dễ; đơn giản
+184|Khác; sai; không phải
+185|Bác sĩ
+186|Một
+187|Một cái
+188|Một tháng (khoảng thời gian)
+189|Hôm kia
+190|Năm kia
+191|Cùng nhau
+192|Một người
+193|Một ngày (khoảng thời gian)
+194|Kéo
+195|Đồ uống
+196|Uống
+197|Bên phải
+198|Mưa
+199|Phim; điện ảnh
+200|Rạp chiếu phim
+201|Bơi
+202|Tiếng Anh
+203|Nhà ga
+204|Xa
+205|Bút chì
+206|Muối
+207|Bẩn
+208|Vợ (cách gọi lịch sự)
+209|Đẩy; ấn; đóng (dấu)
+210|Bên cạnh; chiều ngang
+211|Màu vàng
+212|Có màu vàng
+213|Âm ấm; hơi ấm (chất lỏng)
+214|Âm nhạc
+215|Dưới; phía dưới
+216|Kém; không giỏi
+217|Cái gì; gì
+218|Mùa hè
+219|Kỳ nghỉ hè
+220|Nhà
+221|Gia đình
+222|Gia đình; hộ gia đình
+223|Rảnh; thời gian rảnh
+224|Trái cây; hoa quả
+225|Bài hát
+226|Hát
+227|Thứ Ba
+228|Hoa
+229|Lọ hoa; bình hoa
+230|Hành lý
+231|Gặp
+232|Công ty
+233|Biển
+234|Gạt tàn
+235|Mọi người; các bạn (lịch sự)
+236|Tranh; bức tranh
+237|Mở; mở ra (tự động từ)
+238|Mở (một vật; tha động từ)
+239|Cầu thang
+240|Bên ngoài
+241|Nước ngoài
+242|Người nước ngoài
+243|Nhớ; ghi nhớ
+244|Góc; chỗ rẽ
+245|Trường học
+246|Học sinh; sinh viên
+247|Vui; thú vị
+248|Lạnh (thời tiết)
+249|Chữ Hán; Kanji
+250|Ngọt
+251|Tròn
+252|Kính mắt
+253|Nguy hiểm
+254|Bàn học; bàn làm việc
+255|Về; trở về
+256|Thức dậy; dậy
+257|Quán cà phê
+258|Nghỉ; ngày nghỉ; kỳ nghỉ
+259|Nghỉ; nghỉ ngơi
+260|Hút; hít
+261|Thịt bò
+262|Sữa bò
+263|Năm ngoái
+264|Có; ở; tồn tại (người, động vật)
+265|Cá
+266|Mạnh
+267|Dạy; chỉ; cho biết
+268|Phòng học; lớp học
+269|Cây cầu
+270|Hẹp; chật
+271|Rẽ; cong; uốn
+272|Làm việc cho (công ty, tổ chức)
+273|Gần
+274|Gần; vùng lân cận
+275|Thứ Sáu
+276|Ngân hàng
+277|Chín
+278|Chín cái
+279|Chín ngày; ngày mùng chín
+280|Bầu trời
+281|Giày
+282|Tất; vớ
+283|Anh trai (của mình)
+284|Anh chị em
+285|Cảnh sát; nhân viên cảnh sát
+286|Nhẹ
+287|Tốt; đủ rồi (tùy ngữ cảnh)
+288|Kết hôn; hôn nhân
+289|Thứ Hai
+290|Không thích; khó chịu
+291|Ghét; không thích
+292|Tòa nhà; công trình
+293|Chó
+294|Cho xem
+295|Xem; nhìn
+296|Khỏe; khỏe mạnh; sức sống
+297|Lối vào nhà; tiền sảnh
+298|Nói
+299|Từ; lời nói; ngôn ngữ
+300|Cũ (không dùng để chỉ người già)
+301|Gọi; gọi đến; mời
+302|Cửa; cửa kiểu Nhật
+303|Năm
+304|Năm cái
+305|Năm ngày; ngày mùng năm
+306|Buổi chiều; sau buổi trưa
+307|Buổi sáng; trước buổi trưa
+308|Sau; sau đó
+309|Phía sau
+310|Cơm; bữa ăn
+311|Giao lộ; ngã tư
+312|Đồn cảnh sát khu vực
+313|Công viên
+314|Dày; sâu đậm (tình cảm)
+315|Miệng; chỗ mở
+316|Đằng kia; phía bên kia
+317|Thích
+318|Rộng; rộng rãi
+319|Trà đen; hồng trà
+320|Đi
+321|Xuống (xe); đi xuống
+322|Rơi (mưa, tuyết)
+323|Cao; đắt
+324|Đất nước; quốc gia
+325|Màu đen
+326|Có màu đen
+327|Bây giờ
+328|Tháng này
+329|Tuần này
+330|Sáng nay
+331|Hôm nay
+332|Năm nay
+333|Tối nay
+334|Khó xử; gặp khó khăn; lo lắng
+335|Bên trái
+336|Đưa ra; giơ; che (ô)
+337|Đường (gia vị)
+338|Ngồi
+339|Mảnh; nhỏ; thon
+340|Ví tiền
+341|Nở (hoa)
+342|Làm; tạo ra
+343|Bài văn; việc viết văn
+344|Hôm qua
+345|Đêm qua; tối qua
+346|Chụp ảnh; quay phim
+347|Tạp chí
+348|Ba
+349|Ba cái
+350|Ba ngày; ngày mùng ba
+351|Ô; dù
+352|Núi
+353|Đi dạo
+354|Công việc
+355|Dùng; sử dụng
+356|Bốn
+357|Bốn cái
+358|Bốn ngày; ngày mùng bốn
+359|Bắt đầu (tự động từ)
+360|Chị gái (của mình)
+361|Trẻ em; con
+362|Dừng lại (tự động từ)
+363|Chết
+364|Tôi (trang trọng)
+365|Giấy
+366|Răng
+367|Từ điển
+368|Cầm; mang; có
+369|Thỉnh thoảng
+370|Thời gian; giờ
+371|Đồng hồ
+372|Tiếp theo; kế tiếp
+373|Tai
+374|Xe đạp
+375|Ô tô
+376|Bản thân; chính mình
+377|Từ điển
+378|Bảy
+379|Bảy cái
+380|Bảy ngày; ngày mùng bảy
+381|Câu hỏi; việc hỏi
+382|Ảnh; bức ảnh
+383|Xe; ô tô
+384|Mượn; vay
+385|Trẻ; trẻ tuổi
+386|Yếu
+387|Lấy; cầm lấy
+388|Tay
+389|Thư; bức thư
+390|Tiết học; giờ học
+391|Mùa thu
+392|Kết thúc; xong
+393|Học (từ người dạy)
+394|Sống; cư trú
+395|Mười
+396|Mười ngày; ngày mùng mười
+397|Nặng
+398|Bài tập về nhà
+399|Ra ngoài; đi ra ngoài
+400|Đưa ra; lấy ra
+401|Ra; xuất hiện; rời khỏi
+402|Lối ra; cửa ra
+403|Mùa xuân
+404|Lúc đầu; khởi đầu
+405|Lần đầu tiên
+406|Chỗ; nơi
+407|Nóng (thời tiết)
+408|Viết
+409|Phụ nữ
+410|Bé gái; con gái
+411|Nhỏ; bé
+412|Nhỏ; bé (đứng trước danh từ)
+413|Một chút; một ít
+414|Ít; không nhiều
+415|Biến mất; tắt (tự động từ)
+416|Xóa; tắt (đèn, thiết bị)
+417|Trên; phía trên
+418|Cho; tặng
+419|Giỏi; khéo
+420|Áo khoác ngoài
+421|Chắc chắn; bền; khỏe
+422|Lên (xe); đi; cưỡi
+423|Màu sắc
+424|Ăn
+425|Đồ ăn; thức ăn
+426|Nhà ăn; phòng ăn
+427|Ngủ; đi ngủ
+428|Mới
+429|Báo; tờ báo
+430|Cay
+431|Người
+432|Thư viện
+433|Thổi
+434|Nước
+435|Thứ Tư
+436|Trời quang; trời nắng
+437|Trời quang; trở nên nắng
+438|Sinh ra; được sinh ra
+439|Học sinh
+440|Giọng; tiếng nói
+441|Phía tây
+442|Màu xanh lam
+443|Có màu xanh lam
+444|Yên tĩnh
+445|Màu đỏ
+446|Có màu đỏ
+447|Cắt
+448|Tem thư
+449|Vé
+450|Tuyết
+451|Phía trước; trước đó; tương lai (tùy ngữ cảnh)
+452|Tháng trước
+453|Tuần trước
+454|Thầy; cô; giáo viên; bác sĩ (cách xưng hô)
+455|Nghìn; một nghìn
+456|Sông
+457|Rửa; giặt
+458|Giặt giũ
+459|Trước; phía trước
+460|Toàn bộ; tất cả
+461|Dọn dẹp; quét dọn
+462|Sớm
+463|Cửa sổ
+464|Chạy
+465|Chân; bàn chân
+466|Nhanh
+467|Làng
+468|Nhiều
+469|To; lớn bề ngang; mập
+470|Cơ thể; thân thể
+471|Đợi; chờ
+472|Cho mượn; cho vay
+473|Nhà bếp
+474|To; lớn
+475|To; lớn (đứng trước danh từ)
+476|Đại học
+477|Rất thích
+478|Đại sứ quán
+479|Ổn; không sao
+480|Người lớn
+481|Đông người; nhiều người
+482|Quan trọng; quý giá
+483|Cởi (quần áo, giày…)
+484|Ai
+485|Ngắn
+486|Sinh nhật
+487|Chơi (nhạc cụ có dây, kể cả đàn piano)
+488|Ấm; ấm áp
+489|Đàn ông; nam giới
+490|Bé trai; con trai
+491|Biết
+492|Tàu điện ngầm
+493|Bản đồ
+494|Ao; hồ nhỏ
+495|Đặt; để
+496|Muộn; chậm
+497|Màu nâu
+498|Đến; tới nơi
+499|Mặc (áo và trang phục phần thân trên)
+500|Trong; bên trong; ở giữa
+501|Buổi trưa; ban ngày
+502|Bữa trưa
+503|Buổi sáng
+504|Bữa sáng
+505|Thị trấn; khu phố
+506|Dài
+507|Chim
+508|Đau
+509|Thấp
+510|Vườn
+511|Em trai
+512|Buộc; thắt; siết
+513|Thời tiết
+514|Cửa hàng
+515|Dán
+516|Điện; đèn điện
+517|Tàu điện
+518|Điện thoại
+519|Đưa; trao
+520|Băng qua; đi qua
+521|Leo; trèo
+522|Thứ Bảy
+523|Mùa đông
+524|Phía đông
+525|Trả lời
+526|Đầu
+527|Làm việc
+528|Động vật
+529|Giống nhau; cùng
+530|Đường; đường đi
+531|Đọc
+532|Thịt lợn; thịt heo
+533|Trời nhiều mây
+534|Trở nên nhiều mây; mờ đi
+535|Phía nam
+536|Khó
+537|Hai
+538|Hai cái
+539|Hai mươi tuổi
+540|Hai mươi ngày; ngày hai mươi
+541|Hai người
+542|Hai ngày; ngày mùng hai
+543|Nhộn nhịp; náo nhiệt
+544|Thịt
+545|Chủ nhật
+546|Vào; đi vào; chứa được
+547|Cho vào; bỏ vào
+548|Lối vào; cửa vào
+549|Mèo
+550|Nóng (khi chạm vào)
+551|Năm
+552|Chiều cao; vóc người
+553|Bộ com-lê; âu phục nam
+554|Mua sắm
+555|Mua
+556|Bán
+557|Ông; cụ ông
+558|Cô; dì; bác gái
+559|Màu trắng
+560|Có màu trắng
+561|Mỏng; nhạt; loãng
+562|Hộp
+563|Tám
+564|Tám cái
+565|Tám ngày; ngày mùng tám
+566|Cửa hàng rau quả; người bán rau quả
+567|Nửa; một nửa
+568|Một nửa
+569|Ồn ào; phiền phức
+570|Buổi tối
+571|Bữa tối
+572|Số; số hiệu
+573|Mệt; trở nên mệt
+574|Bay; nhảy
+575|Máy bay
+576|Mũi
+577|Trăm; một trăm
+578|Bệnh viện
+579|Bệnh; ốm
+580|Phòng; căn phòng
+581|Phong bì
+582|Gió
+583|Cảm lạnh
+584|Quần áo
+585|Đồ vật; vật
+586|Hiểu
+587|Câu văn; văn bản
+588|Nghe; lắng nghe; hỏi
+589|Xếp hàng; đứng thành hàng (tự động từ)
+590|Xếp thành hàng; bày ra (tha động từ)
+591|Đóng; đóng lại (tự động từ)
+592|Đóng (một vật; tha động từ)
+593|Khu vực; vùng
+594|Trả lại
+595|Tiện lợi; hữu ích
+596|Học; học tập
+597|Đi bộ
+598|Vị; người (lịch sự); cách làm
+599|Mũ; nón
+600|Quên
+601|Bận; bận rộn
+602|Phía bắc
+603|Sách
+604|Giá sách; kệ sách
+605|Đánh (răng); đánh bóng
+606|Em gái (của mình)
+607|Hằng tháng; mỗi tháng
+608|Hằng tuần; mỗi tuần
+609|Mỗi sáng; hằng sáng
+610|Hằng ngày; mỗi ngày
+611|Hằng năm; mỗi năm
+612|Mỗi tối; hằng đêm
+613|Vạn; mười nghìn
+614|Bút máy
+615|Làm mất; đánh mất
+616|Tên
+617|Sáng; sáng sủa
+618|Ngày mai
+619|Kêu; hót; gầm (động vật)
+620|Cây; gỗ
+621|Thứ Năm
+622|Mắt
+623|Vấn đề; câu hỏi; bài toán
+624|Cổng
+625|Đêm; buổi tối
+626|Rau
+627|Thuốc
+628|Bạn bè
+629|Nổi tiếng
+630|Chơi; vui chơi; đến chơi
+631|Bưu điện
+632|Bữa tối
+633|Chiều tối; lúc xế chiều
+634|Quần áo kiểu phương Tây
+635|Bưu thiếp
+636|Cần
+637|Muốn; mong có
+638|Đến
+639|Tháng sau
+640|Tuần sau
+641|Năm sau
+642|Nhờ; yêu cầu
+643|Trứng
+644|Đứng
+645|Du học sinh
+646|Du lịch; chuyến đi
+647|Bố mẹ; cha mẹ
+648|Món ăn; việc nấu ăn
+649|Mát; mát mẻ
+650|Màu xanh lá cây
+651|Bên cạnh; nhà bên
+652|Lạnh (khi chạm vào)
+653|Tủ lạnh
+654|Không; số không
+655|Luyện tập
+656|Hành lang
+657|Sáu
+658|Sáu cái
+659|Sáu ngày; ngày mùng sáu
+660|Câu chuyện; chuyện; lời nói
+661|Nói; nói chuyện

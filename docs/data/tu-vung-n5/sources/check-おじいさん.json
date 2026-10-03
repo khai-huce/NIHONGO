@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "status": 200
+  },
+  "data": [
+    {
+      "slug": "お祖父さん",
+      "is_common": true,
+      "tags": [],
+      "jlpt": [
+        "jlpt-n1"
+      ],
+      "japanese": [
+        {
+          "word": "お祖父さん",
+          "reading": "おじいさん"
+        },
+        {
+          "word": "お爺さん",
+          "reading": "おじいさん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "grandfather"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [
+            "Usually written using kana alone"
+          ],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [
+            "usu. お祖父さん when written with kanji"
+          ]
+        },
+        {
+          "english_definitions": [
+            "male senior-citizen",
+            "old man"
+          ],
+          "parts_of_speech": [
+            "Noun"
+          ],
+          "links": [],
+          "tags": [
+            "Usually written using kana alone"
+          ],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [
+            "usu. お爺さん when written with kanji"
+          ]
+        }
+      ],
+      "attribution": {
+        "jmdict": true,
+        "jmnedict": false,
+        "dbpedia": false
+      }
+    },
+    {
+      "slug": "51869b01d5dda7b2c6065403",
+      "tags": [],
+      "jlpt": [],
+      "japanese": [
+        {
+          "reading": "おじいさん"
+        }
+      ],
+      "senses": [
+        {
+          "english_definitions": [
+            "Grandparent"
+          ],
+          "parts_of_speech": [
+            "Wikipedia definition"
+          ],
+          "links": [
+            {
+              "text": "Read “Grandparent” on English Wikipedia",
+              "url": "http://en.wikipedia.org/wiki/Grandparent?oldid=494761081"
+            },
+            {
+              "text": "Read “おじいさん” on Japanese Wikipedia",
+              "url": "http://ja.wikipedia.org/wiki/おじいさん?oldid=41987049"
+            }
+          ],
+          "tags": [],
+          "restrictions": [],
+          "see_also": [],
+          "antonyms": [],
+          "source": [],
+          "info": [],
+          "sentences": []
+        }
+      ],
+      "attribution": {
+        "jmdict": false,
+        "jmnedict": false,
+        "dbpedia": "http://dbpedia.org/resource/Grandparent"
+      }
+    }
+  ]
+}
