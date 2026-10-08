@@ -1,0 +1,14 @@
+{
+  "name": "@nihongo/shared",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./study/*": {
+      "types": "./src/study/*.d.mts",
+      "default": "./src/study/*.mjs"
+    },
+    "./contracts/*": "./src/contracts/*.ts",
+    "./curriculum/*": "./src/curriculum/*.ts"
+  }
+}

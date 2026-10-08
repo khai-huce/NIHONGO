@@ -121,4 +121,4 @@ Dữ liệu đối chiếu: [bản nguồn có On/Kun, số nét, bộ thủ, ng
 Kiểm tra cấu trúc đã đạt: đủ 103 mục, không trùng ID/chữ, giữ đúng 27 ID cũ, âm Hán Việt đều thuộc trường Vietnamese reading của nguồn sau chuẩn hóa Unicode; tất cả mục vẫn ở trạng thái draft. Đây là kiểm tra cấu trúc, không thay thế việc duyệt nội dung tiếng Việt.
 # Cập nhật duyệt 20/09/2026
 
-Người dùng đã duyệt bộ Hán Việt/nghĩa tiếng Việt dưới đây trong yêu cầu bắt đầu C01/R01/R02. Đã nhập vào catalog DB cùng dữ liệu nguồn; giữ ID cũ. Bản JSON trong `docs/data` giữ nguyên nhãn nháp để bảo toàn hồ sơ trước duyệt; fixture phát hành `server/content/catalog-initial.json` ghi ngày duyệt. Ví dụ/gợi nhớ/chiết tự mới chưa có không được tự sinh. Xem [triển khai và nghiệm thu](CONTENT_PLATFORM.md).
+Người dùng đã duyệt bộ Hán Việt/nghĩa tiếng Việt dưới đây trong yêu cầu bắt đầu C01/R01/R02. Đã nhập vào catalog DB cùng dữ liệu nguồn; giữ ID cũ. Bản JSON trong `docs/data` giữ nguyên nhãn nháp để bảo toàn hồ sơ trước duyệt; fixture phát hành `apps/api/content/catalog-initial.json` ghi ngày duyệt. Ví dụ/gợi nhớ/chiết tự mới chưa có không được tự sinh. Xem [triển khai và nghiệm thu](CONTENT_PLATFORM.md).

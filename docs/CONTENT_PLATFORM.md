@@ -23,18 +23,18 @@ Xuất bản Kanji cập nhật nội dung các thẻ sao đang hoạt động h
 Từ thư mục gốc sau khi cài dependencies và PostgreSQL:
 
 ```powershell
-npm --prefix server run db:generate
-npm --prefix server run db:migrate
-npm --prefix server run content:seed
-npm --prefix server run content:seed -- --commit
-python -m venv server/.venv-tts
-& server/.venv-tts/Scripts/python.exe -m pip install -r server/requirements-tts.txt
+npm --workspace @nihongo/api run db:generate
+npm --workspace @nihongo/api run db:migrate
+npm --workspace @nihongo/api run content:seed
+npm --workspace @nihongo/api run content:seed -- --commit
+python -m venv apps/api/.venv-tts
+& apps/api/.venv-tts/Scripts/python.exe -m pip install -r apps/api/requirements-tts.txt
 npm run dev:server
 # Terminal khác:
 npm run dev
 ```
 
-Seed mặc định chỉ xem trước. `--commit` thêm mục thiếu, không ghi đè nội dung đã biên tập. Có thể chạy lại; số thêm mới bằng 0. Python 3.12 đã được dùng để kiểm tra. Backend tự tìm `server/.venv-tts`, sau đó `python` trên PATH; có thể chỉ định `TTS_PYTHON`. `TTS_STORAGE_DIR` tùy chọn, mặc định `server/storage/reading`; không đưa thư mục này vào static/public. Cả venv và audio local được gitignore.
+Seed mặc định chỉ xem trước. `--commit` thêm mục thiếu, không ghi đè nội dung đã biên tập. Có thể chạy lại; số thêm mới bằng 0. Python 3.12 đã được dùng để kiểm tra. Backend tự tìm `apps/api/.venv-tts`, sau đó `python` trên PATH; có thể chỉ định `TTS_PYTHON`. `TTS_STORAGE_DIR` tùy chọn, mặc định `apps/api/storage/reading`; không đưa thư mục này vào static/public. Cả venv và audio local được gitignore.
 
 ## API nội dung / admin
 
@@ -54,10 +54,10 @@ Các route dưới `/api/admin/content` kiểm tra phiên và role mới nhất 
 Lệnh local nhập nháp dùng cùng validation/service:
 
 ```powershell
-npm --prefix server run content:import -- C:/path/to/input.json
-npm --prefix server run content:import -- C:/path/to/input.json --commit <previewHash>
-npm --prefix server run admin:role -- grant <UUID-tai-khoan-duoc-chi-dinh>
-npm --prefix server run admin:role -- revoke <UUID-tai-khoan-duoc-chi-dinh>
+npm --workspace @nihongo/api run content:import -- C:/path/to/input.json
+npm --workspace @nihongo/api run content:import -- C:/path/to/input.json --commit <previewHash>
+npm --workspace @nihongo/api run admin:role -- grant <UUID-tai-khoan-duoc-chi-dinh>
+npm --workspace @nihongo/api run admin:role -- revoke <UUID-tai-khoan-duoc-chi-dinh>
 ```
 
 Chỉ cấp admin cho tài khoản được người dùng chỉ định rõ; nếu chỉ định email thì tra đúng UUID của email trước khi cấp. CLI quản trị là công cụ của người vận hành trên máy; API không có chức năng tự thăng quyền. M01 dùng đăng nhập hiện có và `users.role` để vào `/admin/kanji`.

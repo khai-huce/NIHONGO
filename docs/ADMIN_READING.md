@@ -16,9 +16,9 @@ npm run dev:admin
 - Admin: `http://localhost:3002/admin/reading` và `/admin/kanji`; `/` chuyển đến Kanji.
 - API Express: `http://127.0.0.1:3001`, PostgreSQL dùng chung.
 
-`server/.env` cần `APP_ORIGIN=http://localhost:3000` và `ADMIN_ORIGIN=http://localhost:3002`. `.env.example` có `VITE_APP_ORIGIN`/`VITE_ADMIN_ORIGIN` để xác định liên kết giữa hai giao diện. Cấu hình local hiện tại đã cập nhật. Mỗi Vite proxy `/api` sang Express; chỉ hai origin cấu hình được ghi dữ liệu, không bật CORS wildcard.
+`apps/api/.env` cần `APP_ORIGIN=http://localhost:3000` và `ADMIN_ORIGIN=http://localhost:3002`. `apps/web/.env.example` và `apps/admin/.env.example` có `VITE_APP_ORIGIN`/`VITE_ADMIN_ORIGIN` để xác định liên kết giữa hai giao diện. Cấu hình local hiện tại đã cập nhật. Mỗi Vite proxy `/api` sang Express; chỉ hai origin cấu hình được ghi dữ liệu, không bật CORS wildcard.
 
-Admin có entry HTML/React riêng (`admin/index.html`, `src/admin/main.tsx`). `npm run build` kiểm tra TypeScript và tạo hai bản build: `dist` cho trang học, `dist-admin` cho quản trị. `npm run build:admin` chỉ build admin; `npm run preview:admin` xem bản build tại cổng 3002 sau khi dừng dev admin. Hosting production cần SPA fallback và proxy API cho từng giao diện; task này nghiệm thu local.
+Admin có entry HTML/React riêng (`apps/admin/index.html`, `apps/admin/src/app/main.tsx`). `npm run build` kiểm tra TypeScript và tạo ba bản build: `apps/web/dist` cho trang học, `apps/admin/dist` cho quản trị và `apps/api/dist` cho Express. `npm run build:admin` chỉ build admin; `npm run preview:admin` xem bản build tại cổng 3002 sau khi dừng dev admin. Hosting production cần SPA fallback và proxy API cho từng giao diện; task này nghiệm thu local.
 
 Link `/admin/*` cũ trên cổng 3000 chuyển sang 3002. Cookie phiên theo hostname, dùng chung giữa hai cổng `localhost`; đăng xuất một bên sẽ kết thúc phiên của cả hai. Backend luôn kiểm tra role hiện hành, không coi cổng riêng là quyền truy cập. Tài khoản admin được chỉ định vẫn là `nvk05032005@gmail.com`.
 

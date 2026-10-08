@@ -3,40 +3,44 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
-    "dev": "vite",
-    "dev:admin": "vite --config vite.admin.config.ts",
-    "dev:server": "npm --prefix server run dev",
-    "setup:env": "node server/scripts/setup-env.mjs",
-    "build:server": "npm --prefix server run build",
-    "test:server": "npm --prefix server test",
-    "test:review": "node --experimental-strip-types --test tests/review.test.mjs",
-    "test:routes": "node --experimental-strip-types --test tests/routes.test.mjs",
-    "test:import": "node --experimental-strip-types --test tests/vocab-import.test.mjs",
-    "test:vocab-progress": "node --experimental-strip-types --test tests/vocab-progress.test.mjs",
-    "test:vocab-study": "node --test tests/vocab-study.test.mjs",
-    "test:roadmap": "node --test tests/roadmap.test.mjs",
-    "test:roadmap-study": "node --test tests/roadmap-study.test.mjs",
-    "test:default-roadmap": "node --test tests/default-roadmap.test.mjs",
-    "test:settings": "node --experimental-strip-types --test tests/learning-settings.test.mjs tests/speech.test.mjs",
-    "test:kana": "node --test tests/kana-quiz.test.mjs",
+    "dev": "npm run dev --workspace @nihongo/web",
+    "dev:admin": "npm run dev --workspace @nihongo/admin",
+    "dev:server": "npm run dev --workspace @nihongo/api",
+    "dev:api": "npm run dev:server",
+    "setup:env": "node tools/setup-env.mjs",
+    "build": "npm run build:web && npm run build:admin && npm run build:server",
+    "build:web": "npm run build --workspace @nihongo/web",
+    "build:admin": "npm run build --workspace @nihongo/admin",
+    "build:server": "npm run build --workspace @nihongo/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "check:boundaries": "node tools/check-boundaries.mjs",
+    "test": "npm run check:boundaries && npm run test:frontend && npm run test:server",
+    "test:frontend": "node --experimental-strip-types --test apps/web/tests/*.test.mjs apps/admin/tests/*.test.mjs packages/shared/tests/*.test.mjs",
+    "test:server": "npm run test --workspace @nihongo/api",
+    "test:review": "node --experimental-strip-types --test apps/web/tests/review.test.mjs",
+    "test:routes": "node --experimental-strip-types --test apps/web/tests/routes.test.mjs",
+    "test:import": "node --experimental-strip-types --test apps/web/tests/vocab-import.test.mjs",
+    "test:vocab-progress": "node --experimental-strip-types --test apps/web/tests/vocab-progress.test.mjs",
+    "test:vocab-study": "node --test packages/shared/tests/vocab-study.test.mjs",
+    "test:roadmap": "node --test packages/shared/tests/roadmap.test.mjs",
+    "test:roadmap-study": "node --test packages/shared/tests/roadmap-study.test.mjs",
+    "test:default-roadmap": "node --test packages/shared/tests/default-roadmap.test.mjs",
+    "test:settings": "node --experimental-strip-types --test apps/web/tests/learning-settings.test.mjs apps/web/tests/speech.test.mjs",
+    "test:kana": "node --test packages/shared/tests/kana-quiz.test.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:stop": "docker compose stop db",
-    "db:migrate": "npm --prefix server run db:migrate",
-    "build": "tsc && vite build && vite build --config vite.admin.config.ts",
-    "build:admin": "tsc && vite build --config vite.admin.config.ts",
-    "preview": "vite preview",
-    "preview:admin": "vite preview --config vite.admin.config.ts"
-  },
-  "dependencies": {
-    "canvas-confetti": "^1.9.4",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.475.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.18.3",
-    "roughjs": "^4.6.6",
-    "tailwind-merge": "^2.6.0"
+    "db:migrate": "npm run db:migrate --workspace @nihongo/api",
+    "db:generate": "npm run db:generate --workspace @nihongo/api",
+    "preview": "npm run preview --workspace @nihongo/web",
+    "preview:admin": "npm run preview --workspace @nihongo/admin"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",
@@ -49,5 +53,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
     "vite": "^6.1.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2"
   }
 }

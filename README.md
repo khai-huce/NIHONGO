@@ -1,147 +1,95 @@
-**NIHONGO — chạy frontend và Express backend ở local**
+# NIHONGO
 
-Frontend dùng React/Vite/React Router. Backend dùng Express/TypeScript, Prisma và PostgreSQL. Database lưu tài khoản/phiên, tiến độ và Ôn tập, bài học Chủ động, lộ trình, kết quả quiz, kho Kanji/bộ thủ, bài đọc cá nhân/công khai, giáo trình từ vựng và Review theo nhóm bài. Bài khách trên thiết bị giữ riêng. Audio Đọc hiểu dùng Edge TTS phía server.
+Website học tiếng Nhật dùng React/Vite, Express/TypeScript, Prisma và PostgreSQL. Repository dùng **npm workspaces** để tách trang học, trang admin và API; một lần cài dependency ở thư mục gốc.
 
-Kho nội dung, API quản trị, nguồn/giấy phép và cài Edge TTS: [CONTENT_PLATFORM.md](docs/CONTENT_PLATFORM.md). Quản trị Kanji: [ADMIN_KANJI.md](docs/ADMIN_KANJI.md); admin riêng và biên tập Đọc hiểu: [ADMIN_READING.md](docs/ADMIN_READING.md). Giáo trình, từ vựng và Review gộp: [CURRICULUM.md](docs/CURRICULUM.md). Kho giáo trình chờ nội dung người dùng nhập/duyệt, chưa nhập Tango. Ngữ pháp thuộc task riêng.
+## Cấu trúc
 
-Kế hoạch hoàn thiện chức năng theo từng task: [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Đọc tài liệu này khi cần chọn việc tiếp theo; ưu tiên đã chốt là dữ liệu học cá nhân. Danh sách URL: [ROUTES.md](docs/ROUTES.md); luồng sao và Ôn tập: [REVIEW.md](docs/REVIEW.md).
+```text
+apps/web/       Trang học — cổng 3000
+apps/admin/     Quản trị nội dung — cổng 3002
+apps/api/       Express, nghiệp vụ, Prisma, audio — cổng 3001
+packages/shared/ Kiểu dữ liệu và quy tắc học thuần dùng chung
+packages/client/ API client, đăng nhập và mã trình duyệt dùng chung
+tools/          Thiết lập môi trường, kiểm tra ranh giới import
+docs/           Hướng dẫn, thiết kế và backlog
+```
 
-**Cài đặt lần đầu**
+Mỗi frontend chia theo `src/features/`; backend chia theo `src/modules/`. Xem [kiến trúc và cách tìm code](docs/ARCHITECTURE.md), gồm vị trí trợ lý AI tương lai và bảng đường dẫn cũ → mới. Trợ lý nổi hiện vẫn mô phỏng; đợt tổ chức mã không bổ sung chức năng AI mới.
 
-Cần Node.js 22.12 trở lên và Docker Desktop đang chạy Linux containers. Mở terminal tại thư mục dự án và chạy:
+## Cài đặt lần đầu
+
+Cần Node.js 22.12 trở lên và PostgreSQL local (Docker Desktop nếu dùng Compose). Chạy tại thư mục gốc:
 
 ```powershell
 npm ci
-npm --prefix server ci
 npm run setup:env
 npm run db:up
+npm run db:generate
 npm run db:migrate
-npm --prefix server run db:generate
-npm --prefix server run content:seed -- --commit
 ```
 
-`setup:env` tạo `.env`, `server/.env`, `server/.env.test` khi chưa có và sinh SESSION_SECRET ngẫu nhiên. Lệnh không ghi đè cấu hình đã tồn tại. Các file chứa giá trị thật được gitignore; chỉ các file `.example` được lưu trong Git.
+Không cần chạy `npm install` riêng trong từng app. `setup:env` chỉ tạo file còn thiếu và sinh session secret; không ghi đè giá trị đang có. PostgreSQL local dùng cổng 5433, database `nihongo`; giữ nguyên tên Compose/volume. Không reset database khi nâng cấp cấu trúc.
 
-PostgreSQL local chạy tại `localhost:5433`, database `nihongo`. Compose cung cấp tài khoản thử local và volume lưu dữ liệu; cấu hình này chỉ dành cho máy phát triển. Dùng `npm run db:stop` khi cần dừng DB mà vẫn giữ dữ liệu.
+Chỉ khi cài **database mới** và cần nhập bộ Kanji ban đầu đã duyệt:
 
-**Chạy ứng dụng**
+```powershell
+npm run content:seed --workspace @nihongo/api -- --commit
+```
 
-Terminal 1:
+Các giáo trình/bài đọc/ngữ pháp do admin nhập và xuất bản; không tự tạo nội dung mẫu. Audio đọc hiểu dùng Edge TTS; hướng dẫn Python và nguồn nội dung: [CONTENT_PLATFORM.md](docs/CONTENT_PLATFORM.md).
+
+## Chạy ứng dụng
+
+Mỗi lệnh chạy trong một terminal riêng, tại thư mục gốc:
 
 ```powershell
 npm run dev:server
-```
-
-Terminal 2:
-
-```powershell
 npm run dev
-```
-
-Terminal 3 (trang admin riêng):
-
-```powershell
 npm run dev:admin
 ```
 
-Mở [NIHONGO local](http://localhost:3000) và [Admin](http://localhost:3002/admin/reading). Express nghe tại `127.0.0.1:3001`; cả hai Vite proxy `/api` sang Express. Dùng hostname `localhost` thống nhất với APP_ORIGIN/ADMIN_ORIGIN và Google config. Trong `server/.env`, thêm `ADMIN_ORIGIN=http://localhost:3002` nếu nâng cấp từ bản cũ. Giữ backend chạy khi dùng một trong hai giao diện.
+- [Trang học](http://localhost:3000): `apps/web`.
+- [Admin](http://localhost:3002/admin/kanji): `apps/admin`.
+- [API health](http://localhost:3001/api/health): trả `{"status":"ok"}` khi DB hoạt động.
 
-Admin email/mật khẩu dùng phiên hiện có. Nút Google của admin mở trang học để đăng nhập bằng origin 3000 đã cấu hình; quay lại admin sẽ nhận cùng phiên. Cookie dùng chung hostname, đăng xuất một bên kết thúc phiên cả hai; mọi API admin vẫn kiểm tra role từ database. Link `/admin/*` cũ ở cổng 3000 chuyển sang cổng 3002.
+Giữ API chạy khi sử dụng frontend. Hai giao diện proxy `/api` về cổng 3001, dùng chung database và phiên trên hostname `localhost`. Google trong admin mở trang học để đăng nhập; API admin luôn kiểm tra quyền thật.
 
-`npm run build` tạo `dist` (trang học) và `dist-admin` (admin); `npm run build:admin` / `npm run preview:admin` hỗ trợ build/xem admin riêng. Chưa triển khai hosting online trong đợt này.
+## Biến môi trường
 
-Kiểm tra [API health qua Vite](http://localhost:3000/api/health): trả `{"status":"ok"}` khi PostgreSQL hoạt động. Khi không có DB, trả HTTP 503.
-
-**Bật đăng nhập Google**
-
-Email/mật khẩu chạy độc lập. Khi chưa có client ID, giao diện báo Google chưa sẵn sàng; không tạo tài khoản Google giả.
-
-1. Vào [Google Cloud Console — Clients](https://console.cloud.google.com/auth/clients), tạo/chọn project của bạn.
-2. Hoàn thành Branding và Audience cho ứng dụng NIHONGO; cấu hình tài khoản test nếu Console yêu cầu. Chỉ dùng thông tin định danh cơ bản cho đăng nhập.
-3. Tạo OAuth client loại **Web application**. Thêm Authorized JavaScript Origins: `http://localhost` và `http://localhost:3000`.
-4. Sao chép client ID dạng `....apps.googleusercontent.com` vào hai nơi:
-
-```dotenv
-# .env ở thư mục gốc
-VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-```
-
-```dotenv
-# server/.env
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-```
-
-5. Khởi động lại cả Vite và backend, mở modal và dùng nút Google. Bạn tự chọn tài khoản Google/hoàn thành các bước đăng nhập trong cửa sổ Google.
-
-Luồng dùng Google Identity Services và JavaScript callback, xác minh ID token ở backend rồi tạo session nội bộ. Không cần client secret, redirect callback Express, hoặc lưu Google access/refresh token. Hướng dẫn chính thức: [Google setup](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid), [server token verification](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token).
-
-Nếu email đã đăng ký bằng mật khẩu, đăng nhập Google cùng email sẽ báo dùng cách đăng nhập đã có. Đợt này chưa có chức năng liên kết hai cách đăng nhập; không tự liên kết chỉ dựa trên email.
-
-**Database và API**
-
-Schema: `server/prisma/schema.prisma`; migration: `server/prisma/migrations/202609080001_auth/migration.sql`.
-
-- `users`: hồ sơ, email chuẩn hóa duy nhất, hash Argon2id hoặc Google subject duy nhất. `is_premium` mặc định false và không nhận từ request đăng ký.
-- `sessions`: session PostgreSQL theo schema của `connect-pg-simple`; cookie `nihongo.sid` có HttpOnly/SameSite=Lax, hết hạn sau 7 ngày không hoạt động với phiên đã đăng nhập. Nonce Google có hạn 10 phút và chỉ dùng một lần.
-
-| Endpoint | Mục đích |
+| File | Nội dung |
 |---|---|
-| `GET /api/health` | Kiểm tra kết nối DB |
-| `POST /api/auth/register` | `{ name, email, password }`; tạo user và phiên |
-| `POST /api/auth/login` | `{ email, password }`; đăng nhập |
-| `GET /api/auth/me` | Lấy hồ sơ từ phiên hiện tại |
-| `POST /api/auth/logout` | `{}`; hủy phiên và cookie |
-| `POST /api/auth/google/nonce` | `{}`; chuẩn bị lượt đăng nhập Google |
-| `POST /api/auth/google` | `{ credential }`; xác minh và đăng nhập |
+| `apps/web/.env` | `VITE_GOOGLE_CLIENT_ID`, `VITE_ADMIN_ORIGIN` và cấu hình công khai trang học |
+| `apps/admin/.env` | `VITE_APP_ORIGIN` và cấu hình công khai admin |
+| `apps/api/.env` | Database, session secret, `GOOGLE_CLIENT_ID`, Gemini, TTS |
+| `apps/api/.env.test` | Database kiểm thử riêng có tên kết thúc `_test` |
 
-POST yêu cầu `Content-Type: application/json` và Origin thuộc `APP_ORIGIN`/`ADMIN_ORIGIN` đã cấu hình, kể cả khi gọi từ công cụ kiểm thử. Cookie được gửi tự động khi frontend gọi cùng origin qua proxy. API chỉ trả các trường hồ sơ công khai cho UI, không trả password hash.
+File giá trị thật và audio không được đưa vào Git. Không đặt bí mật trong `VITE_*`. Khởi động lại app tương ứng sau khi đổi env.
 
-Mật khẩu đăng ký dài 15–128 ký tự và không bị trim. Đăng nhập sai trả thông báo chung. Request đăng nhập/đăng ký được giới hạn theo IP và email chuẩn hóa; lỗi API có dạng `{ error: { code, message } }`.
+Google Client ID ở web và API phải khớp. Authorized JavaScript Origins của OAuth Web client gồm `http://localhost` và `http://localhost:3000`; không đặt hai giá trị đó vào Redirect URIs. Backend dùng `APP_ORIGIN=http://localhost:3000` và `ADMIN_ORIGIN=http://localhost:3002`.
 
-**Kiểm tra và phát triển tiếp**
+Gemini chấm ngữ pháp và phân tích câu được cấu hình tại `apps/api/.env`, dùng chung hạn mức ứng dụng; xem [GRAMMAR.md](docs/GRAMMAR.md) và [SENTENCE_ANALYSIS.md](docs/SENTENCE_ANALYSIS.md). Kính lúp phân tích câu dùng Kuromoji ở API cho cả khách; nút AI cần đăng nhập, không yêu cầu Premium. Audio mặc định tại `apps/api/storage/reading/`; Python TTS local tại `apps/api/.venv-tts/`. Cả hai thư mục đã được chuyển cùng API và giữ dữ liệu.
+
+## Build và kiểm thử
 
 ```powershell
+npm run check:boundaries
+npm run typecheck
+npm run test:frontend
 npm run test:server
-npm run build:server
 npm run build
 ```
 
-Test tự tạo/migrate database `nihongo_test` trên PostgreSQL local, dọn dữ liệu trong database test trước mỗi case và kiểm tra API với DB thật. Script từ chối database không ở localhost hoặc có tên không kết thúc bằng `_test`. Test Google dùng RSA token ký bằng khóa test và thay nguồn certificate; thư viện Google vẫn thực hiện xác minh chữ ký/claims. Bộ test đó không thay thế lần đăng nhập Google thật trên trình duyệt.
+`test:server` dùng `nihongo_test`, không dùng database người học. Các bài test cần chạy lần lượt khi cùng dùng database này. Build tạo `apps/web/dist`, `apps/admin/dist`, `apps/api/dist`; chạy API đã build bằng `npm run start --workspace @nihongo/api`. `build:web`, `build:admin`, `build:server` hỗ trợ build riêng.
 
-Khi thay đổi schema: dùng `npm --prefix server run db:migrate:dev -- --name ten_thay_doi`, kiểm tra SQL sinh ra và giữ migration trong Git. Không dùng reset DB để áp dụng thay đổi vào dữ liệu người học. Hai bảng users/sessions được tạo bởi migration, không tạo ngầm khi server khởi động.
+Trên Windows, dừng API trước khi `npm run db:generate` để tránh Prisma DLL bị khóa. Thay schema cần migration mới được rà SQL; không dùng reset. Dữ liệu runtime/log và bản build cũ có thể nằm trong `.artifacts/` (ignored), không phải source.
 
-Trên Windows, dừng backend trước khi chạy `db:generate` sau thay đổi schema để tránh khóa file Prisma DLL. Lệnh build chỉ biên dịch TypeScript; bước generate đã nằm trong hướng dẫn cài đặt.
+## Tài liệu chức năng
 
-Prisma được cố định ở 6.19.3 để giữ workflow đơn giản tương thích Node đang có. Override `deepmerge-ts` 8.0.2 sửa cảnh báo dependency của Prisma CLI; chạy lại migration/generate/build khi nâng các phiên bản này.
-
-**Các lỗi local thường gặp**
-
-- Docker báo không tìm thấy pipe/engine: mở Docker Desktop, chờ Engine sẵn sàng rồi chạy lại `npm run db:up`.
-- Docker báo `The file cannot be accessed by the system` tại `Docker/run/dockerInference` hoặc `docker-secrets-engine/engine.sock`: đây là lỗi socket tạm được ghi nhận trong [Docker issue #536](https://github.com/docker/desktop-feedback/issues/536). Sau khi Docker thoát, sao lưu bằng cách đổi tên cả hai thư mục runtime bị kẹt trước khi khởi động lại; kiểm tra thư mục chỉ chứa socket tạm, giữ bản sao và không factory reset/xóa volume để xử lý lỗi này. Đợt triển khai này đã khôi phục Engine theo cách đó.
-- API báo không kết nối DB: kiểm tra `docker compose ps`, cổng 5433 và DATABASE_URL trong `server/.env`.
-- Thiếu bảng: chạy `npm run db:migrate`.
-- Google báo `400 origin_mismatch`: mở Google Cloud → Clients → đúng client đang cấu hình, thêm `http://localhost` và `http://localhost:3000` vào **Authorized JavaScript origins**, rồi Save. Mở ứng dụng bằng `http://localhost:3000`, tải lại và thử đăng nhập. Không nhập hai origin này vào Redirect URIs; `127.0.0.1` là origin khác. Kiểm tra hai client ID frontend/backend giống nhau; frontend dùng strictPort để không tự nhảy cổng.
-- Đổi `.env` chưa có tác dụng: khởi động lại tiến trình tương ứng.
-- Đăng xuất khi mất mạng: UI báo chưa xác nhận đăng xuất; kết nối lại và bấm đăng xuất lần nữa.
-
-Trạng thái task và phạm vi chi tiết nằm trong `docs/BACKEND_AUTH_PLAN.md`. Xác minh email, quên mật khẩu, đồng bộ học tập và triển khai public là bước tiếp theo, chưa nằm trong phiên bản local này.
-
-**Tiến độ flashcard Kanji theo tài khoản (T8–T12)**
-
-Sau khi cập nhật source, chạy `npm run db:migrate`, dừng backend rồi chạy `npm --prefix server run db:generate` và khởi động lại backend. Không reset database.
-
-Mở Hán tự → Flashcard. Đã đăng nhập: Đã thuộc/Chưa thuộc được lưu sau mỗi lần đánh giá, mở lại trên cùng tài khoản sẽ lấy tiến độ từ server. Chỉ chuyển thẻ sau khi lưu thành công; lỗi thì giữ thẻ để thử lại. Hai nút mũi tên không thay đổi tiến độ. Học thử không ghi database và không tự chuyển vào tài khoản khi đăng nhập.
-
-API mới: `GET /api/progress/kanji`, `POST /api/progress/kanji` với `{ kanjiId, memorized, expectedUserId }`. Quyền sở hữu luôn lấy từ cookie session; expectedUserId chỉ chặn ghi nhầm khi đổi tài khoản ở tab khác. Cùng Kanji/tài khoản chỉ có một bản ghi; lần ghi thành công sau cùng quyết định trạng thái. Mở lại flashcard hoặc tải trang để lấy thay đổi từ thiết bị khác.
-
-Chi tiết rà soát localStorage, schema, API và nghiệm thu đợt tiến độ Hán tự: [KANJI_PROGRESS_PLAN.md](docs/KANJI_PROGRESS_PLAN.md). Ngôi sao đã được đồng bộ trong đợt Ôn tập; bài học Chủ động đã lưu theo tài khoản ở P01. Tiến độ học Chủ động và lộ trình riêng theo [FEATURE_BACKLOG.md](docs/FEATURE_BACKLOG.md). Khi thay catalog Kanji, cập nhật `server/src/kanji-ids.ts`; test kiểm tra danh sách này khớp frontend.
-
-**Bài học Chủ động theo tài khoản (P01/P02)**
-
-Mở `/ca-nhan/chu-dong`: tạo/đổi tên/xóa bài, nhập/sửa/xóa từ và dùng demo bằng giao diện hiện có. Khi đăng nhập, bài cùng mảng từ được lưu trong `vocab_lessons`; F5 hoặc đăng nhập lại cùng tài khoản vẫn đọc được. Guest giữ dữ liệu thiết bị riêng, không tự nhập vào tài khoản.
-
-API `/api/vocab/lessons` kiểm tra owner, chống tạo lặp và dùng version để tránh hai tab ghi đè nhau. Lỗi lưu giữ nguyên form. P02 đồng bộ từ/cách đọc/nghĩa đã sửa vào thẻ sao trong cùng transaction và giữ lịch/lịch sử. Xóa từ/bài giữ thẻ; nút ⭐ cạnh phát âm trên thẻ Ôn tập cho phép bỏ sao khi nguồn đã xóa. P02 không cần migration mới. Chưa lưu tiến độ flashcard/kết quả quiz Chủ động hoặc tích hợp AI Format. Schema, giới hạn, API và kiểm thử: [VOCAB_LESSONS.md](docs/VOCAB_LESSONS.md).
-
-**Kho ngữ pháp và bài tập (C03/C04)**
-
-Admin: `http://localhost:3002/admin/grammar`; trang học: `http://localhost:3000/ngu-phap`. Nhập tay hoặc JSON có xem trước, lưu nháp rồi xuất bản. Ba dạng bài tập chấm/lưu theo tài khoản bằng API; Gemini cần cấu hình key/model trong `server/.env`, chưa có key vẫn dùng Kiểm tra theo đáp án. Không tự tạo giáo trình mẫu. Xem [hướng dẫn ngữ pháp](docs/GRAMMAR.md) để nhập nội dung và cấu hình Gemini miễn phí.
+- [Task và trạng thái nghiệm thu](docs/FEATURE_BACKLOG.md), [điều hướng](docs/ROUTES.md).
+- [Kanji và nền nội dung](docs/CONTENT_PLATFORM.md), [admin Kanji](docs/ADMIN_KANJI.md).
+- [Admin Đọc hiểu và audio](docs/ADMIN_READING.md).
+- [Nhập giáo trình từ vựng](docs/HUONG_DAN_GIAO_TRINH.md), [thiết kế giáo trình/Review](docs/CURRICULUM.md).
+- [Ngữ pháp và ba dạng bài tập](docs/GRAMMAR.md).
+- [Phân tích câu tiếng Nhật, nguồn từ điển và Gemini](docs/SENTENCE_ANALYSIS.md).
+- [Ôn tập/SRS](docs/REVIEW.md), [bài học cá nhân](docs/VOCAB_LESSONS.md).
+- [XP và Xếp hạng Tổng XP/XP tháng](docs/LEADERBOARD.md).

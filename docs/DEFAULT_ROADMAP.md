@@ -8,7 +8,7 @@ Phạm vi triển khai và bằng chứng kiểm tra ngày 16/09/2026. Người 
 
 ## Phạm vi và giao diện
 
-Catalog cố định có mã `n5-v1`, khai báo trong `shared/default-roadmap.mjs`. Danh sách là 28 chữ N5 từ catalog hiện tại, ID `k-1` đến `k-28`; không đưa các chữ N4–N1 vào lộ trình N5, không tự bổ sung nguồn nội dung khác.
+Catalog cố định có mã `n5-v1`, khai báo trong `packages/shared/src/study/default-roadmap.mjs`. Danh sách là 28 chữ N5 từ catalog hiện tại, ID `k-1` đến `k-28`; không đưa các chữ N4–N1 vào lộ trình N5, không tự bổ sung nguồn nội dung khác.
 
 Giữ thứ tự và danh sách của phiên bản `n5-v1` để không làm lệch ngày đã học. Mở rộng sang bộ N5 đầy đủ hoặc cấp khác cần chốt nguồn và cách chuyển phiên bản riêng.
 

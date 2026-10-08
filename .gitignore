@@ -21,6 +21,8 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
-server/.venv-tts/
-server/storage/
+apps/api/.venv-tts/
+apps/api/storage/
 __pycache__/
+
+.artifacts/

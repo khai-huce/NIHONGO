@@ -26,7 +26,7 @@ Một bảng `personal_roadmaps`: ID UUID, chủ tài khoản, tên, văn bản 
 - `POST /api/roadmaps/delete` nhận `{id, expectedUserId, version}`. Phiên bản cũ bị chặn; xóa lại ID đã xóa được coi là thành công. Không tác động sao, lịch sử Ôn tập hoặc tiến độ Kanji.
 - Giữ xác thực session/Origin và giới hạn JSON 16 KiB. Schema strict từ chối trường giả mạo chủ sở hữu, danh sách chữ dẫn xuất hoặc tiến độ. Hạn mức 120 request/phút; giới hạn số lộ trình được kiểm tra trong khóa transaction theo tài khoản.
 
-`shared/roadmap.mjs` là quy tắc nhận diện và danh sách hỗ trợ dùng chung FE/BE; test đối chiếu với `src/data/kanjiData.ts`. Chưa thêm nguồn nội dung, dịch vụ AI hoặc thư viện mới. Khi đóng gói backend cần giữ thư mục `shared` như P05.
+`packages/shared/src/study/roadmap.mjs` là quy tắc nhận diện và danh sách hỗ trợ dùng chung FE/BE; test đối chiếu với `packages/shared/fixtures/legacy-kanji.ts`. Chưa thêm nguồn nội dung, dịch vụ AI hoặc thư viện mới. Khi đóng gói backend cần giữ package `packages/shared` và cài dependency bằng npm workspace ở gốc như P05.
 
 ## Dữ liệu khách
 

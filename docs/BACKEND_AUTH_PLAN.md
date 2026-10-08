@@ -34,17 +34,17 @@ Người dùng đã chọn:
 
 **Căn cứ từ code hiện tại**
 
-- `src/components/AuthModal.tsx`: cả đăng nhập email và Google đều dùng `setTimeout` để tạo người dùng giả; Google đang tự gán Premium.
-- `src/App.tsx`: đọc và ghi tài khoản bằng khóa `nhai_kanji_user`; đăng xuất chỉ xóa trạng thái phía frontend.
-- `src/components/TopHeader.tsx`: đã có giao diện người dùng và nút đăng xuất, có thể nối vào API mới.
-- `src/types/index.ts`: đã có `UserProfile`; cần giữ định dạng phản hồi tương thích với giao diện.
+- `apps/web/src/features/auth/components/AuthModal.tsx`: cả đăng nhập email và Google đều dùng `setTimeout` để tạo người dùng giả; Google đang tự gán Premium.
+- `apps/web/src/app/App.tsx`: đọc và ghi tài khoản bằng khóa `nhai_kanji_user`; đăng xuất chỉ xóa trạng thái phía frontend.
+- `apps/web/src/app/layout/TopHeader.tsx`: đã có giao diện người dùng và nút đăng xuất, có thể nối vào API mới.
+- `packages/shared/src/contracts/core.ts`: đã có `UserProfile`; cần giữ định dạng phản hồi tương thích với giao diện.
 - Nội dung học nằm ở file TypeScript; nhiều dữ liệu học khác lưu trong localStorage theo trình duyệt, chưa tách theo tài khoản.
 - Node.js 22.20.0 và npm 10.9.3 có trên máy. Có Docker CLI nhưng lần kiểm tra này không kết nối được Docker Engine; chưa tìm thấy `psql` trên PATH. Điều này chưa chứng minh máy không có PostgreSQL.
 - Đang có thay đổi chưa commit trong frontend; khi triển khai phải đọc và giữ các thay đổi đó.
 
 **Thiết kế vừa đủ cho đợt này**
 
-- Giữ frontend trong `src/`; thêm `server/` có package.json và tsconfig riêng. Dùng npm như hiện tại.
+- Giữ frontend trong `src/`; thêm `apps/api/` có package.json và tsconfig riêng. Dùng npm như hiện tại.
 - Backend: Express + TypeScript, Prisma cho dữ liệu tài khoản, PostgreSQL làm nơi lưu dữ liệu.
 - Session: `express-session` + `connect-pg-simple`, dùng cùng PostgreSQL. Cookie chứa mã phiên; thông tin phiên ở server. Session chỉ giữ định danh người dùng, hồ sơ và Premium đọc từ database.
 - Băm mật khẩu bằng Argon2id; Zod kiểm tra đầu vào; giới hạn số lần gọi các API đăng nhập/đăng ký và middleware xử lý lỗi chung.

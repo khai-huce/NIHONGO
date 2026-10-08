@@ -11,10 +11,10 @@ Hoàn thành phần triển khai ngày 16/09/2026. Cài đặt tiếp tục thu�
 
 ## Triển khai
 
-- `src/utils/learning-settings.ts`: giá trị mặc định, danh sách font và chuẩn hóa cài đặt cũ/thiếu/sai. Default Itim cũ chuyển sang Zen Maru Gothic để giữ nét chữ Nhật cũ; UD Digi Kyokasho chuyển Klee One theo lựa chọn đã duyệt. Tốc độ chung 0.6–1.3, bước 0.1.
-- `src/hooks/useLearningSettings.tsx`, `App.tsx`: context nhẹ, lưu thiết bị, CSS variable cho cả modal, đặt tốc độ TTS mặc định, thông báo khi không lưu được hoặc phát âm lỗi.
-- `src/index.css`, `index.html`, `SettingsModal.tsx`: nối font, furigana và giữ UI cài đặt; thêm tên truy cập cho đóng/range, trạng thái lựa chọn.
-- `src/utils/speech.ts`: dùng đúng giọng `ja`, chờ danh sách giọng rỗng tối đa 1 giây; báo lỗi rõ khi thiếu giọng/API hoặc phát thất bại. Mỗi request có hàm hủy riêng; bỏ callback và timer cũ khi thay request/rời màn. Giữ khoảng trắng/dấu câu của nội dung đọc.
+- `apps/web/src/features/settings/lib/learning-settings.ts`: giá trị mặc định, danh sách font và chuẩn hóa cài đặt cũ/thiếu/sai. Default Itim cũ chuyển sang Zen Maru Gothic để giữ nét chữ Nhật cũ; UD Digi Kyokasho chuyển Klee One theo lựa chọn đã duyệt. Tốc độ chung 0.6–1.3, bước 0.1.
+- `apps/web/src/features/settings/hooks/useLearningSettings.tsx`, `App.tsx`: context nhẹ, lưu thiết bị, CSS variable cho cả modal, đặt tốc độ TTS mặc định, thông báo khi không lưu được hoặc phát âm lỗi.
+- `packages/client/styles/base.css`, `index.html`, `SettingsModal.tsx`: nối font, furigana và giữ UI cài đặt; thêm tên truy cập cho đóng/range, trạng thái lựa chọn.
+- `apps/web/src/shared/audio/speech.ts`: dùng đúng giọng `ja`, chờ danh sách giọng rỗng tối đa 1 giây; báo lỗi rõ khi thiếu giọng/API hoặc phát thất bại. Mỗi request có hàm hủy riêng; bỏ callback và timer cũ khi thay request/rời màn. Giữ khoảng trắng/dấu câu của nội dung đọc.
 - Đọc hiểu/Shadowing dùng helper chung, dọn request/timer và dùng tốc độ hiện tại khi phát lại. Bỏ nhánh phát giả 2.5 giây của Shadowing khi thiếu API. Các màn Chủ động/giáo trình nhận font cho từ/cách đọc/đáp án Nhật; cleanup Chủ động hủy cả request đang chờ giọng.
 
 Không thay dữ liệu học, tiến độ, lịch ôn, ⭐ hoặc route. Timeline ước lượng Đọc hiểu và player/transcript mẫu Shadowing vẫn là phần còn lại của **R02/S01**, không được xem là media thật đã tích hợp.

@@ -24,7 +24,7 @@ Không có tiến độ flashcard Kanji cũ được lưu bền để nhập. Kh
 - Session thiếu/hết hạn hoặc tài khoản đã xóa trả 401. Origin/JSON kiểm tra như API auth. Lỗi hạ tầng trả 503 và không lộ chi tiết.
 - Lần đánh giá ghi thành công sau cùng quyết định trạng thái. Thử lại cùng đánh giá không tạo thêm dòng. Không có hàng đợi offline hoặc cập nhật trực tiếp giữa tab; mở lại flashcard/tải trang để lấy dữ liệu mới.
 
-Catalog backend: `server/src/kanji-ids.ts`. Khi thêm/bỏ Kanji trong `src/data/kanjiData.ts`, cập nhật danh sách ID này cùng thay đổi; kiểm thử tự động đối chiếu hai danh sách.
+Catalog backend: `apps/api/src/modules/content/kanji-ids.ts`. Khi thêm/bỏ Kanji trong `packages/shared/fixtures/legacy-kanji.ts`, cập nhật danh sách ID này cùng thay đổi; kiểm thử tự động đối chiếu hai danh sách.
 
 ## Giao diện (T11)
 

@@ -1,0 +1,16 @@
+{
+  "revision": "9ebca4589565c696e7c39e089e2e928ad65f678c",
+  "sourceId": "kanjium-pitch-9ebca458-v1",
+  "files": [
+    {
+      "name": "accents.txt",
+      "path": "data/source_files/raw/accents.txt",
+      "sha256": "8bd0dd127dab32ceec94cb03ab1ba6b68858ea73421dfa1731af2f373deb4f20"
+    },
+    {
+      "name": "conjugations.txt",
+      "path": "data/source_files/conjugations.txt",
+      "sha256": "0c2ab97af59032c3c7a1062502869554bc038ddfd7ea83d7765de6339a98ac6e"
+    }
+  ]
+}

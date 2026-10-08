@@ -49,7 +49,7 @@ Khung bản nháp tối thiểu, chưa đủ xuất bản:
 
 ## Cấu hình Gemini mức miễn phí
 
-Chỉ cấu hình trong **server/.env**, không đặt key vào frontend, `VITE_*`, file JSON giáo trình hoặc chat:
+Chỉ cấu hình trong **apps/api/.env**, không đặt key vào frontend, `VITE_*`, file JSON giáo trình hoặc chat:
 
 ```dotenv
 GEMINI_API_KEY=<key-cua-ban>
@@ -60,7 +60,7 @@ GEMINI_GLOBAL_DAILY_LIMIT=100
 
 Lấy key từ [Google AI Studio](https://aistudio.google.com/api-keys) của dự án **chưa bật Cloud Billing**. Model phải khả dụng ở dự án và thuộc mức miễn phí; đối chiếu [bảng giá chính thức](https://ai.google.dev/gemini-api/docs/pricing). Ứng dụng không bật thanh toán và không đổi sang model khác khi lỗi, nhưng không thể biến key thuộc dự án trả phí thành key miễn phí. Khởi động lại API sau khi lưu cấu hình.
 
-Hạn mức trong ứng dụng là số lần gọi mới trong 24 giờ, không phải hạn mức Google cam kết; Google có thể giới hạn thấp hơn. Gửi lại cùng request không gọi lại nếu đã có kết quả. Lượt lỗi đã gửi tới nhà cung cấp vẫn chiếm hạn mức; không tự retry mạng để tránh gọi ngoài ý muốn. API key/model để trống thì AI báo chưa cấu hình, Kiểm tra vẫn hoạt động.
+Hạn mức trong ứng dụng là số lần gọi mới trong 24 giờ gần nhất, không phải hạn mức Google cam kết; Google có thể giới hạn thấp hơn. Từ A03 ngày 04/10/2026, `GEMINI_DAILY_LIMIT` (mặc định 20/tài khoản) và `GEMINI_GLOBAL_DAILY_LIMIT` (mặc định 100/toàn ứng dụng) **dùng chung giữa chấm bài C03 và phân tích câu A03**. Server khóa và đặt chỗ trong cùng transaction trước khi gọi provider, nên hai chức năng hoặc hai tab không có hạn mức riêng để cộng thêm. Gửi lại cùng request không gọi lại nếu đã có kết quả; cache A03 riêng theo tài khoản cũng không gọi/tính lượt mới. Lượt lỗi đã gửi tới nhà cung cấp vẫn chiếm hạn mức; không tự retry mạng. API key/model để trống thì AI báo chưa cấu hình, Kiểm tra vẫn hoạt động.
 
 Chỉ mẫu ngữ pháp, đề, đáp án tham chiếu và bản dịch người học được gửi sang Google, không gửi email/cookie/ID tài khoản. Dữ liệu mức miễn phí có thể được Google dùng để cải thiện sản phẩm theo [điều khoản Gemini](https://ai.google.dev/gemini-api/terms). Nút AI là thao tác chủ động. Phản hồi JSON được kiểm tra schema và hiển thị dưới dạng text. [Tham chiếu API](https://ai.google.dev/api/generate-content).
 
@@ -85,8 +85,10 @@ Admin: `/api/admin/grammar/courses`: list/detail/create/patch, `/preview`, `/:id
 
 Xuất bản và chấm bài dùng lock cùng giáo trình. Hai tab cùng ghi tiến độ cũ chỉ một tab thành công. Gọi Gemini nằm ngoài transaction; trả về phải kiểm tra lại phiên, phiên bản nội dung và tiến độ rồi mới lưu. Cache/hạn mức nằm ở DB nên giữ khi khởi động lại API.
 
-Thẻ legacy dùng sourceId dạng chữ cũ được giữ nguyên, không tự gộp sang UUID mới. C03 dùng `grammar:<UUID>` với snapshot đọc từ DB. Phân tích câu mẫu/Bảng chia thể trên trang đầu thuộc A03/phạm vi cũ, chưa được thay bằng AI trong C03.
+Thẻ legacy dùng sourceId dạng chữ cũ được giữ nguyên, không tự gộp sang UUID mới. C03 dùng `grammar:<UUID>` với snapshot đọc từ DB. [A03 — Phân tích câu](SENTENCE_ANALYSIS.md) triển khai riêng ngày 04/10/2026: kính lúp dùng Kuromoji ở backend cho cả khách, Gemini cần đăng nhập và không yêu cầu Premium. Chỉ mẫu AI khớp duy nhất với mẫu ngữ pháp đang công khai mới có link/sao theo UUID; phân tích không ghi điểm, tiến độ hoặc XP. Bảng chia thể giữ nguyên, ngoài lượt A03 này.
 
 ## Nghiệm thu
 
 Kết quả và giới hạn nghiệm thu được ghi tại `FEATURE_BACKLOG.md`. Nội dung test chỉ dùng database test và được dọn theo ID riêng; kho ngữ pháp thật chưa được tự nhập/xuất bản.
+
+Ngày 04/10/2026, A03 đã nghiệm thu hai câu phân tích với Gemini thật và giao diện desktop/mobile. Kết nối provider này được dùng chung với C03, nhưng chưa có lượt nghiệm thu trực tiếp Gemini chấm bài C04; không suy kết quả nghiệm thu chấm điểm từ việc phân tích câu đã chạy thành công.

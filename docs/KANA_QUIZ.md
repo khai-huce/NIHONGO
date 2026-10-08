@@ -16,7 +16,7 @@ Khi câu cuối lưu lỗi, giữ nguyên 104 câu trả lời và UUID để b�
 
 ## Dữ liệu và API
 
-Migration bổ sung `server/prisma/migrations/202609160001_kana_quiz_results/migration.sql`, đã áp dụng cho DB local và DB test, không reset DB hoặc đổi dữ liệu cũ.
+Migration bổ sung `apps/api/prisma/migrations/202609160001_kana_quiz_results/migration.sql`, đã áp dụng cho DB local và DB test, không reset DB hoặc đổi dữ liệu cũ.
 
 Một bảng `kana_quiz_results` lưu:
 
@@ -43,7 +43,7 @@ Có index `(user_id, completed_at)`. Xóa tài khoản xóa các kết quả c�
 - Sai tài khoản nhận `409 ACCOUNT_CHANGED`; thiếu phiên nhận 401. Input sai bị từ chối trước khi ghi; lô không đủ/không đúng catalog nhận 400. Ghi lỗi rollback, không lưu một phần.
 - Body tối đa **32 KiB** riêng route này; giới hạn chung 16 KiB vẫn giữ cho các API còn lại không có cấu hình riêng. Rate limit 120 request/phút; response `Cache-Control: no-store`.
 
-Quy tắc dùng chung nằm trong `shared/kana-quiz.mjs` và khai báo kiểu `shared/kana-quiz.d.mts`. FE nối qua `src/hooks/useKanaQuiz.ts`, `src/pages/AlphabetPage.tsx`; backend qua `server/src/kana-results.routes.ts`.
+Quy tắc dùng chung nằm trong `packages/shared/src/study/kana-quiz.mjs` và khai báo kiểu `packages/shared/src/study/kana-quiz.d.mts`. FE nối qua `apps/web/src/features/kana/hooks/useKanaQuiz.ts`, `apps/web/src/features/kana/pages/AlphabetPage.tsx`; backend qua `apps/api/src/modules/kana/kana-results.routes.ts`.
 
 ## Bằng chứng nghiệm thu
 
@@ -60,8 +60,8 @@ Quy tắc dùng chung nằm trong `shared/kana-quiz.mjs` và khai báo kiểu `s
 Lệnh kiểm tra liên quan:
 
 ```powershell
-node --test tests/kana-quiz.test.mjs
-npm --prefix server test -- tests/kana-results.test.ts
+node --test packages/shared/tests/kana-quiz.test.mjs
+npm --workspace @nihongo/api test -- tests/kana-results.test.ts
 npm run build:server
 npm run build
 ```

@@ -80,7 +80,7 @@ Từ thư mục gốc dự án:
 node docs/data/tu-vung-n5/build.mjs
 ```
 
-Sau đó, từ thư mục `server`:
+Sau đó, từ thư mục `apps/api`:
 
 ```powershell
 node --import tsx scripts/validate-n5-curriculum.ts

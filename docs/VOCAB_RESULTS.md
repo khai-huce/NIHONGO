@@ -26,7 +26,7 @@ Khách chỉ có kết quả trong màn đang mở. Không nhập dữ liệu kh
 
 Không dùng chữ gốc thay cho cách đọc còn thiếu. Trường chỉ có khoảng trắng hoặc dấu câu không được coi là dữ liệu hợp lệ. Các đáp án nhiễu Cách đọc dùng kana; không còn trộn chữ Kanji từ danh sách dự phòng vào câu hỏi chọn kana. Bài ít từ vẫn có bốn lựa chọn khác nhau bằng tập đáp án phụ nhỏ có sẵn; không nhập những từ đó vào bài học.
 
-Quy tắc thuần dùng chung ở `shared/vocab-study.mjs` cho FE và Express. Nhồi nhét nhận kana/katakana/romaji được bộ chuyển hiện có hỗ trợ, xử lý n/nn và phụ âm kép; giữ phân biệt dấu đục và kana nhỏ. Hán Việt nhận khác biệt hoa thường, khoảng trắng và dấu tiếng Việt. Đáp án rỗng/ký hiệu không thể thành câu đúng. Đây là bộ chuyển romaji nhỏ trong dự án, không phải một IME đầy đủ.
+Quy tắc thuần dùng chung ở `packages/shared/src/study/vocab-study.mjs` cho FE và Express. Nhồi nhét nhận kana/katakana/romaji được bộ chuyển hiện có hỗ trợ, xử lý n/nn và phụ âm kép; giữ phân biệt dấu đục và kana nhỏ. Hán Việt nhận khác biệt hoa thường, khoảng trắng và dấu tiếng Việt. Đáp án rỗng/ký hiệu không thể thành câu đúng. Đây là bộ chuyển romaji nhỏ trong dự án, không phải một IME đầy đủ.
 
 ## Lưu trữ và API
 
@@ -38,7 +38,7 @@ Migration cộng thêm `202609140001_vocab_study_results` tạo **một bảng**
 - Server kiểm tra đúng tập từ hợp lệ, mỗi ID đúng một lần, không thiếu/thừa/ngoài bài, và version nội dung còn đúng. Giới hạn 500 câu, 500 ký tự mỗi đáp án, body riêng 512 KiB; giữ giới hạn 16 KiB của API chung và auth. Có rate limit 120 request/phút.
 - Dùng transaction và khóa tài khoản chung với bài học. Cùng UUID và cùng câu trả lời trả bản cũ ngay cả khi nguồn đã sửa/xóa sau lần lưu thành công; cùng UUID nhưng nội dung hoặc tài khoản khác trả 409. Điểm lưu do server tính từ nội dung bài, không do FE báo tổng.
 
-Không tạo bảng lượt đang làm, dịch vụ nền, hàng đợi offline hoặc dependencies mới. Hai tiến trình dùng file thuần `shared/vocab-study.mjs`; giữ thư mục `shared` cùng repository khi chạy `server/dist/index.js`.
+Không tạo bảng lượt đang làm, dịch vụ nền, hàng đợi offline hoặc dependencies mới. Hai tiến trình dùng file thuần `packages/shared/src/study/vocab-study.mjs`; giữ `packages/shared` cùng repository và cài dependency bằng npm workspace ở gốc trước khi chạy `apps/api/dist/index.js`.
 
 Local đã generate Prisma Client và chạy `npm run db:migrate` bằng migrate deploy. Không reset hoặc xóa dữ liệu người dùng để áp dụng migration.
 

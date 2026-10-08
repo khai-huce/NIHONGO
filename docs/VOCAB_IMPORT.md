@@ -56,7 +56,7 @@ Nút **AI Format** giữ nguyên trên trang và thông báo chưa kết nối d
 ## Kiểm tra
 
 - `npm run test:import`: parser, kiểu/trường/aliases, JSON hỏng, số dòng, ngoặc kép, dấu ngăn, từ trùng, nghĩa khác, giới hạn.
-- `npm --prefix server test -- tests/lessons.import.test.ts`: transaction, xác thực/account isolation, batch lỗi, import lặp, hai request đồng thời, phiên bản cũ, UUID, giới hạn, rollback, dữ liệu ôn không đổi.
+- `npm --workspace @nihongo/api test -- tests/lessons.import.test.ts`: transaction, xác thực/account isolation, batch lỗi, import lặp, hai request đồng thời, phiên bản cũ, UUID, giới hạn, rollback, dữ liệu ôn không đổi.
 - `npm run test:server`, `npm run test:review`, `npm run test:routes`, `npm run build:server`, `npm run build` cho kiểm tra tích hợp.
 
 P04/P05 vẫn là task riêng: chưa lưu trạng thái Đã biết/Chưa biết hoặc kết quả quiz/gõ.

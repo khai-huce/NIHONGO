@@ -45,18 +45,18 @@ Tất cả endpoint yêu cầu phiên đăng nhập. POST yêu cầu Origin đú
 
 ## Cài đặt và nghiệm thu
 
-Migration: `server/prisma/migrations/202609090001_vocab_lessons/migration.sql`. Đã áp dụng vào DB local bằng migrate deploy, không reset DB. Khi lấy code ở máy khác: dừng backend, chạy `npm run db:migrate`, `npm --prefix server run db:generate`, rồi khởi động lại backend.
+Migration: `apps/api/prisma/migrations/202609090001_vocab_lessons/migration.sql`. Đã áp dụng vào DB local bằng migrate deploy, không reset DB. Khi lấy code ở máy khác: dừng backend, chạy `npm run db:migrate`, `npm --workspace @nihongo/api run db:generate`, rồi khởi động lại backend.
 
 Kiểm thử ngày 09/09/2026:
 
 - Frontend/backend build thành công. Vite vẫn có cảnh báo kích thước bundle trên 500 kB đã có từ trước.
-- 9 test API bài học với PostgreSQL thật: phiên/Origin, dữ liệu qua restart/đăng nhập lại, tạo lặp, owner/trang cũ, hai tab sửa/xóa, validation toàn batch, giới hạn body, lỗi DB/thử lại, giữ sao/lịch sử khi sửa/xóa bài. File: `server/tests/lessons.test.ts`.
+- 9 test API bài học với PostgreSQL thật: phiên/Origin, dữ liệu qua restart/đăng nhập lại, tạo lặp, owner/trang cũ, hai tab sửa/xóa, validation toàn batch, giới hạn body, lỗi DB/thử lại, giữ sao/lịch sử khi sửa/xóa bài. File: `apps/api/tests/lessons.test.ts`.
 - 40 test auth/progress/review và 5 test thống kê đã qua; 2 test review FE và 2 test route đã qua. Test chạy trên `nihongo_test`, không dọn DB người dùng.
 - Trình duyệt bằng tài khoản kiểm thử: tạo, nhập JSON hai từ, đổi tên, F5; ngắt API khi sửa từ thấy lỗi và form còn nội dung; sau phục hồi lưu được, các màn Flashcard/Trắc nghiệm/Nhồi nhét mở đúng bộ từ. Demo hiển thị đúng 10 từ.
 - Xóa một từ demo cập nhật 10 → 9; đăng nhập lại giữ đúng bài/9 từ; xóa bài rồi F5 vẫn trống. Tạo riêng một bài khách, đăng nhập không nhận bài khách vào tài khoản, đăng xuất bài khách vẫn còn. Đã dọn cả hai bài QA vừa tạo; không xóa bài có sẵn của người dùng.
 - Đối chiếu source: toàn bộ 119 thuộc tính className tĩnh của `ChuDongPage.tsx` giữ nguyên; không sửa CSS hoặc bố cục màn học. Đã xem trực tiếp UI trước/sau và trạng thái lỗi trên trình duyệt.
 
-Lệnh kiểm thử: `npm run test:server`, hoặc riêng bài học `npm --prefix server test -- tests/lessons.test.ts`; `npm run test:review`; `npm run test:routes`; `npm run build:server`; `npm run build`.
+Lệnh kiểm thử: `npm run test:server`, hoặc riêng bài học `npm --workspace @nihongo/api test -- tests/lessons.test.ts`; `npm run test:review`; `npm run test:routes`; `npm run build:server`; `npm run build`.
 
 Nghiệm thu P02 ngày 10/09/2026:
 

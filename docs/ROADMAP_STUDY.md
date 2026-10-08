@@ -31,7 +31,7 @@ GET/CRUD lộ trình trả thêm ba trường trên (`completedDays`, `progressV
 
 Hai API giữ session/Origin, JSON strict, body 16 KiB và hạn mức có sẵn. Dùng chung khóa transaction theo tài khoản với tạo/sửa/xóa P06 để chặn xung đột mục tiêu. Đổi tên không làm mất lượt học; đổi mục tiêu sau bắt đầu bị chặn. Gửi lại đánh giá với phiên bản cũ trả 409 `ROADMAP_PROGRESS_CHANGED`, không áp dụng lại. Xóa lộ trình xóa tiến độ riêng của lộ trình đó, giữ trạng thái Kanji và SRS hiện có.
 
-`shared/roadmap.mjs` chia ngày; `shared/roadmap-study.mjs` tính tiến độ dùng chung FE/BE. Không thêm thư viện.
+`packages/shared/src/study/roadmap.mjs` chia ngày; `packages/shared/src/study/roadmap-study.mjs` tính tiến độ dùng chung FE/BE. Không thêm thư viện.
 
 ## Khách và giao diện
 
