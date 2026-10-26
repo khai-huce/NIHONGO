@@ -27,6 +27,8 @@ import { sentenceAnalysisRoutes } from './modules/sentence-analysis/sentence-ana
 import { pitchAccentRoutes } from './modules/pitch-accent/pitch.routes.js';
 import { shadowingRoutes } from './modules/shadowing/shadowing.routes.js';
 import { shadowingAiRoutes } from './modules/shadowing/shadowing-ai.routes.js';
+import { jlptRoutes } from './modules/jlpt/jlpt.routes.js';
+import { jlptStudyRoutes } from './modules/jlpt/jlpt-study.routes.js';
 
 export function createApp(config: Config) {
   const db = new PrismaClient({ datasources: { db: { url: config.DATABASE_URL } } });
@@ -63,6 +65,10 @@ export function createApp(config: Config) {
   app.use('/api/admin/shadowing/videos', middleware, shadowing.admin);
   app.use('/api/shadowing/ai', middleware, shadowingAi.router);
   app.use('/api/admin/content', middleware, adminContentRoutes(db));
+  const jlpt = jlptRoutes(db);
+  app.use('/api/jlpt', jlpt.public);
+  app.use('/api/jlpt/study', middleware, jlptStudyRoutes(db));
+  app.use('/api/admin/jlpt', middleware, jlpt.admin);
   const reading = readingRoutes(db, { python: config.TTS_PYTHON, storageDir: config.TTS_STORAGE_DIR });
   app.use('/api/reading/articles', middleware, reading.public);
   app.use('/api/admin/reading/articles', middleware, reading.admin);

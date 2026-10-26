@@ -25,6 +25,7 @@ export function createAdminRequest(userId: string, options: {
     const requestGeneration = generation;
     const requestCurrent = () => current() && requestGeneration === generation;
     if (!path.startsWith('/admin/content/') && !/^\/admin\/(?:reading\/articles|curriculum\/courses|grammar\/courses|shadowing\/videos)(?:\/|$)/.test(path)
+      && !/^\/admin\/jlpt\/(?:roadmaps|resources)(?:\/|\?|$)/.test(path)
       && !/^\/shadowing\/ai(?:\/[a-f0-9-]{36})?$/.test(path)) throw new Error('Unsupported admin endpoint');
     const method = input.method ?? (input.body ? 'POST' : 'GET');
     const controller = new AbortController();
@@ -43,7 +44,7 @@ export function createAdminRequest(userId: string, options: {
         throw new AdminApiError(response.status, data?.error?.code ?? 'SERVER_ERROR', data?.error?.message ?? 'Máy chủ chưa sẵn sàng. Vui lòng thử lại.', data?.error?.issues);
       }
       if (!data) throw new AdminApiError(502, 'INVALID_RESPONSE', 'Phản hồi máy chủ không hợp lệ.');
-      if ((path.startsWith('/admin/shadowing/videos') || path.startsWith('/shadowing/ai')) && data.userId !== userId) {
+      if ((path.startsWith('/admin/shadowing/videos') || path.startsWith('/shadowing/ai') || path.startsWith('/admin/jlpt/')) && data.userId !== userId) {
         options.onAccessDenied?.();
         throw changed();
       }

@@ -122,7 +122,7 @@ export const App: React.FC = () => {
             <Route path={pagePaths.accent} element={<AccentPage />} />
             <Route path={pagePaths.leaderboard} element={<LeaderboardPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} />} />
             <Route path={pagePaths.write} element={<CatalogGate><WritePage /></CatalogGate>} />
-            <Route path={pagePaths['lifetime-jlpt']} element={<JlptRoadmapPage />} />
+            <Route path={pagePaths['lifetime-jlpt']} element={<JlptRoadmapPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} />} />
             <Route path={pagePaths['lifetime-doc-hieu']} element={<DocHieuPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={`${pagePaths['lifetime-doc-hieu']}/:articleId`} element={<DocHieuPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={`${pagePaths['lifetime-shadowing']}/*`} element={<ShadowingPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} />} />

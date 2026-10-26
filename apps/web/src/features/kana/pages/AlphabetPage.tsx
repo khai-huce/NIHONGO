@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Volume2, 
   RotateCcw, 
@@ -16,7 +17,13 @@ interface AlphabetPageProps { userId: string | null; authBusy: boolean; }
 const kanaById = new Map(KANA_LIST.map(kana => [kana.id, kana]));
 
 export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) => {
-  const [activeTab, setActiveTab] = useState<'hiragana' | 'katakana'>('hiragana');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('script') === 'katakana' ? 'katakana' : 'hiragana';
+  const setActiveTab = (script: 'hiragana' | 'katakana') => {
+    const next = new URLSearchParams(searchParams);
+    next.set('script', script);
+    setSearchParams(next, { replace: true });
+  };
   const [selectedKana, setSelectedKana] = useState<KanaTileData | null>(null);
   const quiz = useKanaQuiz(userId, authBusy);
   const { mode: selectedQuizMode, index: currentQuestionIdx, started: isQuizStarted } = quiz;

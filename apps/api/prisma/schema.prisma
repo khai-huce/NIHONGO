@@ -41,6 +41,9 @@ model User {
   shadowingGrades ShadowingGrade[]
   shadowingAttempts ShadowingAttempt[]
   shadowingAiRequests ShadowingAiRequest[]
+  jlptEnrollments JlptEnrollment[]
+  jlptProgress JlptSessionProgress[]
+  jlptAttempts JlptAttempt[]
 
   @@map("users")
 }
@@ -118,6 +121,7 @@ model ReviewEvent {
 }
 
 model ReadingArticle {
+  jlptResources JlptResource[]
   id String @id @db.Uuid
   userId String @map("user_id") @db.Uuid
   scope String @default("personal") @db.VarChar(16)
@@ -260,6 +264,8 @@ model KanaQuizResult {
 }
 
 model ContentSource {
+  jlptDraftRoadmaps JlptRoadmap[] @relation("JlptDraftSource")
+  jlptPublishedRoadmaps JlptRoadmap[] @relation("JlptPublishedSource")
   id String @id @db.VarChar(64)
   name String @db.VarChar(200)
   url String
@@ -310,6 +316,7 @@ model PitchAccentEntry {
 }
 
 model KanjiContent {
+  jlptResources JlptResource[]
   id String @id @db.VarChar(32)
   character String @unique @db.VarChar(8)
   level String @db.VarChar(2)
@@ -401,6 +408,7 @@ model CurriculumTopic {
 }
 
 model CurriculumLesson {
+  jlptResources JlptResource[]
   id String @id @db.Uuid
   courseId String @map("course_id") @db.Uuid
   topicId String @map("topic_id") @db.Uuid
@@ -535,6 +543,7 @@ model GrammarLesson {
 }
 
 model GrammarPattern {
+  jlptResources JlptResource[]
   id String @id @db.Uuid
   lessonId String @map("lesson_id") @db.Uuid
   content Json @default("{}")
@@ -618,6 +627,7 @@ model GrammarAiRequest {
 }
 
 model ShadowingVideo {
+  jlptResources JlptResource[]
   id String @id @db.Uuid
   ownerId String? @map("owner_id") @db.Uuid
   scope String @db.VarChar(16)
@@ -640,6 +650,119 @@ model ShadowingVideo {
   @@index([ownerId, archivedAt, createdAt])
   @@index([scope, archivedAt, publishedVersion])
   @@map("shadowing_videos")
+}
+
+// J01: catalog identities are retained for future account progress. No study state here.
+model JlptRoadmap {
+  id String @id @db.Uuid
+  level String @unique @db.VarChar(2)
+  version Int @default(0)
+  draft Json
+  published Json?
+  sourceId String? @map("source_id") @db.VarChar(64)
+  publishedSourceId String? @map("published_source_id") @db.VarChar(64)
+  publishedVersion Int? @map("published_version")
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  source ContentSource? @relation("JlptDraftSource", fields: [sourceId], references: [id], onDelete: Restrict)
+  publishedSource ContentSource? @relation("JlptPublishedSource", fields: [publishedSourceId], references: [id], onDelete: Restrict)
+  sessions JlptSession[]
+  enrollments JlptEnrollment[]
+  attempts JlptAttempt[]
+  @@map("jlpt_roadmaps")
+}
+
+model JlptSession {
+  id String @id @db.Uuid
+  roadmapId String @map("roadmap_id") @db.Uuid
+  draft Json?
+  published Json?
+  roadmap JlptRoadmap @relation(fields: [roadmapId], references: [id], onDelete: Restrict)
+  resources JlptResource[]
+  progress JlptSessionProgress[]
+  attempts JlptAttempt[]
+  lastEnrollments JlptEnrollment[]
+  @@index([roadmapId])
+  @@map("jlpt_sessions")
+}
+
+model JlptEnrollment {
+  userId String @map("user_id") @db.Uuid
+  roadmapId String @map("roadmap_id") @db.Uuid
+  lastSessionId String? @map("last_session_id") @db.Uuid
+  startedAt DateTime @default(now()) @map("started_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmap JlptRoadmap @relation(fields: [roadmapId], references: [id], onDelete: Restrict)
+  lastSession JlptSession? @relation(fields: [lastSessionId], references: [id], onDelete: Restrict)
+  @@id([userId, roadmapId])
+  @@map("jlpt_enrollments")
+}
+
+model JlptSessionProgress {
+  userId String @map("user_id") @db.Uuid
+  sessionId String @map("session_id") @db.Uuid
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  bestScore Float @map("best_score")
+  attempts Int @default(0)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session JlptSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  @@id([userId, sessionId])
+  @@map("jlpt_session_progress")
+}
+
+model JlptAttempt {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  roadmapId String @map("roadmap_id") @db.Uuid
+  sessionId String @map("session_id") @db.Uuid
+  sessionTitle String @map("session_title") @db.VarChar(150)
+  level String @db.VarChar(2)
+  publishedVersion Int @map("published_version")
+  version Int @default(0)
+  passPercent Int @map("pass_percent")
+  questions Json
+  answers Json @default("{}")
+  startedAt DateTime @default(now()) @map("started_at") @db.Timestamptz(3)
+  submittedAt DateTime? @map("submitted_at") @db.Timestamptz(3)
+  correctCount Int? @map("correct_count")
+  score Float?
+  passed Boolean?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmap JlptRoadmap @relation(fields: [roadmapId], references: [id], onDelete: Restrict)
+  session JlptSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  @@index([userId, roadmapId, submittedAt])
+  @@index([userId, sessionId, startedAt])
+  @@map("jlpt_attempts")
+}
+
+model JlptResource {
+  id String @id @db.Uuid
+  sessionId String @map("session_id") @db.Uuid
+  kind String @db.VarChar(16)
+  kanjiId String? @map("kanji_id") @db.VarChar(32)
+  vocabularyLessonId String? @map("vocabulary_lesson_id") @db.Uuid
+  grammarPatternId String? @map("grammar_pattern_id") @db.Uuid
+  readingArticleId String? @map("reading_article_id") @db.Uuid
+  shadowingVideoId String? @map("shadowing_video_id") @db.Uuid
+  kanaScript String? @map("kana_script") @db.VarChar(16)
+  draftPosition Int? @map("draft_position")
+  publishedPosition Int? @map("published_position")
+  session JlptSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  kanji KanjiContent? @relation(fields: [kanjiId], references: [id], onDelete: Restrict)
+  vocabularyLesson CurriculumLesson? @relation(fields: [vocabularyLessonId], references: [id], onDelete: Restrict)
+  grammarPattern GrammarPattern? @relation(fields: [grammarPatternId], references: [id], onDelete: Restrict)
+  readingArticle ReadingArticle? @relation(fields: [readingArticleId], references: [id], onDelete: Restrict)
+  shadowingVideo ShadowingVideo? @relation(fields: [shadowingVideoId], references: [id], onDelete: Restrict)
+  @@index([sessionId, draftPosition])
+  @@index([sessionId, publishedPosition])
+  @@index([kanjiId])
+  @@index([vocabularyLessonId])
+  @@index([grammarPatternId])
+  @@index([readingArticleId])
+  @@index([shadowingVideoId])
+  @@map("jlpt_resources")
 }
 
 model ShadowingStudy {

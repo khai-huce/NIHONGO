@@ -1,0 +1,281 @@
+{
+  "sha256": "4ff4a7235d421b010a3164880b8acde7f26f5f4ae8d5124a0344297c7978e273",
+  "sessions": 40,
+  "words": 662,
+  "kanji": 103,
+  "patterns": 62,
+  "grammarExercises": 186,
+  "readingArticles": 31,
+  "readingSentences": 156,
+  "examQuestions": 516,
+  "spellingChanges": [
+    {
+      "id": "28e105ba-ec77-5ec3-9208-20188a74b56c",
+      "before": "明い",
+      "after": "明るい",
+      "reason": "Cách viết phổ thông; giữ cách đọc, nghĩa và UUID nguồn."
+    },
+    {
+      "id": "7361b996-c2f6-59b5-8ae6-0106bb2d6626",
+      "before": "終る",
+      "after": "終わる",
+      "reason": "Cách viết phổ thông; giữ cách đọc, nghĩa và UUID nguồn."
+    },
+    {
+      "id": "cae3a564-1dad-5ae2-9641-fc3527bebec7",
+      "before": "さ来年",
+      "after": "再来年",
+      "reason": "Cách viết phổ thông; giữ cách đọc, nghĩa và UUID nguồn."
+    },
+    {
+      "id": "2abdb92b-0365-56e2-b128-3afb0251a766",
+      "before": "曲る",
+      "after": "曲がる",
+      "reason": "Cách viết phổ thông; giữ cách đọc, nghĩa và UUID nguồn."
+    }
+  ],
+  "editorialStatus": "AI-assisted internal review; not native-editor certified",
+  "databaseWrites": 0,
+  "coverage": [
+    {
+      "session": 1,
+      "title": "Hiragana — nền tảng đọc tiếng Nhật",
+      "resources": 1,
+      "questions": 10
+    },
+    {
+      "session": 2,
+      "title": "Katakana — đọc từ mượn",
+      "resources": 1,
+      "questions": 10
+    },
+    {
+      "session": 3,
+      "title": "03 · Tự giới thiệu",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 4,
+      "title": "04 · Hỏi và bổ sung thông tin",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 5,
+      "title": "05 · Đồ vật quanh mình",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 6,
+      "title": "06 · Hỏi đường và địa điểm",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 7,
+      "title": "07 · Sở hữu và quan hệ",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 8,
+      "title": "08 · Giờ giấc và giờ mở cửa",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 9,
+      "title": "09 · Thói quen hằng ngày",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 10,
+      "title": "Ôn chặng 1 — củng cố kiến thức",
+      "resources": 14,
+      "questions": 14
+    },
+    {
+      "session": 11,
+      "title": "11 · Thời điểm và đích đến",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 12,
+      "title": "12 · Nơi hoạt động và phương tiện",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 13,
+      "title": "13 · Cùng ai và gồm những gì",
+      "resources": 8,
+      "questions": 12
+    },
+    {
+      "session": 14,
+      "title": "14 · Có vật và có người",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 15,
+      "title": "15 · Vị trí và số lượng",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 16,
+      "title": "16 · Tính chất của sự vật",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 17,
+      "title": "17 · Khu phố và con người",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 18,
+      "title": "18 · Sở thích và khả năng",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 19,
+      "title": "19 · Kể chuyện hôm qua",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 20,
+      "title": "Ôn chặng 2 — củng cố kiến thức",
+      "resources": 18,
+      "questions": 18
+    },
+    {
+      "session": 21,
+      "title": "21 · Cảm nhận và so sánh",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 22,
+      "title": "22 · Rủ bạn và đề nghị",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 23,
+      "title": "23 · Nối hành động bằng thể て",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 24,
+      "title": "24 · Yêu cầu và xin phép",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 25,
+      "title": "25 · Đang làm và quy định cấm",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 26,
+      "title": "26 · Thể từ điển và thể ない",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 27,
+      "title": "27 · Nhắc nhở và nghĩa vụ",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 28,
+      "title": "28 · Không bắt buộc và mong muốn",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 29,
+      "title": "29 · Mục đích và trước khi làm",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 30,
+      "title": "Ôn chặng 3 — củng cố kiến thức",
+      "resources": 18,
+      "questions": 18
+    },
+    {
+      "session": 31,
+      "title": "31 · Việc đã làm và trình tự",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 32,
+      "title": "32 · Lý do và sự đối lập",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 33,
+      "title": "33 · Đã xong hay chưa",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 34,
+      "title": "34 · Số lần và khoảng thời gian",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 35,
+      "title": "35 · Giới hạn và ước lượng",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 36,
+      "title": "36 · Tần suất và sắc thái hội thoại",
+      "resources": 7,
+      "questions": 11
+    },
+    {
+      "session": 37,
+      "title": "37 · Đọc hiểu tổng hợp",
+      "resources": 5,
+      "questions": 14
+    },
+    {
+      "session": 38,
+      "title": "38 · Nghe và phản xạ thông tin",
+      "resources": 6,
+      "questions": 12
+    },
+    {
+      "session": 39,
+      "title": "39 · Tổng ôn từ vựng và Kanji",
+      "resources": 31,
+      "questions": 27
+    },
+    {
+      "session": 40,
+      "title": "40 · Tổng kiểm tra NIHONGO N5",
+      "resources": 3,
+      "questions": 42
+    }
+  ]
+}
