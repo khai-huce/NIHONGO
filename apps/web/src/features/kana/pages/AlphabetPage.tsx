@@ -8,9 +8,12 @@ import {
   Download,
   Headphones
 } from 'lucide-react';
-import { speakJapanese } from '../../../shared/audio/speech';
+import { cancelJapaneseSpeech, speakJapanese } from '../../../shared/audio/speech';
 import { RoughCard, RoughButton } from '../../../shared/ui/RoughCard';
 import { useKanaQuiz } from '../hooks/useKanaQuiz';
+import { KanaStudyDialog } from '../components/KanaStudyDialog';
+import { KanaFlashcards } from '../components/KanaFlashcards';
+import { KanaWriting } from '../components/KanaWriting';
 import { KANA_LIST, KANA_COUNT, SEION_ROWS as seionRows, DAKUON_ROWS as dakuonRows, YOON_ROWS as yoonRows, type Kana as KanaTileData } from '@nihongo/shared/study/kana-quiz';
 
 interface AlphabetPageProps { userId: string | null; authBusy: boolean; }
@@ -25,6 +28,11 @@ export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) 
     setSearchParams(next, { replace: true });
   };
   const [selectedKana, setSelectedKana] = useState<KanaTileData | null>(null);
+  const [studyPanel, setStudyPanel] = useState<'flashcards' | 'writing' | null>(null);
+  const openStudy = (panel: 'flashcards' | 'writing') => {
+    cancelJapaneseSpeech();
+    setStudyPanel(panel);
+  };
   const quiz = useKanaQuiz(userId, authBusy);
   const { mode: selectedQuizMode, index: currentQuestionIdx, started: isQuizStarted } = quiz;
   const targetKana = kanaById.get(quiz.question?.kanaId ?? '') ?? KANA_LIST[0];
@@ -89,7 +97,14 @@ export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) 
     return (
       <div
         key={idx}
+        role="button" tabIndex={0} aria-label={`${char} — ${item.romaji}`} aria-pressed={isSelected}
         onClick={() => handleTileClick(item)}
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault(); event.stopPropagation();
+            if (!event.repeat) handleTileClick(item);
+          }
+        }}
         className="cursor-pointer group"
       >
         <RoughCard
@@ -157,7 +172,7 @@ export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) 
         
         {/* Caption */}
         <p className="text-xs font-bold text-[#78716c] italic">
-          Bấm để xem thứ tự nét viết và nghe âm đọc của mỗi chữ
+          Bấm chọn chữ và nghe âm đọc. Chọn Luyện viết để viết theo chữ mẫu.
         </p>
 
         {/* TOP ROW: ÂM TRONG (SEION) & ÂM ĐỤC - BÁN ĐỤC (DAKUON · HANDAKUON) */}
@@ -200,7 +215,7 @@ export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) 
       {/* Action Pills below Alphabet Card */}
       <div className="flex items-center gap-2">
         <RoughButton
-          onClick={() => {}}
+          onClick={() => openStudy('flashcards')}
           fill="#0094ff"
           stroke="#0369a1"
           borderRadius={8}
@@ -214,7 +229,7 @@ export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) 
         </RoughButton>
 
         <RoughButton
-          onClick={() => {}}
+          onClick={() => openStudy('writing')}
           fill="#0094ff"
           stroke="#0369a1"
           borderRadius={8}
@@ -529,6 +544,14 @@ export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) 
 
       </RoughCard>
 
+      {studyPanel && <KanaStudyDialog
+        variant={studyPanel === 'flashcards' ? 'flashcard' : 'paper'}
+        title={`${studyPanel === 'flashcards' ? 'Flashcard' : 'Luyện viết'} · ${activeTab === 'hiragana' ? 'Hiragana' : 'Katakana'}`}
+        onClose={() => setStudyPanel(null)}>
+        {studyPanel === 'flashcards'
+          ? <KanaFlashcards script={activeTab} initialKanaId={selectedKana?.id} />
+          : <KanaWriting script={activeTab} initialKanaId={selectedKana?.id} />}
+      </KanaStudyDialog>}
     </div>
   );
 };

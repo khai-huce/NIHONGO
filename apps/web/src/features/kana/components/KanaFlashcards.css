@@ -1,0 +1,25 @@
+.kana-flashcard-dialog { width:calc(100% - 32px); max-width:840px; max-height:92dvh; margin:auto; padding:0; overflow:auto; border:1px solid #eee9de; border-radius:11px; background:#2e3856; color:#f5f5fa; }
+.kana-flashcard-dialog::backdrop { background:#000b; }
+.kana-flashcard-header { position:absolute; right:12px; top:10px; z-index:3; color:#c3c9d7; }
+.kana-flashcard-header button:hover { background:#ffffff20; }
+.kana-flashcard-stage { position:relative; height:min(500px, calc(92dvh - 140px)); min-height:210px; }
+.kana-flashcard-flip { position:absolute; inset:50px 72px 65px; display:flex; justify-content:center; align-items:center; border-radius:12px; cursor:pointer; }
+.kana-flashcards button:focus-visible { outline:2px solid #93c5fd; outline-offset:-4px; }
+.kana-glyph { font-size:clamp(52px,8vw,76px); }
+.kana-romaji { font-size:42px; font-weight:700; }
+.kana-arrow { position:absolute!important; top:50%; transform:translateY(-50%); width:56px; height:56px; color:#c5c9d4; }
+.kana-arrow:disabled { opacity:.3; cursor:default; }
+.kana-prev { left:8px; } .kana-next { right:8px; }
+.kana-speaker { position:absolute; top:calc(50% + 58px); left:calc(50% - 22px); width:44px; height:44px; display:grid; place-items:center; color:#a4aec4; }
+.kana-speech-error { position:absolute; bottom:10px; left:65px; right:65px; text-align:center; font-size:13px; color:#fecaca; }
+.kana-shortcuts { min-height:45px; background:#3c4668; color:#aab3c8; display:flex; align-items:center; justify-content:center; gap:9px; font-size:14px; font-weight:700; }
+.kana-shortcuts kbd { background:#ffffff12; padding:3px 8px; border-radius:4px; font-weight:400; }
+.kana-shortcuts kbd:first-of-type { outline:1px solid #b5bac9; outline-offset:2px; }
+.kana-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:36px; padding:12px 18px; min-height:94px; background:#1b2038; border-bottom:4px solid #97999f; }
+.kana-ratings,.kana-tools { display:flex; align-items:center; }
+.kana-ratings { gap:23px; } .kana-rating { width:64px; height:64px; }
+.kana-counter { min-width:70px; text-align:center; font-size:18px; font-weight:800; }
+.kana-tools { gap:10px; } .kana-tools > button { min-width:40px; height:44px; display:flex; align-items:center; justify-content:center; }
+.kana-tools .kana-direction { height:48px; padding:0 12px; gap:5px; color:#ffc400; font-size:13px; font-weight:700; }
+@media(max-width:700px) { .kana-toolbar { gap:12px; padding:10px; } .kana-rating { width:54px; height:54px; } .kana-flashcard-stage { height:min(470px,calc(92dvh - 205px)); } .kana-arrow { width:44px; height:44px; } .kana-flashcard-flip { left:52px; right:52px; } .kana-shortcuts { gap:6px; font-size:12px; } .kana-tools { gap:6px; } }
+@media(max-width:380px) { .kana-shortcuts > span { display:none; } .kana-tools { gap:3px; } }

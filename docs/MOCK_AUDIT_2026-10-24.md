@@ -1,5 +1,7 @@
 # Rà soát mock và các task còn lại — 24/10/2026
 
+> Cập nhật 27/10/2026: **P12/P13 đã hoàn thành** theo phạm vi người dùng chốt: Flashcard chỉ lật/nghe/chuyển, không lưu tiến độ; luyện viết tự do theo mẫu, chưa chấm/thứ tự nét. Hai nút không còn handler rỗng. Xem [KANA_PRACTICE.md](KANA_PRACTICE.md); U01 tải PDF vẫn riêng. Các bằng chứng bên dưới giữ theo thời điểm audit.
+
 > Cập nhật sau audit, 26/10/2026: **J01/J02/J03 đã hoàn thành** theo quy tắc người dùng duyệt: kho liên kết, tiến độ tài khoản, kiểm tra chấm server, ngưỡng điều chỉnh và mở tuần tự. NIHONGO N5 40 buổi đã nhập/xuất bản thật. Các dòng và số dòng bên dưới là bằng chứng tại thời điểm audit, không phải trạng thái hiện tại; xem [JLPT_ROADMAP.md](JLPT_ROADMAP.md) và [backlog](FEATURE_BACKLOG.md).
 
 ## Phạm vi và mức độ xác nhận
