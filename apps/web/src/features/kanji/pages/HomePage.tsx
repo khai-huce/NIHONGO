@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Search, 
   FileText, 
   Sparkles, 
   BookOpen, 
@@ -9,6 +8,7 @@ import {
 import { useContentCatalog } from '../../content/hooks/useContentCatalog';
 import { HandwritingLookup } from '../components/HandwritingLookup';
 import { KanjiTile } from '../components/KanjiTile';
+import { KanjiSearch } from '../components/KanjiSearch';
 import { FlashcardView } from '../components/FlashcardView';
 import { RoughCard, RoughButton } from '../../../shared/ui/RoughCard';
 import { KanjiItem, JLPTLevel } from '@nihongo/shared/contracts/core';
@@ -27,23 +27,9 @@ export const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const { kanji: KANJI_DATABASE, radicals: RADICALS_DATABASE } = useContentCatalog();
   const [activeLevel, setActiveLevel] = useState<JLPTLevel | 'RADICALS'>('N5');
-  const [searchQuery, setSearchQuery] = useState('');
   const [isFlashcardOpen, setIsFlashcardOpen] = useState(false);
 
-  const currentKanjiList = KANJI_DATABASE.filter(k => {
-    if (activeLevel !== 'RADICALS' && k.level !== activeLevel) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      return (
-        k.kanji.includes(q) ||
-        k.hanViet.toLowerCase().includes(q) ||
-        k.meaning.toLowerCase().includes(q) ||
-        k.onyomi.some(on => on.toLowerCase().includes(q)) ||
-        k.kunyomi.some(kun => kun.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  const currentKanjiList = KANJI_DATABASE.filter(k => activeLevel === 'RADICALS' || k.level === activeLevel);
 
   return (
     <div className="w-full bg-sketch-paper p-4 md:p-8 min-h-[calc(100vh-48px)] overflow-y-auto">
@@ -59,18 +45,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <h2 className="text-base font-black text-[#292524] font-sketch">
               Tìm kiếm Kanji
             </h2>
-            <RoughCard fill="#ffffff" stroke="#78716c" borderRadius={10} roughness={0.7}>
-              <div className="relative flex items-center p-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Nhập kanji hoặc âm hán việt..."
-                  className="w-full bg-transparent px-3 py-1.5 text-sm text-[#292524] focus:outline-none font-sketch font-bold"
-                />
-                <Search className="w-4 h-4 text-[#78716c] mr-3" />
-              </div>
-            </RoughCard>
+            <KanjiSearch items={KANJI_DATABASE} onSelect={onSelectKanji} />
           </div>
 
           <HandwritingLookup onSelectKanji={onSelectKanji} />

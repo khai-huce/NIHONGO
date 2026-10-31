@@ -1,5 +1,7 @@
 # Kế hoạch hoàn thiện chức năng NIHONGO
 
+**Tìm kiếm Kanji cập nhật 31/10/2026:** theo ảnh người dùng, kết quả xổ xuống dưới ô nhập, có Kanji/cách đọc/Hán Việt/nghĩa và cuộn; tìm trên toàn catalog đã xuất bản, không lọc hoặc thay bảng cấp độ/Flashcard. Chọn kết quả mở chi tiết; hỗ trợ mũi tên/Enter, Escape/bấm ngoài/xóa ô để đóng, trạng thái không tìm thấy. Tách `KanjiSearch.tsx` khỏi HomePage; không thay API/DB. Build web đạt; UI desktop/390px, bảng N5 giữ nguyên 104 mục khi gõ, chọn bằng bàn phím mở `体`, chọn chữ N4 `館` từ kết quả khi đang ở bảng N5 đã kiểm tra. Ảnh `.artifacts/kanji-search/dropdown-desktop.png` và `dropdown-mobile.png`.
+
 **A02 hoàn thành local 30/10/2026:** AI Format Chủ động dùng Gemini hiện có, tối đa 6.000 ký tự/50 mục, giữ trường đã nhập và đánh dấu phần bổ sung. Xem trước/sửa/xác nhận mới thêm qua P03; bỏ trùng đủ bốn trường, giữ bản gốc khi lỗi. Gemini thật → sửa → lưu → F5 → cache/bỏ trùng đã đạt; giữ UI trang, thêm hộp đã duyệt. Xem [hướng dẫn A02](VOCAB_AI_FORMAT.md).
 
 **A06 hoàn thành local 30/10/2026:** Trợ lý NIHONGO gọi Gemini thật, hướng dẫn toàn web và dẫn tới route/nội dung published; đọc tóm tắt học của chính tài khoản khi được hỏi. Giữ khung chat, bỏ online/chấm xanh; F5/đổi tài khoản xóa hội thoại. Dùng model/quota chung, chỉ đọc, không sao/XP. Hai câu Gemini thật về bỏ sao và số thẻ đến hạn đã khớp DB; link/đóng mở/chuyển trang/F5 và desktop/390px đạt. Xem [hướng dẫn và nghiệm thu A06](ASSISTANT.md).
