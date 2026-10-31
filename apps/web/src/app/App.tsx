@@ -135,7 +135,9 @@ export const App: React.FC = () => {
       </div>
 
       {/* Floating Mascot Assistant */}
-      <MascotAssistant />
+      <MascotAssistant key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null}
+        authBusy={auth.checking || auth.loggingOut || !!auth.error}
+        onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} />
 
       {/* Settings Modal */}
       <SettingsModal

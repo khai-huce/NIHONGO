@@ -1,5 +1,13 @@
 # Rà soát mock và các task còn lại — 24/10/2026
 
+Cập nhật 30/10/2026: A02 đã hoàn thành local, nghiệm thu Gemini → preview/sửa → lưu/F5 và cache/bỏ trùng. Xem [VOCAB_AI_FORMAT.md](VOCAB_AI_FORMAT.md); dòng A02 bên dưới là trạng thái lịch sử.
+
+Cập nhật 30/10/2026: A06 đã hoàn thành local với Gemini thật và dữ liệu tài khoản đúng phạm vi; bỏ nhãn online, chỉ giữ chat trong lượt mở. Xem [ASSISTANT.md](ASSISTANT.md). Dòng A06 bên dưới là bằng chứng cũ tại ngày audit, không còn là trạng thái hiện tại.
+
+Cập nhật 28/10/2026: O01 đã hoàn thành; xem [NOTIFICATIONS.md](NOTIFICATIONS.md). Các nhận định O01 dưới đây là trạng thái ngày audit.
+
+Cập nhật 28/10/2026: U03 đã hoàn thành, xem [HANDWRITING.md](HANDWRITING.md). Dòng U03 bên dưới giữ lại tình trạng tại thời điểm audit 24/10.
+
 > Cập nhật 27/10/2026: **P12/P13 đã hoàn thành** theo phạm vi người dùng chốt: Flashcard chỉ lật/nghe/chuyển, không lưu tiến độ; luyện viết tự do theo mẫu, chưa chấm/thứ tự nét. Hai nút không còn handler rỗng. Xem [KANA_PRACTICE.md](KANA_PRACTICE.md); U01 tải PDF vẫn riêng. Các bằng chứng bên dưới giữ theo thời điểm audit.
 
 > Cập nhật sau audit, 26/10/2026: **J01/J02/J03 đã hoàn thành** theo quy tắc người dùng duyệt: kho liên kết, tiến độ tài khoản, kiểm tra chấm server, ngưỡng điều chỉnh và mở tuần tự. NIHONGO N5 40 buổi đã nhập/xuất bản thật. Các dòng và số dòng bên dưới là bằng chứng tại thời điểm audit, không phải trạng thái hiện tại; xem [JLPT_ROADMAP.md](JLPT_ROADMAP.md) và [backlog](FEATURE_BACKLOG.md).

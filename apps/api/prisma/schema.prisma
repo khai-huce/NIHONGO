@@ -20,6 +20,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   kanjiProgress KanjiProgress[]
   reviewCards ReviewCard[]
+  notificationReads NotificationRead[]
   vocabLessons VocabLesson[]
   vocabProgress VocabProgress[]
   vocabStudyResults VocabStudyResult[]
@@ -35,6 +36,8 @@ model User {
   grammarAttempts GrammarAttempt[]
   grammarAiRequests GrammarAiRequest[]
   sentenceAnalysisRequests SentenceAnalysisRequest[]
+  vocabAiRequests VocabAiRequest[]
+  assistantRequests AssistantRequest[]
   xpEvents XpEvent[]
   shadowingVideos ShadowingVideo[]
   shadowingStudies ShadowingStudy[]
@@ -46,6 +49,41 @@ model User {
   jlptAttempts JlptAttempt[]
 
   @@map("users")
+}
+
+// Only quota/idempotency metadata; assistant conversations are session-only.
+model AssistantRequest {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  requestHash String @map("request_hash") @db.VarChar(64)
+  model String @db.VarChar(100)
+  status String @default("pending") @db.VarChar(16)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, requestHash, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("assistant_requests")
+}
+
+// Private AI previews and quota reservations; formatting never writes lesson content.
+model VocabAiRequest {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  requestHash String @map("request_hash") @db.VarChar(64)
+  model String @db.VarChar(100)
+  status String @default("pending") @db.VarChar(16)
+  providerCalled Boolean @default(true) @map("provider_called")
+  result Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, requestHash, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("vocab_ai_requests")
 }
 
 // Reward claims survive edits/deletion of learning content; only account deletion removes them.
@@ -822,4 +860,14 @@ model ShadowingAiRequest {
   @@index([status, createdAt])
   @@index([createdAt])
   @@map("shadowing_ai_requests")
+}
+
+model NotificationRead {
+  userId String @map("user_id") @db.Uuid
+  category String @db.VarChar(16)
+  readDay String @map("read_day") @db.VarChar(10)
+  readAt DateTime @default(now()) @map("read_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([userId, category])
+  @@map("notification_reads")
 }

@@ -97,13 +97,13 @@ Ví dụ: dialog của trình nhập giáo trình/ngữ pháp nằm tại `apps/
 
 ## 4. Vị trí dành cho trợ lý AI
 
-`apps/web/src/features/assistant/components/MascotAssistant.tsx` là giao diện trợ lý hiện có. Phản hồi hiện vẫn là mô phỏng; việc di chuyển file không biến nó thành một trợ lý AI hoạt động thật.
+Từ A06 ngày 30/10/2026, `apps/web/src/features/assistant/` dùng API Gemini thật, giữ khung chat và bỏ trạng thái online. Component chỉ trình bày; hook quản lý hội thoại trong bộ nhớ, thư viện kiểm tra request/response và liên kết. Xem [Trợ lý NIHONGO](ASSISTANT.md) để biết phạm vi và kết quả nghiệm thu mới nhất.
 
-Khi triển khai trợ lý, đặt giao diện, hội thoại và thao tác của người dùng trong feature này. Phần server sẽ nằm ở `apps/api/src/modules/assistant/`, với API riêng để kiểm tra phiên, lấy dữ liệu người dùng được phép xem và gọi mô hình. Thư mục module đó chỉ cần tạo khi bắt đầu triển khai. Các thao tác thêm sao, sửa bài hay cập nhật tiến độ phải dùng lại nghiệp vụ tương ứng, thay vì cho mô hình ghi trực tiếp database.
+`apps/api/src/modules/assistant/` tách route, schema, provider orchestration, hướng dẫn/kho public và thống kê cá nhân. Chỉ đọc dữ liệu học của phiên hiện tại khi câu hỏi yêu cầu; dùng lại bộ phân giải nội dung published của JLPT. Model không có công cụ ghi database hay thực hiện thao tác. Bảng `assistant_requests` chỉ giữ metadata chống gửi lặp/quota, không giữ hội thoại; cache trả lại khi mất mạng nằm trong bộ nhớ có thời hạn.
 
 Từ A03 ngày 04/10/2026, C03 và A03 dùng chung `apps/api/src/integrations/gemini.ts` cho kết nối provider và `gemini-quota.ts` cho hạn mức tổng trong 24 giờ. Prompt, schema và quy tắc chấm/lưu vẫn do `modules/grammar/grammar-ai.ts` và `modules/sentence-analysis/sentence-ai.ts` sở hữu riêng. Kuromoji/IPADIC chỉ chạy phía API, được nạp một lần trong tiến trình; catalog public được đối chiếu trong module phân tích câu. Xem [phạm vi A03](SENTENCE_ANALYSIS.md). Phần tích hợp này không tự bổ sung chức năng cho trợ lý nổi.
 
-Chưa cần thêm server AI riêng, hàng đợi, vector database hoặc framework agent chỉ để chuẩn bị thư mục. Lựa chọn đó phụ thuộc phạm vi trợ lý được chốt sau này. Khóa dịch vụ AI luôn ở môi trường của API, không đưa vào frontend hoặc `packages/shared`.
+Không thêm server AI riêng, hàng đợi, vector database hoặc framework agent cho phạm vi trợ lý hướng dẫn này. A06 và AI Format A02 dùng lại Gemini transport/quota chung; prompt và validation vẫn thuộc từng module. Khóa dịch vụ AI luôn ở môi trường của API, không đưa vào frontend hoặc `packages/shared`.
 
 ## 5. Chạy dự án và biến môi trường
 

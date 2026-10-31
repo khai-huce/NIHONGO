@@ -1,3 +1,4 @@
+import { notificationRoutes } from './modules/notifications/notifications.routes.js';
 import express from 'express';
 import helmet from 'helmet';
 import { PrismaClient } from '@prisma/client';
@@ -9,6 +10,7 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { progressRoutes } from './modules/kanji/progress.routes.js';
 import { reviewRoutes } from './modules/review/review.routes.js';
 import { lessonRoutes } from './modules/vocabulary/lessons.routes.js';
+import { vocabAiRoutes } from './modules/vocabulary/vocab-ai.routes.js';
 import { vocabProgressRoutes } from './modules/vocabulary/vocab-progress.routes.js';
 import { vocabResultsRoutes } from './modules/vocabulary/vocab-results.routes.js';
 import { roadmapRoutes } from './modules/roadmaps/roadmaps.routes.js';
@@ -29,6 +31,8 @@ import { shadowingRoutes } from './modules/shadowing/shadowing.routes.js';
 import { shadowingAiRoutes } from './modules/shadowing/shadowing-ai.routes.js';
 import { jlptRoutes } from './modules/jlpt/jlpt.routes.js';
 import { jlptStudyRoutes } from './modules/jlpt/jlpt-study.routes.js';
+import { handwritingRoutes } from './modules/handwriting/handwriting.routes.js';
+import { assistantRoutes } from './modules/assistant/assistant.routes.js';
 
 export function createApp(config: Config) {
   const db = new PrismaClient({ datasources: { db: { url: config.DATABASE_URL } } });
@@ -55,9 +59,13 @@ export function createApp(config: Config) {
     next();
   });
   app.use('/api/vocab/lessons', middleware, lessonRoutes(db));
+  app.use('/api/vocab/ai-format', middleware, vocabAiRoutes(db, config));
+  const assistant = assistantRoutes(db, config);
+  app.use('/api/assistant', middleware, assistant.router);
   app.use('/api/vocab/results', middleware, vocabResultsRoutes(db));
   app.use('/api/kana/results', middleware, kanaResultsRoutes(db));
   app.use('/api/content', contentRoutes(db));
+  app.use('/api/handwriting', handwritingRoutes(db));
   app.use('/api/pitch-accent', pitchAccentRoutes(db));
   const shadowing = shadowingRoutes(db, config);
   const shadowingAi = shadowingAiRoutes(db, config);
@@ -89,6 +97,7 @@ export function createApp(config: Config) {
   app.use('/api/progress', middleware, progressRoutes(db));
   app.use('/api/vocab/progress', middleware, vocabProgressRoutes(db));
   app.use('/api/review', middleware, reviewRoutes(db));
+  app.use('/api/notifications', middleware, notificationRoutes(db));
   app.use('/api/roadmaps/default', middleware, defaultRoadmapRoutes(db));
   app.use('/api/roadmaps', middleware, roadmapRoutes(db));
   app.use((_req, _res, next) => next(new HttpError(404, 'NOT_FOUND', 'API không tồn tại.')));
@@ -96,6 +105,6 @@ export function createApp(config: Config) {
 
   return {
     app, db, pool,
-    async close() { store.close(); await shadowingAi.close(); await Promise.all([db.$disconnect(), pool.end()]); },
+    async close() { store.close(); assistant.close(); await shadowingAi.close(); await Promise.all([db.$disconnect(), pool.end()]); },
   };
 }

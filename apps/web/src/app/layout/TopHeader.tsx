@@ -1,5 +1,6 @@
+import { NotificationBell } from '../../features/notifications/NotificationBell';
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { UserProfile } from '@nihongo/shared/contracts/core';
 
 interface TopHeaderProps {
@@ -30,7 +31,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   }, []);
 
   return (
-    <header className="bg-[#fcf9f2] dark:bg-[#181614] flex h-12 items-center border-b-2 border-[#292524] dark:border-[#a8a29e] justify-between px-4 sm:px-6 sticky top-0 z-30 select-none w-full shrink-0">
+    <header className="bg-[#fcf9f2] dark:bg-[#181614] flex h-12 items-center border-b-2 border-[#292524] dark:border-[#a8a29e] justify-between px-4 sm:px-6 sticky top-0 z-[45] select-none w-full shrink-0">
       
       {/* Brand logo: 漢字 "nihongo" with doodle bird */}
       <div className="flex items-center gap-2">
@@ -48,13 +49,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
       {/* Right User Bar */}
       <div className="flex items-center gap-3">
-        {/* Notification Bell */}
-        <button 
-          className="p-1.5 rounded-full hover:bg-[#eae3d5] dark:hover:bg-[#292524] text-[#292524] dark:text-[#d6d3d1] transition-colors"
-          title="Thông báo"
-        >
-          <Bell className="w-4 h-4" />
-        </button>
+        <NotificationBell userId={currentUser?.id ?? null} authBusy={authBusy} onLogin={() => onOpenAuthModal('login')} />
 
         {/* Auth Button or User Profile (matches media_1788801159505.png) */}
         {currentUser ? (

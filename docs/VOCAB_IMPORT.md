@@ -41,7 +41,7 @@ Text không có hàng tiêu đề, mỗi dòng một từ:
 - Bỏ qua dòng trắng, vẫn giữ số dòng gốc. Mỗi mục text nằm trên một dòng; dùng JSON nếu nội dung cần xuống dòng.
 - Giới hạn 500 dòng mỗi đợt, 500 từ sau nhập mỗi bài, 512 KiB đầu vào và request. Từ/cách đọc tối đa 500 ký tự, Hán Việt 200, nghĩa 2.000.
 
-Nút **AI Format** giữ nguyên trên trang và thông báo chưa kết nối dịch vụ; không còn thay dữ liệu bằng kết quả mô phỏng. Dịch vụ AI thuộc A01/A02, chưa được triển khai trong P03.
+Tại thời điểm P03, AI Format chưa kết nối dịch vụ. A02 ngày 29/10/2026 đã nối Gemini và bản xem trước có thể sửa; vẫn dùng quy tắc nhập P03. Xem [AI Format](VOCAB_AI_FORMAT.md).
 
 ## API và lưu dữ liệu
 

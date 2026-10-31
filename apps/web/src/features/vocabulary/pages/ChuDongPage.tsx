@@ -7,6 +7,9 @@ import { QuizStudy } from '../../../shared/study/components/QuizStudy';
 import { CramStudy } from '../../../shared/study/components/CramStudy';
 import { ImportPreviewDialog } from '../../../shared/study/components/ImportPreviewDialog';
 import { parseVocabImport, type ImportPreview } from '../lib/vocab-import';
+import { useVocabAiFormat } from '../hooks/useVocabAiFormat';
+import { AiFormatPreviewDialog } from '../components/AiFormatPreviewDialog';
+import { prepareAiImport } from '../lib/vocab-ai-format';
 import { 
   Folder, 
   Plus, 
@@ -95,6 +98,10 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
 
   // Current active lesson
   const currentLesson = lessons.find(l => l.id === selectedLessonId) || null;
+  const aiFormat = useVocabAiFormat(userId, selectedLessonId, inputContent, authBusy);
+  const actionBusy = store.busy || aiFormat.busy;
+  const [aiImportError, setAiImportError] = useState('');
+  const [aiTargetMissing, setAiTargetMissing] = useState(false);
 
   // Show toast notification
   const triggerToast = (msg: string) => {
@@ -104,13 +111,13 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
 
   // Keep the existing editor open until the server confirms a successful save.
   const handleStartCreateLesson = () => {
-    if (store.busy) return;
+    if (actionBusy) return;
     createId.current=crypto.randomUUID();
     setIsCreatingLesson(true);
     setNewLessonName(`Bài ${lessons.length+1}`);
   };
   const handleConfirmCreateLesson = async () => {
-    if (store.busy || !newLessonName.trim()) return;
+    if (actionBusy || !newLessonName.trim()) return;
     const result=await store.create(createId.current,newLessonName.trim());
     if (!result?.lesson) return;
     setSelectedLessonId(result.lesson.id);setIsCreatingLesson(false);setNewLessonName('');
@@ -119,22 +126,22 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
   const handleDeleteLesson = async (id:string,e:React.MouseEvent) => {
     e.stopPropagation();
     const lesson=lessons.find(l=>l.id===id);
-    if (!lesson || store.busy) return;
+    if (!lesson || actionBusy) return;
     if (await store.remove(lesson)) {
       if (selectedLessonId===id) {setSelectedLessonId(lessons.find(l=>l.id!==id)?.id??null);setActiveStudyMode(null);setInputContent('');setEditingWordId(null);}
     }
   };
   const handleStartRename = (lesson:VocabLesson,e:React.MouseEvent) => {
-    e.stopPropagation();if(store.busy)return;
+    e.stopPropagation();if(actionBusy)return;
     setEditingLessonId(lesson.id);setEditLessonName(lesson.name);
   };
   const handleConfirmRename = async (id:string,e:React.MouseEvent) => {
     e.stopPropagation();const lesson=lessons.find(l=>l.id===id);
-    if (!lesson || store.busy || !editLessonName.trim()) return;
+    if (!lesson || actionBusy || !editLessonName.trim()) return;
     if (await store.update(lesson,{name:editLessonName.trim()})) setEditingLessonId(null);
   };
   const handleUseDemo = async () => {
-    if (!currentLesson || store.busy) return;
+    if (!currentLesson || actionBusy) return;
     const words=DEMO_WORDS.map(w=>({...w,id:crypto.randomUUID()}));
     if (await store.update(currentLesson,{words})) triggerToast(`Đã tải ${words.length} từ vựng demo thành công!`);
   };
@@ -152,7 +159,7 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
     setImportDraft({ lesson, preview, words });
   };
   const handleImportData = () => {
-    if (currentLesson && !store.busy) prepareImport(currentLesson);
+    if (currentLesson && !actionBusy) prepareImport(currentLesson);
   };
   const handleConfirmImport = async () => {
     if (!importDraft || store.busy || importDraft.preview.errors.length || importDraft.preview.errorCount || !importDraft.preview.validCount) return;
@@ -180,26 +187,55 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
     }
   };
   const handleAiFormat = () => {
-    triggerToast('AI Format chưa kết nối dịch vụ. Bạn vẫn có thể nhập JSON/text và xem trước bằng nút Nhập dữ liệu vào hệ thống.');
+    if (!currentLesson || actionBusy) return;
+    setAiImportError(''); setAiTargetMissing(false);
+    void aiFormat.start(currentLesson);
+  };
+  const handleConfirmAiImport = async () => {
+    const draft = aiFormat.draft;
+    if (!draft || actionBusy || aiTargetMissing || !aiFormat.isCurrent(draft.context)) return;
+    const prepared = prepareAiImport(draft.rows, draft.lesson.words);
+    if (!prepared.canSave) return;
+    setAiImportError('');
+    const result = await store.importWords(draft.lesson, prepared.words);
+    if (!result || !aiFormat.isCurrent(draft.context)) return;
+    aiFormat.close();
+    setInputContent('');
+    const duplicates = result.duplicateCount ?? 0;
+    triggerToast(`Đã thêm ${result.importedCount ?? 0} từ vựng vào bài!${duplicates ? ` Bỏ qua ${duplicates} từ trùng.` : ''}`);
+  };
+  const handleReloadAiImport = async () => {
+    const draft = aiFormat.draft;
+    if (!draft || store.busy) return;
+    const refreshed = await store.reload();
+    if (!refreshed || !aiFormat.isCurrent(draft.context)) return;
+    const lesson = refreshed.find(item => item.id === draft.lesson.id);
+    if (lesson) {
+      aiFormat.replaceLesson(lesson);
+      setAiImportError(''); setAiTargetMissing(false);
+    } else {
+      setAiTargetMissing(true);
+      setAiImportError('Bài học đã bị xóa nên không thể nhập vào bài này. Nội dung gốc vẫn được giữ; hãy quay lại chọn hoặc tạo bài khác.');
+    }
   };
 
   const handleClearAllWords = async () => {
-    if (!currentLesson || store.busy) return;
+    if (!currentLesson || actionBusy) return;
     if (window.confirm('Bạn có chắc chắn muốn xóa tất cả từ vựng trong bài này?')) {
       if (await store.update(currentLesson,{words:[]})) {setEditingWordId(null);triggerToast('Đã xóa tất cả từ vựng trong bài!');}
     }
   };
   const handleDeleteWord = async (wordId:string) => {
-    if (!currentLesson || store.busy) return;
+    if (!currentLesson || actionBusy) return;
     if (await store.update(currentLesson,{words:currentLesson.words.filter(w=>w.id!==wordId)})) {
       if (editingWordId===wordId) setEditingWordId(null);
     }
   };
   const handleStartEditWord = (word:VocabWord) => {
-    if(store.busy)return;setEditingWordId(word.id);setEditWordForm({...word});
+    if(actionBusy)return;setEditingWordId(word.id);setEditWordForm({...word});
   };
   const handleSaveEditWord = async () => {
-    if (!currentLesson || !editingWordId || store.busy) return;
+    if (!currentLesson || !editingWordId || actionBusy) return;
     if (!editWordForm.word.trim() || !editWordForm.meaning.trim()) {triggerToast('Từ vựng và nghĩa không được để trống.');return;}
     if (await store.update(currentLesson,{words:currentLesson.words.map(w=>w.id===editingWordId?{...editWordForm}:w)})) setEditingWordId(null);
   };
@@ -227,6 +263,20 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
         onClose={() => { if (!store.saving && !store.loading) setImportDraft(null); }}
         onConfirm={() => { void handleConfirmImport(); }}
         onReload={() => { void handleReloadImport(); }}
+      />}
+      {aiFormat.draft && <AiFormatPreviewDialog
+        lessonName={aiFormat.draft.lesson.name}
+        existingWords={aiFormat.draft.lesson.words}
+        rows={aiFormat.draft.rows}
+        warnings={aiFormat.draft.warnings}
+        saving={store.saving}
+        loading={store.loading}
+        canSave={!actionBusy && !aiTargetMissing}
+        error={aiImportError || store.error}
+        onEdit={aiFormat.edit}
+        onClose={() => { if (!store.saving && !store.loading) aiFormat.close(); }}
+        onConfirm={() => { void handleConfirmAiImport(); }}
+        onReload={() => { void handleReloadAiImport(); }}
       />}
 
       {/* ACTIVE STUDY MODE CONTAINER (Images 1, 2, 3, 4, 5) */}
@@ -394,7 +444,7 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
               return (
                 <div
                   key={lesson.id}
-                  onClick={() => {if (!store.busy && selectedLessonId!==lesson.id) {setSelectedLessonId(lesson.id);setInputContent('');setEditingWordId(null);}}}
+                  onClick={() => {if (!store.busy && selectedLessonId!==lesson.id) {setSelectedLessonId(lesson.id);setEditingWordId(null);}}}
                   className={`min-w-[170px] p-3.5 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 shadow-xs ${
                     isSelected 
                       ? 'border-[#292524] bg-white shadow-sketch' 
@@ -450,7 +500,7 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
               </button>
             </div>
 
-            <RoughButton disabled={store.busy}
+            <RoughButton disabled={actionBusy}
               onClick={handleUseDemo}
               fill="#ffffff"
               stroke="#292524"
@@ -489,7 +539,7 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
           {/* Actions below textarea */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-2.5">
-              <button disabled={store.busy}
+              <button disabled={actionBusy}
                 onClick={handleImportData}
                 className="px-4 py-2 rounded-xl bg-[#0094ff] border-2 border-[#292524] text-white text-xs font-black flex items-center gap-1.5 shadow-xs hover:bg-blue-600 transition-colors cursor-pointer"
               >
@@ -497,7 +547,7 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
                 <span>Nhập dữ liệu vào hệ thống</span>
               </button>
 
-              <button disabled={store.busy}
+              <button disabled={actionBusy}
                 onClick={handleAiFormat}
                 className="px-4 py-2 rounded-xl bg-[#f3e8ff] border-2 border-[#c084fc] text-[#7e22ce] text-xs font-black flex items-center gap-1.5 shadow-xs hover:bg-purple-100 transition-colors cursor-pointer"
               >
@@ -516,6 +566,9 @@ export const ChuDongPage: React.FC<{userId:string|null;authBusy:boolean}> = ({us
               </button>
             )}
           </div>
+
+          {aiFormat.busy && <p role="status" className="text-xs font-bold text-purple-700">Đang định dạng với Gemini… Nội dung gốc được giữ cho đến khi bạn xác nhận nhập. Sửa nội dung hoặc đổi bài sẽ hủy chờ kết quả.</p>}
+          {aiFormat.error && <p role="alert" className="text-xs font-bold text-rose-700">{aiFormat.error}</p>}
 
         </RoughCard>
       )}

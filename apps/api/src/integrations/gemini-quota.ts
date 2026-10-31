@@ -9,16 +9,20 @@ export async function lockGeminiQuota(tx: Prisma.TransactionClient) {
 /** Called under lockGeminiQuota, in the same transaction as reserving a request. */
 export async function assertGeminiQuota(tx: Prisma.TransactionClient, config: Config, userId: string) {
   const since = new Date(Date.now() - 86400000);
-  const [personalGrammar, totalGrammar, personalSentence, totalSentence, personalShadowing, totalShadowing] = await Promise.all([
+  const [personalGrammar, totalGrammar, personalSentence, totalSentence, personalShadowing, totalShadowing, personalVocab, totalVocab, personalAssistant, totalAssistant] = await Promise.all([
     tx.grammarAiRequest.count({ where: { userId, createdAt: { gte: since } } }),
     tx.grammarAiRequest.count({ where: { createdAt: { gte: since } } }),
     tx.sentenceAnalysisRequest.count({ where: { userId, createdAt: { gte: since } } }),
     tx.sentenceAnalysisRequest.count({ where: { createdAt: { gte: since } } }),
     tx.shadowingAiRequest.count({ where: { userId, createdAt: { gte: since } } }),
     tx.shadowingAiRequest.count({ where: { createdAt: { gte: since } } }),
+    tx.vocabAiRequest.count({ where: { userId, providerCalled: true, createdAt: { gte: since } } }),
+    tx.vocabAiRequest.count({ where: { providerCalled: true, createdAt: { gte: since } } }),
+    tx.assistantRequest.count({ where: { userId, createdAt: { gte: since } } }),
+    tx.assistantRequest.count({ where: { createdAt: { gte: since } } }),
   ]);
-  if (personalGrammar + personalSentence + personalShadowing >= (config.GEMINI_DAILY_LIMIT ?? 20)
-    || totalGrammar + totalSentence + totalShadowing >= (config.GEMINI_GLOBAL_DAILY_LIMIT ?? 100)) {
+  if (personalGrammar + personalSentence + personalShadowing + personalVocab + personalAssistant >= (config.GEMINI_DAILY_LIMIT ?? 20)
+    || totalGrammar + totalSentence + totalShadowing + totalVocab + totalAssistant >= (config.GEMINI_GLOBAL_DAILY_LIMIT ?? 100)) {
     throw new HttpError(429, 'AI_QUOTA', 'Đã đạt hạn mức Gemini trong 24 giờ của ứng dụng. Hãy thử lại sau; các chức năng không dùng AI vẫn hoạt động.');
   }
 }

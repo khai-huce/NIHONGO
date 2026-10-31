@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
   Search, 
-  RotateCcw, 
   FileText, 
   Sparkles, 
   BookOpen, 
   ExternalLink
 } from 'lucide-react';
 import { useContentCatalog } from '../../content/hooks/useContentCatalog';
+import { HandwritingLookup } from '../components/HandwritingLookup';
 import { KanjiTile } from '../components/KanjiTile';
 import { FlashcardView } from '../components/FlashcardView';
 import { RoughCard, RoughButton } from '../../../shared/ui/RoughCard';
@@ -29,55 +29,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [activeLevel, setActiveLevel] = useState<JLPTLevel | 'RADICALS'>('N5');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFlashcardOpen, setIsFlashcardOpen] = useState(false);
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.strokeStyle = '#44403c';
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    setIsDrawing(true);
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
-
-  const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  };
 
   const currentKanjiList = KANJI_DATABASE.filter(k => {
     if (activeLevel !== 'RADICALS' && k.level !== activeLevel) return false;
@@ -122,49 +73,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </RoughCard>
           </div>
 
-          {/* Embedded Handwriting Canvas Box */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-black text-[#292524] font-sketch">
-                Hoặc vẽ Kanji
-              </h2>
-              <button
-                onClick={clearCanvas}
-                className="text-xs text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1"
-              >
-                <RotateCcw className="w-3 h-3" />
-                Xóa nét
-              </button>
-            </div>
-
-            <RoughCard fill="#ffffff" stroke="#78716c" borderRadius={12} roughness={0.7} className="h-[270px] overflow-hidden">
-              <div className="relative w-full h-full">
-                {/* Dashed Crosshair lines */}
-                <div 
-                  className="pointer-events-none absolute z-10 border-l border-dashed border-[#78643c]/30" 
-                  style={{ left: '50%', height: '100%' }}
-                />
-                <div 
-                  className="pointer-events-none absolute z-10 border-t border-dashed border-[#78643c]/30" 
-                  style={{ top: '50%', width: '100%' }}
-                />
-                
-                <canvas
-                  ref={canvasRef}
-                  width={380}
-                  height={270}
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                  className="relative w-full h-full cursor-crosshair touch-none"
-                />
-              </div>
-            </RoughCard>
-          </div>
+          <HandwritingLookup onSelectKanji={onSelectKanji} />
 
           {/* Ecosystem Feature Badges */}
           <div className="space-y-2">
