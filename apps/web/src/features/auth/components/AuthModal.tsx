@@ -4,6 +4,7 @@ import { RoughCard } from '../../../shared/ui/RoughCard';
 import { GoogleSignIn } from './GoogleSignIn';
 import { api } from '@nihongo/client/api';
 import type { UserProfile } from '@nihongo/shared/contracts/core';
+import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@nihongo/shared/contracts/auth-policy';
 interface AuthModalProps {
   onClose: () => void;
   initialMode?: 'login' | 'register';
@@ -74,14 +75,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3 w-4 h-4 text-[#78716c]" />
-                <input type={showPassword ? 'text' : 'password'} name="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} aria-label="Mật khẩu" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mật khẩu" required minLength={mode === 'register' ? 15 : 1} maxLength={128} className={`${inputClass} pr-10`} />
+                <input type={showPassword ? 'text' : 'password'} name="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} aria-label="Mật khẩu" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mật khẩu" required minLength={mode === 'register' ? PASSWORD_MIN_LENGTH : 1} maxLength={PASSWORD_MAX_LENGTH} className={`${inputClass} pr-10`} />
                 <button type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} className="absolute inset-y-0 right-0 pr-3.5 text-[#78716c]">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
               </div>
               {mode === 'register' && <>
-                <p className="text-xs text-[#78716c]">Mật khẩu từ 15 đến 128 ký tự. Có thể dùng một cụm từ dễ nhớ.</p>
+                <p className="text-xs text-[#78716c]">Mật khẩu từ {PASSWORD_MIN_LENGTH} đến {PASSWORD_MAX_LENGTH} ký tự. Có thể dùng một cụm từ dễ nhớ.</p>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3 w-4 h-4 text-[#78716c]" />
-                  <input type={showPassword ? 'text' : 'password'} name="confirmPassword" autoComplete="new-password" aria-label="Xác nhận mật khẩu" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Xác nhận mật khẩu" required maxLength={128} className={inputClass} />
+                  <input type={showPassword ? 'text' : 'password'} name="confirmPassword" autoComplete="new-password" aria-label="Xác nhận mật khẩu" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Xác nhận mật khẩu" required maxLength={PASSWORD_MAX_LENGTH} className={inputClass} />
                 </div>
               </>}
               <button type="submit" className="w-full py-2.5 rounded-xl bg-[#0091ff] hover:bg-[#007fd9] text-white font-black text-sm md:text-base border-2 border-[#292524] shadow-sketch transition-all disabled:opacity-50 cursor-pointer">{isLoading ? 'Đang xử lý...' : mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</button>
@@ -91,7 +92,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
             {mode === 'login' ? 'Nếu chưa có tài khoản thì ' : 'Đã có tài khoản? '}
             <button type="button" disabled={isLoading} onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErrorMsg(''); setPassword(''); setConfirmPassword(''); }} className="font-bold text-[#0091ff] hover:underline">{mode === 'login' ? 'Đăng Ký' : 'Đăng nhập'}</button>
           </div>
-          <p className="mt-4 pt-3 border-t border-[#d6d3d1]/80 text-[11px] text-[#78716c] text-center leading-relaxed">Đăng nhập để lưu tiến độ flashcard Kanji giữa các thiết bị. Các dữ liệu học khác vẫn ở trình duyệt này.</p>
+          <p className="mt-4 pt-3 border-t border-[#d6d3d1]/80 text-[11px] text-[#78716c] text-center leading-relaxed">Đăng nhập để lưu bài học cá nhân, lịch ôn và tiến độ học được hỗ trợ theo tài khoản, dùng tiếp trên thiết bị khác. Dữ liệu khách và cài đặt trên thiết bị giữ riêng, không tự chuyển vào tài khoản.</p>
         </RoughCard>
       </div>
     </div>

@@ -169,7 +169,7 @@ export const KanjiDetailView: React.FC<KanjiDetailViewProps> = ({
             <div className="flex items-center justify-between pb-1">
               <h2 className="text-xs md:text-sm font-black text-[#ea580c] uppercase tracking-wide flex items-center gap-1.5 font-sketch">
                 <BookOpen className="w-4 h-4" />
-                <span>TỪ VỰNG TRONG (MINA, TANGO, MIMIKARA)</span>
+                <span>TỪ VỰNG VÍ DỤ</span>
               </h2>
               <span className="text-xs text-[#78716c] font-black">
                 {item.examples.length} từ phổ biến
@@ -228,8 +228,8 @@ export const KanjiDetailView: React.FC<KanjiDetailViewProps> = ({
             className="p-3 text-xs text-[#1e40af] font-bold mt-3"
           >
             <div className="flex items-center justify-between">
-              <span>Học Kanji qua từ vựng ngữ cảnh giúp nhớ lâu hơn 3 lần!</span>
-              <span className="font-black font-sketch tracking-wide text-blue-950">nihongo</span>
+              <span>Học Kanji cùng từ vựng và ngữ cảnh sử dụng.</span>
+              <span className="font-black font-sketch tracking-wide text-blue-950">NIHONGO</span>
             </div>
           </RoughCard>
 

@@ -58,8 +58,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                   漢
                 </div>
                 <div>
-                  <div className="text-xs font-black text-[#292524]">2500+ Kanji</div>
-                  <div className="text-[10px] text-[#78716c] font-bold">Chiết tự · Sơ đồ · N5→N1</div>
+                  <div className="text-xs font-black text-[#292524]">{KANJI_DATABASE.length.toLocaleString('vi-VN')} Kanji</div>
+                  <div className="text-[10px] text-[#78716c] font-bold">Trong kho đã xuất bản</div>
                 </div>
               </div>
             </RoughCard>
@@ -70,8 +70,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-black text-[#292524]">10.000+ Từ vựng</div>
-                  <div className="text-[10px] text-[#78716c] font-bold">Mina · Tango · Mimikara · Tettei</div>
+                  <div className="text-xs font-black text-[#292524]">Giáo trình từ vựng</div>
+                  <div className="text-[10px] text-[#78716c] font-bold">Học từ kho giáo trình đã xuất bản</div>
                 </div>
               </div>
             </RoughCard>
@@ -82,8 +82,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-black text-[#292524]">Ngữ pháp N5→N1</div>
-                  <div className="text-[10px] text-[#78716c] font-bold">Mina · Shinkanzen · Somatome</div>
+                  <div className="text-xs font-black text-[#292524]">Kho ngữ pháp</div>
+                  <div className="text-[10px] text-[#78716c] font-bold">Mẫu câu · Ví dụ · Bài tập</div>
                 </div>
               </div>
             </RoughCard>
@@ -175,7 +175,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 roughness={0.7}
                 className="px-3.5 py-1.5 text-xs font-black text-center"
               >
-                <span className={activeLevel === 'RADICALS' ? 'text-[#6b21a8]' : 'text-[#57534e]'}>214 Bộ thủ</span>
+                <span className={activeLevel === 'RADICALS' ? 'text-[#6b21a8]' : 'text-[#57534e]'}>{RADICALS_DATABASE.length.toLocaleString('vi-VN')} Bộ thủ</span>
               </RoughCard>
             </div>
 
@@ -188,7 +188,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="mb-4 flex shrink-0 items-center justify-between border-b border-[#78716c]/30 pb-3">
               <div className="flex items-center gap-3">
                 <h3 className="hidden text-base font-black sm:block text-[#292524] font-sketch">
-                  {activeLevel === 'RADICALS' ? '214 Bộ thủ' : `Kanji ${activeLevel}`}
+                  {activeLevel === 'RADICALS' ? `${RADICALS_DATABASE.length.toLocaleString('vi-VN')} Bộ thủ` : `Kanji ${activeLevel}`}
                 </h3>
                 
                 <RoughButton

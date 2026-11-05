@@ -64,10 +64,10 @@ export const KanjiTile: React.FC<KanjiTileProps> = ({ item, onSelect, level }) =
         roughness={0.7}
         bowing={0.4}
         borderRadius={10}
-        className="aspect-square flex items-center justify-center transition-transform group-hover:scale-105"
+        className="aspect-square transition-transform group-hover:scale-105"
       >
         <span 
-          className="font-kanji font-bold text-center leading-none select-none"
+          className="flex aspect-square w-full items-center justify-center font-kanji font-bold text-center leading-none select-none"
           style={{ 
             color: theme.text,
             fontSize: '22px'

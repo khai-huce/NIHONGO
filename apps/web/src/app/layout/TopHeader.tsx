@@ -40,7 +40,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             漢字
           </span>
           <div className="flex items-center font-black text-lg text-[#292524] dark:text-white tracking-wide font-sketch">
-            <span>“nihongo</span>
+            <span>“NIHONGO</span>
             {/* Mascot crow / bird standing on the logo */}
             <span className="text-base ml-1">🐦”</span>
           </div>
