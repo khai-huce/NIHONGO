@@ -1,4 +1,5 @@
 import type { ReadingArticle, ReadingAudio, ReadingSentence } from '@nihongo/client/reading';
+import { validateReadingSupplements } from './reading-supplement-data.ts';
 
 export type ReadingContent = Pick<ReadingArticle, 'title' | 'subtitle' | 'text' | 'paragraphs' | 'vocabList' | 'grammarList' | 'quizList'>;
 export type AdminReading = ReadingArticle & {
@@ -43,10 +44,12 @@ export function readingEditorBody(form: ReadingForm, saved?: AdminReading | null
   if (!form.text.trim() || Array.from(form.text).length > 3000) throw new Error('Bài đọc cần từ 1 đến 3000 ký tự.');
   if (form.content.text !== form.text || !form.content.paragraphs.length) throw new Error('Hãy tách câu và kiểm tra bản dịch trước khi lưu.');
   if (saved && saved.text !== form.text && !form.translationsReviewed) throw new Error('Cần xác nhận kiểm tra bản dịch khi đổi văn bản Nhật.');
+  validateReadingSupplements(form.content);
   return { title: form.title.trim(), subtitle: form.subtitle.trim(), text: form.text, sourceId: form.sourceId || null,
     annotations: form.content.paragraphs.flatMap(paragraph => paragraph.sentences).map(sentence => ({ sentenceId: sentence.id,
-      japanese: sentence.japanese, translation: sentence.translation ?? '', ...(sentence.ruby ? { ruby: sentence.ruby } : {}) })),
+      japanese: sentence.japanese, translation: sentence.translation ?? '', ruby: sentence.ruby ?? [] })),
     vocabList: form.content.vocabList, grammarList: form.content.grammarList, quizList: form.content.quizList,
+    ...(saved ? { editorialText: form.content.text } : {}),
     ...(saved && saved.text !== form.text ? { translationsReviewed: true } : {}),
   };
 }

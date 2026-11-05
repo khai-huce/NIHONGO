@@ -1,5 +1,7 @@
 # Rà soát mock và các task còn lại — 24/10/2026
 
+Cập nhật 06/11/2026: **M03a/M03b đã hoàn thành local**. Admin nhập/sửa furigana, từ vựng, ngữ pháp và quiz một đáp án đúng 2–6 lựa chọn; preview/nháp/publish và database thật. Xem [ADMIN_READING.md](ADMIN_READING.md). Nhận định thiếu UI M03 và đề xuất M03 ở cuối tài liệu chỉ còn là lịch sử; R03 lưu kết quả học vẫn riêng.
+
 Cập nhật 30/10/2026: A02 đã hoàn thành local, nghiệm thu Gemini → preview/sửa → lưu/F5 và cache/bỏ trùng. Xem [VOCAB_AI_FORMAT.md](VOCAB_AI_FORMAT.md); dòng A02 bên dưới là trạng thái lịch sử.
 
 Cập nhật 30/10/2026: A06 đã hoàn thành local với Gemini thật và dữ liệu tài khoản đúng phạm vi; bỏ nhãn online, chỉ giữ chat trong lượt mở. Xem [ASSISTANT.md](ASSISTANT.md). Dòng A06 bên dưới là bằng chứng cũ tại ngày audit, không còn là trạng thái hiện tại.
@@ -48,8 +50,8 @@ Quy ước:
 
 | Task | Hiện trạng | Phạm vi có thể nghiệm thu riêng | Cần chốt/phụ thuộc |
 |---|---|---|---|
-| **M03a — Admin nhập phần bổ trợ Đọc hiểu** | API đã hỗ trợ ruby/từ/ngữ pháp nhưng UI admin chỉ nhập dịch từng câu. [ReadingEditor:122](../apps/admin/src/features/reading/ReadingEditor.tsx#L122), [reading-content:8](../apps/api/src/modules/reading/reading-content.ts#L8). | Nhập/sửa/preview ruby, từ vựng và mẫu ngữ pháp; gắn đúng văn bản/phiên bản, sửa nháp giữ public. | Duyệt các trường UI admin cần thêm; có thể làm trước AI. |
-| **M03b — Admin nhập câu hỏi Đọc hiểu** | Có `quizList` trong schema nhưng chưa có form biên tập câu hỏi. | Nhập câu hỏi/lựa chọn/đáp án/giải thích, validation và preview trước publish. | Chốt kiểu câu hỏi, nguồn đề; có thể làm độc lập A04/A05. |
+| **M03a — Admin nhập phần bổ trợ Đọc hiểu — Xong 06/11** | Đã có form ruby/từ/ngữ pháp và preview trong ReadingEditor. | Nội dung gắn đúng văn bản/phiên bản, lưu/F5, sửa nháp giữ public; không đổi UI học. | Đã nghiệm thu; [hướng dẫn](ADMIN_READING.md). |
+| **M03b — Admin nhập câu hỏi Đọc hiểu — Xong 06/11** | Đã có form câu hỏi/lựa chọn/đáp án/giải thích và validation FE/API/publish. | Một đáp án đúng, 2–6 lựa chọn, đổi thứ tự giữ đáp án; preview trước publish. | Đã nghiệm thu; R03 vẫn cần chốt riêng. |
 | **A04 — Tạo furigana và dịch bài đọc** | Tách câu và lưu bài đã thật; bài cá nhân mới chưa được tự thêm ruby/dịch. [reading-content:20](../apps/api/src/modules/reading/reading-content.ts#L20). | Phân tích đúng bài, xem trước rồi áp dụng, giữ văn bản gốc và xử lý khi bài đổi phiên bản. Không cần viết lại việc tách câu đã có. | Chốt cách sinh furigana/dịch, dịch vụ/model/hạn mức và bước duyệt. |
 | **A05a — Từ/ngữ pháp theo bài đọc** | Các cột lấy dữ liệu biên tập hoặc báo thiếu, không phân tích tự động. [DocHieuPage:676](../apps/web/src/features/reading/pages/DocHieuPage.tsx#L676), [713](../apps/web/src/features/reading/pages/DocHieuPage.tsx#L713). | Đề xuất từ/mẫu theo đúng bài; đối chiếu catalog published, thiếu báo thiếu; xem trước để sửa rồi lưu. | Sau hoặc kết hợp A04; chốt AI được bổ sung tới đâu, không nhập tự động vào catalog chung. |
 | **A05b — Tạo câu hỏi theo bài đọc** | Chưa có luồng sinh quiz từ nội dung bài. | Tạo câu hỏi/đáp án/giải thích có căn cứ trong bài, preview và duyệt trước khi dùng. | Sau A04; chốt số câu, dạng câu và mức độ. Có thể dùng đề nhập M03b trước khi triển khai AI. |

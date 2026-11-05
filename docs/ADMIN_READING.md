@@ -1,6 +1,6 @@
-# M02 — Admin riêng và biên tập bài Đọc hiểu
+# M02/M03 — Admin và biên tập bài Đọc hiểu
 
-Người dùng duyệt ba quy tắc M02 và cổng admin riêng ngày 22/09/2026. Phạm vi lần này: văn bản Nhật, dịch thủ công từng câu, nguồn, audio Edge và nháp/xuất bản/lưu trữ. Giữ giao diện học hiện có. Chưa thêm biên tập furigana, từ vựng, ngữ pháp hoặc quiz; dữ liệu bổ trợ đã có được bảo toàn khi không đổi văn bản Nhật.
+M02 hoàn thành ngày 22/09/2026: văn bản Nhật, dịch thủ công từng câu, nguồn, audio Edge và nháp/xuất bản/lưu trữ. M03a/M03b hoàn thành local ngày 06/11/2026, bổ sung biên tập furigana, từ vựng, ngữ pháp và câu hỏi theo phạm vi người dùng duyệt. Giữ giao diện học hiện có và luồng xuất bản M02.
 
 ## Chạy local
 
@@ -44,6 +44,8 @@ Lỗi lưu giữ form để thử lại. Hai tab cùng sửa dùng version: tab 
 
 ## Database và API
 
+M03 dùng lại JSONB `reading_articles.content`/`published_content`, nguồn và phiên bản hiện có; không thêm bảng hoặc migration. Các mục này thuộc nội dung bài đọc, không tự tạo bản ghi trong kho từ vựng/ngữ pháp hoặc thẻ Ôn tập. Bản nháp và bản công khai luôn tách riêng.
+
 Migration `202609220001_admin_reading` chỉ thêm `reading_articles.source_id`, `published_source_id` (nullable cho dữ liệu cũ, FK `content_sources`, không xóa nguồn đang tham chiếu) và index tra audio theo bài/hash/giọng/trạng thái. Không reset hoặc thay dữ liệu cũ, không tạo CMS tổng quát.
 
 Giữ `reading_articles.content` và `published_content` riêng; nguồn nháp/công khai cũng riêng. Câu/dịch thuộc trọn bài nên tiếp tục dùng JSONB. `reading_audio` giữ metadata/file của từng job; `article_version` là phiên bản tạo file và không bị di chuyển khi dùng lại. Hash văn bản/giọng nối audio vào đúng bản đang xem; URL media kiểm tra nội dung hiện hành và quyền. Publish trong transaction với khóa bài, kiểm tra version và audio trước khi chép nháp sang bản công khai.
@@ -55,14 +57,39 @@ Các endpoint dưới `/api/admin/reading/articles`:
 | `GET /`, `GET /:id` | Thư viện/chi tiết nháp, source, trạng thái, version và audio hợp lệ |
 | `POST /preview` | `{expectedUserId,title,subtitle?,text}` → `{content}` tách câu; không ghi DB |
 | `POST /` | `{expectedUserId,id,title,subtitle?,text,sourceId,annotations}`; tạo nháp, retry cùng ID/nội dung không nhân bản |
-| `PATCH /:id` | `{expectedUserId,version,title,text,sourceId?,annotations?,translationsReviewed?}`; text đổi cần xác nhận và annotation có nguyên văn câu tiếng Nhật khớp câu |
+| `PATCH /:id` | `{expectedUserId,version,title,text,sourceId?,annotations?,translationsReviewed?,editorialText?}` cùng các danh sách bổ trợ; text đổi cần xác nhận và annotation có nguyên văn câu tiếng Nhật khớp câu |
 | `POST /:id/audio` | `{expectedUserId,version}` → `{audio}`; dùng cache hoặc tạo file, kiểm tra lại phiên/role sau job dài |
 | `GET /:id/audio/:audioId/:filename` | MP3 nháp cho admin, hỗ trợ Range, no-store |
 | `POST /:id/publish`, `/archive`, `/restore` | `{expectedUserId,version}`; ghi có version/transaction |
 
-Source dùng GET/POST `/api/admin/content/sources` hiện có. Các trường editorial cũ không nằm trong UI M02 vẫn được giữ nếu text không đổi; API tiếp tục validation chúng. Phần học dùng `/api/reading/articles` và public media hiện có.
+Source dùng GET/POST `/api/admin/content/sources` hiện có. Phần học dùng `/api/reading/articles` và public media hiện có. `editorialText` phải khớp chính xác văn bản gửi lên để ràng buộc danh sách vừa biên tập với bài mới; client cũ không gửi binding vẫn theo quy tắc xóa bổ trợ khi đổi văn bản. Annotation `ruby: []` xóa chú thích; bỏ trường ruby trong PATCH giữ chú thích cũ. Danh sách `[]` xóa toàn bộ nhóm tương ứng. Cả preview/save và publish đều validation; publish kiểm tra lại nội dung lưu trong DB, cấu trúc câu, đáp án và ID an toàn.
 
-## Kiểm thử
+## M03a/M03b — Cách nhập nội dung bổ trợ
+
+Mở **Đọc hiểu → chọn bài** tại admin cổng 3002. Nhập/tách câu như M02, sau đó:
+
+1. **Furigana:** dưới mỗi bản dịch, bấm **Nhập furigana**. Chia câu thành các đoạn liên tiếp, nhập cách đọc cho đoạn Kanji; để trống cách đọc ở kana/dấu câu. Ví dụ `学校です。` gồm đoạn `学校` với cách đọc `がっこう`, tiếp theo `です。` không cần cách đọc. Ghép các đoạn phải đúng nguyên văn, kể cả khoảng trắng. Có thêm, xóa, đổi thứ tự và **Bỏ furigana**; bản xem trước hiện ruby ngay.
+2. **Từ vựng:** bấm **Thêm từ vựng**, nhập từ Nhật, cách đọc, Hán Việt và nghĩa. Từ Nhật bắt buộc; các phần chưa có có thể để trống, hệ thống không tự điền.
+3. **Ngữ pháp:** bấm **Thêm mẫu ngữ pháp**, nhập mẫu, trình độ nếu đã xác định, ý nghĩa, ví dụ Nhật và dịch ví dụ. Mẫu bắt buộc; không tự nối vào kho ngữ pháp hoặc gán trình độ.
+4. **Câu hỏi:** bấm **Thêm câu hỏi**, nhập đề và 2–6 lựa chọn không trùng; chọn đúng một radio **Đáp án đúng**, nhập giải thích. Mỗi lựa chọn phải có nội dung. Đổi thứ tự vẫn giữ đáp án tương ứng; nếu xóa đáp án đúng, phải chọn lại trước khi lưu. ID câu hỏi giữ nguyên khi sửa hoặc đổi thứ tự.
+5. **Lưu bản nháp → Xem trước → Xuất bản… → Xác nhận xuất bản**. Preview cho admin hiển thị cả đáp án đúng và giải thích. Nếu chưa có audio khớp văn bản, tạo audio trước khi xuất bản. Sửa riêng bổ trợ không phải tạo lại audio.
+
+Mỗi nhóm từ vựng/ngữ pháp/câu hỏi tối đa 100 mục. Mỗi câu tối đa 500 đoạn ruby. Mọi phần dùng nguồn và quyền sử dụng của bài đọc; người biên tập chịu trách nhiệm nhập nội dung đã rà soát. Không gọi AI trong M03.
+
+Khi sửa văn bản Nhật, phải tách lại câu và xác nhận; danh sách từ/ngữ pháp/câu hỏi cũ được xóa khỏi **bản nháp** trước khi biên tập lại. Có thể nhập bổ trợ mới sau bước này và lưu cùng văn bản mới. Bản đã xuất bản vẫn giữ nội dung/audio cũ đến khi xuất bản lại. Lỗi nhập liệu giữ nguyên form để sửa; không âm thầm bỏ hàng lỗi.
+
+M03 chỉ quản trị đề và nội dung hiển thị. Quiz trang học dùng đáp án đã xuất bản để kiểm tra trong lượt mở; lưu kết quả/tiến độ quiz theo tài khoản thuộc **R03**, chưa triển khai trong task này. Không thêm XP hay tự gắn sao.
+
+### Nghiệm thu M03 — 06/11/2026
+
+- `reading.test.ts`: **27/27** (23 hồi quy + 4 ca M03), TypeScript API/tests đạt. Kiểm tra CRUD, xóa ruby/danh sách, ràng buộc văn bản mới, nguồn/phiên/version, preview không ghi, draft/public/audio độc lập và validation trước publish.
+- Frontend/admin/shared: **207/207**, gồm 9 ca mới cho nội dung bổ trợ và 5 hồi quy editor. Build web/admin/API và `check:boundaries` (239 file) đạt. Vite cảnh báo bundle web 833,37 KB/admin 500,55 KB; không phải lỗi build.
+- Browser trên DB riêng: nhập đủ bốn nhóm → chặn câu hỏi chưa chọn đáp án → đổi thứ tự lựa chọn → preview → lưu → F5 → tạo Edge MP3 thật → xuất bản → trang học hiển thị ruby/từ/ngữ pháp/quiz và giải thích đúng. Sửa nghĩa và xóa ruby ở nháp rồi F5 vẫn giữ; bản công khai vẫn giữ ruby/nghĩa cũ.
+- Desktop và 390px: form/preview dùng được, không tràn ngang. Ảnh trong `.artifacts/m03/`. Không nghe đối chiếu chất lượng phát âm trong lượt M03.
+- Kiểm tra tương thích database chính bằng transaction chỉ đọc: 31 bài thư viện, 31 bản nháp và 31 bản công khai đều qua validator mới. Kiểm thử ghi dữ liệu chỉ ở `nihongo_test` và `nihongo_m03_ui_test`, không sửa nội dung hay quyền admin thật.
+- Đã đăng xuất, thu hồi role admin và phiên của tài khoản QA trong database riêng; dừng các server 3100–3102. Giữ dữ liệu kiểm thử riêng để đối chiếu, không đưa vào thư viện chính. Các server local 3000/3001/3002 đã khởi động lại để sử dụng.
+
+## Nghiệm thu M02 — 22/09/2026 (lịch sử)
 
 - API: 79/79 auth/content/reading/origin đạt, thêm 5/5 ca M02 đạt (tổng 84 ca liên quan). Bao gồm nháp kín, source bắt buộc, file thiếu, cache, quyền media, hai lần publish đồng thời, bảo toàn bản public, phân quyền sau job dài, rà soát câu và khôi phục nháp.
 - FE/shared: 97/97 đạt, gồm ghép câu không theo index, câu lặp, giữ/bỏ dữ liệu bổ trợ đúng lúc, phiên bản và đường dẫn audio, request theo tài khoản.

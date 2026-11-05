@@ -8,7 +8,7 @@ import { Prisma, type PrismaClient, type ReadingArticle, type ReadingAudio } fro
 import { z } from 'zod';
 import { requireAdmin } from '../auth/admin.auth.js';
 import { HttpError } from '../../common/errors.js';
-import { editorialInput, makeReadingContent, readingInput, readingEditorialPatch, updateReadingEditorial, type ReadingContent } from './reading-content.js';
+import { editorialInput, makeReadingContent, readingInput, readingEditorialPatch, updateReadingEditorial, validateStoredReadingContent, type ReadingContent } from './reading-content.js';
 import { contentSourceSchema } from '../content/content.schema.js';
 import { defaultReadingStorage, edgeReadingTts, READING_VOICE, readingMediaSchema, type ReadingTts } from './reading-tts.js';
 
@@ -322,7 +322,7 @@ export function readingRoutes(db: PrismaClient, options: Options = {}) {
       let data: Prisma.ReadingArticleUncheckedUpdateManyInput;
       if (operation === 'publish') {
         const content = viewContent(article, true);
-        readingInput.parse({ title: content.title, subtitle: content.subtitle, text: content.text });
+        validateStoredReadingContent(content);
         if (!article.sourceId || !await tx.contentSource.findUnique({ where: { id: article.sourceId } }))
           throw new HttpError(400, 'SOURCE_REQUIRED', 'Chọn nguồn hợp lệ trước khi xuất bản.');
         if (!await readyAudio(article.id, content, tx))

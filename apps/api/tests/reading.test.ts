@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../src/app.js';
 import type { Config } from '../src/config/env.js';
-import { makeReadingContent } from '../src/modules/reading/reading-content.js';
+import { makeReadingContent, type ReadingContent } from '../src/modules/reading/reading-content.js';
 import * as tts from '../src/modules/reading/reading-tts.js';
 
 const databaseUrl = process.env.TEST_DATABASE_URL!;
@@ -248,6 +248,106 @@ describe('M02 library editorial and private draft audio', () => {
     const audio = await api.db.readingAudio.findFirstOrThrow({ where: { articleId: article.id } });
     await get(`${adminPath}/${article.id}/audio/${audio.id}/0.mp3`, admin).expect(403);
     await get(`${articlePath}/${article.id}`).expect(404);
+  });
+});
+
+describe('M03 reading supporting content and questions', () => {
+  const rich = {
+    annotations: [{ sentenceId: 'p1-s1', japanese: '学校。', translation: 'Trường học.', ruby: [{ text: '学校', reading: 'がっこう' }, { text: '。' }] }],
+    vocabList: [{ word: '学校', reading: 'がっこう', hanViet: 'HỌC HIỆU', meaning: 'Trường học' }],
+    grammarList: [{ pattern: 'Nです', jlptLevel: 'N5', meaning: 'Là N', exampleJp: '学校です。', exampleVi: 'Là trường học.' }],
+    quizList: [{ id: 7, question: '学校 nghĩa là gì?', options: ['Trường học', 'Nhà ga'], correctIndex: 0, explanation: '学校 là trường học.' }],
+  };
+
+  it('saves all editorial groups, keeps public/audio unchanged until publish and explicitly clears ruby/lists', async () => {
+    const admin = await register(true), article = await create(admin, { text: '学校。', editorialText: '学校。', ...rich }, true);
+    const firstAudio = (await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).expect(200)).body.audio;
+    await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(200);
+    const publicBefore = (await get(`${articlePath}/${article.id}`).expect(200)).body.article;
+    const { updatedAt: _publicUpdatedAt, ...publicSnapshot } = publicBefore;
+    expect(publicBefore).toMatchObject({ vocabList: rich.vocabList, grammarList: rich.grammarList, quizList: rich.quizList });
+    const edit = { version: 1, title: article.title, text: article.text, editorialText: article.text,
+      vocabList: [{ ...rich.vocabList[0], meaning: 'Ngôi trường' }],
+      grammarList: [{ ...rich.grammarList[0], meaning: 'Nêu danh tính' }],
+      quizList: [{ ...rich.quizList[0], id: 12, correctIndex: 1, explanation: 'Nội dung biên tập mới.' }],
+    };
+    const changed = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, edit).expect(200)).body.article;
+    expect(changed.audio.id).toBe(firstAudio.id);
+    expect(changed.quizList[0]).toMatchObject({ id: 12, correctIndex: 1 });
+    expect(changed.grammarList[0].meaning).toBe('Nêu danh tính');
+    expect(changed.vocabList[0].meaning).toBe('Ngôi trường');
+    expect((await get(`${articlePath}/${article.id}`)).body.article).toMatchObject(publicSnapshot);
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, edit).expect(409);
+    const cleared = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 2, title: article.title, text: article.text,
+      editorialText: article.text, annotations: [{ sentenceId: 'p1-s1', japanese: article.text, ruby: [] }],
+      vocabList: [], grammarList: [], quizList: [] }).expect(200)).body.article;
+    expect(cleared.paragraphs[0].sentences[0]).toEqual({ id: 'p1-s1', japanese: '学校。', translation: 'Trường học.' });
+    expect(cleared).toMatchObject({ version: 3, vocabList: [], grammarList: [], quizList: [] });
+    expect((await get(`${articlePath}/${article.id}`)).body.article).toMatchObject(publicSnapshot);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 3 }).expect(200);
+    const publicAfter = (await get(`${articlePath}/${article.id}`)).body.article;
+    expect(publicAfter.paragraphs[0].sentences[0].ruby).toBeUndefined();
+    expect(publicAfter).toMatchObject({ vocabList: [], grammarList: [], quizList: [] });
+    expect(publicAfter.audio.id).toBe(firstAudio.id);
+    expect(await api.db.reviewCard.count()).toBe(0);
+    expect(await api.db.xpEvent.count()).toBe(0);
+  });
+
+  it('binds newly reviewed supporting content to changed Japanese without inheriting old lists', async () => {
+    const admin = await register(true), article = await create(admin, { text: '学校。', ...rich }, true);
+    const nextText = '図書館。';
+    const patch = { version: 0, title: article.title, text: nextText, translationsReviewed: true,
+      annotations: [{ sentenceId: 'p1-s1', japanese: nextText, translation: 'Thư viện.', ruby: [{ text: '図書館', reading: 'としょかん' }, { text: '。' }] }],
+      vocabList: [{ word: '図書館', reading: 'としょかん', hanViet: '', meaning: 'Thư viện' }],
+      grammarList: [{ ...rich.grammarList[0], exampleJp: '図書館です。', exampleVi: 'Là thư viện.' }],
+      quizList: [{ id: 10, question: '図書館 nghĩa là gì?', options: ['Nhà ga', 'Thư viện'], correctIndex: 1, explanation: '図書館 là thư viện.' }],
+    };
+    await mutation(admin, 'patch', `${adminPath}/${article.id}`, { ...patch, editorialText: article.text }).expect(400);
+    expect((await get(`${adminPath}/${article.id}`, admin)).body.article.version).toBe(0);
+    const saved = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, { ...patch, editorialText: nextText }).expect(200)).body.article;
+    expect(saved).toMatchObject({ text: nextText, vocabList: patch.vocabList, grammarList: patch.grammarList, quizList: patch.quizList });
+    expect(saved.paragraphs[0].sentences[0].ruby).toEqual(patch.annotations[0].ruby);
+    const empty = (await mutation(admin, 'patch', `${adminPath}/${article.id}`, { version: 1, title: article.title, text: '駅。',
+      editorialText: '駅。', translationsReviewed: true }).expect(200)).body.article;
+    expect(empty).toMatchObject({ vocabList: [], grammarList: [], quizList: [] });
+  });
+
+  it('validates preview without saving: ruby, blank fields, choice uniqueness, answer index and safe question IDs', async () => {
+    const admin = await register(true), base = { title: 'Biên tập', text: '学校。' }, validQuiz = rich.quizList[0];
+    const invalid = [
+      { editorialText: '旧文。' },
+      { annotations: [{ sentenceId: 'p1-s1', japanese: '旧文。', ruby: [] }] },
+      { annotations: [{ sentenceId: 'p1-s1', ruby: [{ text: '学校', reading: 'がっこう' }] }] },
+      { annotations: [{ sentenceId: 'p1-s1', ruby: [{ text: '学校。', reading: '   ' }] }] },
+      { vocabList: [{ ...rich.vocabList[0], word: '  ' }] },
+      { grammarList: [{ ...rich.grammarList[0], pattern: '\t' }] },
+      { quizList: [{ ...validQuiz, question: '\n ' }] },
+      { quizList: [{ ...validQuiz, options: ['A', ' '] }] },
+      { quizList: [{ ...validQuiz, options: [' Thư viện ', 'Thư   viện'] }] },
+      { quizList: [{ ...validQuiz, options: ['が', 'か\u3099'] }] },
+      { quizList: [{ ...validQuiz, correctIndex: 2 }] },
+      { quizList: [{ ...validQuiz, id: Number.MAX_SAFE_INTEGER + 1 }] },
+      { quizList: [validQuiz, validQuiz] },
+    ];
+    for (const extra of invalid) await mutation(admin, 'post', `${adminPath}/preview`, { ...base, ...extra }).expect(400);
+    const preview = (await mutation(admin, 'post', `${adminPath}/preview`, { ...base, editorialText: base.text, ...rich }).expect(200)).body.content;
+    expect(preview).toMatchObject({ vocabList: rich.vocabList, grammarList: rich.grammarList, quizList: rich.quizList });
+    expect(await api.db.readingArticle.count()).toBe(0);
+  });
+
+  it('revalidates persisted editorial content when publishing and preserves the previous public version on failure', async () => {
+    const admin = await register(true), article = await create(admin, { text: '学校。', ...rich }, true);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/audio`, { version: 0 }).expect(200);
+    await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 0 }).expect(200);
+    const before = (await get(`${articlePath}/${article.id}`)).body.article;
+    const { updatedAt: _publicUpdatedAt, ...publicSnapshot } = before;
+    const stored = await api.db.readingArticle.findUniqueOrThrow({ where: { id: article.id } });
+    const malformed = { ...(stored.content as unknown as ReadingContent), quizList: [{ ...rich.quizList[0], options: ['A', ' A '] }] };
+    await api.db.readingArticle.update({ where: { id: article.id }, data: { content: malformed } });
+    const response = await mutation(admin, 'post', `${adminPath}/${article.id}/publish`, { version: 1 }).expect(400);
+    expect(response.body.error.issues[0].path).toEqual(['quizList', 0, 'options']);
+    expect((await get(`${articlePath}/${article.id}`)).body.article).toMatchObject(publicSnapshot);
+    expect((await api.db.readingArticle.findUniqueOrThrow({ where: { id: article.id } })).version).toBe(1);
   });
 });
 
