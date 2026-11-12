@@ -19,6 +19,7 @@ import { kanaResultsRoutes } from './modules/kana/kana-results.routes.js';
 import { contentRoutes } from './modules/content/content.routes.js';
 import { adminContentRoutes } from './modules/content/admin.content.routes.js';
 import { readingRoutes } from './modules/reading/reading.routes.js';
+import { readingAnalysisRoutes } from './modules/reading/reading-analysis.routes.js';
 import { curriculumStudyRoutes } from './modules/curriculum/curriculum-study.routes.js';
 import { curriculumRoutes } from './modules/curriculum/curriculum.routes.js';
 import { grammarRoutes } from './modules/grammar/grammar.routes.js';
@@ -78,6 +79,7 @@ export function createApp(config: Config) {
   app.use('/api/jlpt/study', middleware, jlptStudyRoutes(db));
   app.use('/api/admin/jlpt', middleware, jlpt.admin);
   const reading = readingRoutes(db, { python: config.TTS_PYTHON, storageDir: config.TTS_STORAGE_DIR });
+  app.use('/api/reading/articles', middleware, readingAnalysisRoutes(db, config));
   app.use('/api/reading/articles', middleware, reading.public);
   app.use('/api/admin/reading/articles', middleware, reading.admin);
   const curriculum = curriculumRoutes(db);

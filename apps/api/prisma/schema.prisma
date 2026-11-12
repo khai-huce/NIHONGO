@@ -38,6 +38,7 @@ model User {
   sentenceAnalysisRequests SentenceAnalysisRequest[]
   vocabAiRequests VocabAiRequest[]
   assistantRequests AssistantRequest[]
+  readingAnalysisRequests ReadingAnalysisRequest[]
   xpEvents XpEvent[]
   shadowingVideos ShadowingVideo[]
   shadowingStudies ShadowingStudy[]
@@ -160,6 +161,7 @@ model ReviewEvent {
 
 model ReadingArticle {
   jlptResources JlptResource[]
+  analysisRequests ReadingAnalysisRequest[]
   id String @id @db.Uuid
   userId String @map("user_id") @db.Uuid
   scope String @default("personal") @db.VarChar(16)
@@ -178,6 +180,31 @@ model ReadingArticle {
   audio ReadingAudio[]
   @@index([userId, scope, createdAt])
   @@map("reading_articles")
+}
+
+// Private previews and idempotent application; article annotations remain in ReadingArticle.content.
+model ReadingAnalysisRequest {
+  id String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  articleId String @map("article_id") @db.Uuid
+  baseVersion Int @map("base_version")
+  baseHash String @map("base_hash") @db.VarChar(64)
+  requestHash String @map("request_hash") @db.VarChar(64)
+  model String @db.VarChar(100)
+  status String @default("pending") @db.VarChar(16)
+  providerCalled Boolean @default(true) @map("provider_called")
+  result Json?
+  appliedHash String? @map("applied_hash") @db.VarChar(64)
+  appliedVersion Int? @map("applied_version")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article ReadingArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  @@index([userId, requestHash, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([articleId])
+  @@map("reading_analysis_requests")
 }
 
 model ReadingAudio {

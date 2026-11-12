@@ -207,15 +207,19 @@ describe('Shadowing AI transcript', () => {
 });
 
 describe('Shadowing shares Gemini quota', () => {
-  function transaction(counts: { grammar?: [number, number]; sentence?: [number, number]; shadowing?: [number, number]; vocab?: [number, number] }) {
+  function transaction(counts: { grammar?: [number, number]; sentence?: [number, number]; shadowing?: [number, number]; vocab?: [number, number]; reading?: [number, number] }) {
     const count = (values: [number, number] = [0, 0]) => vi.fn().mockImplementation(async ({ where }) => where.userId ? values[0] : values[1]);
-    return { grammarAiRequest: { count: count(counts.grammar) }, sentenceAnalysisRequest: { count: count(counts.sentence) }, shadowingAiRequest: { count: count(counts.shadowing) }, vocabAiRequest: { count: count(counts.vocab) }, assistantRequest: { count: count() } } as unknown as Prisma.TransactionClient;
+    return { grammarAiRequest: { count: count(counts.grammar) }, sentenceAnalysisRequest: { count: count(counts.sentence) }, shadowingAiRequest: { count: count(counts.shadowing) }, vocabAiRequest: { count: count(counts.vocab) }, assistantRequest: { count: count() }, readingAnalysisRequest: { count: count(counts.reading) } } as unknown as Prisma.TransactionClient;
   }
   it('counts Shadowing claims against common account/global caps, including other feature calls', async () => {
     await expect(assertGeminiQuota(transaction({ grammar: [10, 50], sentence: [8, 30], shadowing: [2, 10] }), config, 'user')).rejects.toMatchObject({ code: 'AI_QUOTA' });
     await expect(assertGeminiQuota(transaction({ grammar: [0, 70], sentence: [0, 20], shadowing: [0, 10] }), config, 'user')).rejects.toMatchObject({ code: 'AI_QUOTA' });
     await expect(assertGeminiQuota(transaction({ shadowing: [2, 9] }), config, 'user')).resolves.toBeUndefined();
     await expect(assertGeminiQuota(transaction({ shadowing: [2, 9], vocab: [18, 18] }), config, 'user')).rejects.toMatchObject({ code: 'AI_QUOTA' });
+    await expect(assertShadowingQuota(transaction({ shadowing: [2, 9], reading: [18, 18] }), config, 'user')).rejects.toMatchObject({ code: 'AI_QUOTA' });
+    const tx = transaction({ reading: [0, 0] });
+    await assertGeminiQuota(tx, config, 'user');
+    expect(vi.mocked(tx.readingAnalysisRequest.count).mock.calls.every(([args]) => args?.where?.providerCalled === true)).toBe(true);
   });
   it('enforces 3 per account, 10 globally in rolling 24h independent of shared caps', async () => {
     await expect(assertShadowingQuota(transaction({ shadowing: [3, 3] }), config, 'user')).rejects.toMatchObject({ code: 'SHADOWING_AI_QUOTA' });
