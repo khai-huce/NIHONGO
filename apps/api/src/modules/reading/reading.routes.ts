@@ -11,6 +11,7 @@ import { HttpError } from '../../common/errors.js';
 import { editorialInput, makeReadingContent, readingInput, readingEditorialPatch, updateReadingEditorial, validateStoredReadingContent, type ReadingContent } from './reading-content.js';
 import { contentSourceSchema } from '../content/content.schema.js';
 import { defaultReadingStorage, edgeReadingTts, READING_VOICE, readingMediaSchema, type ReadingTts } from './reading-tts.js';
+import { readingSupplementCatalog } from './reading-supplements.catalog.js';
 
 type LiveUser = { id: string; role: string };
 type Options = { python?: string; storageDir?: string; synthesize?: ReadingTts };
@@ -73,7 +74,10 @@ export function readingRoutes(db: PrismaClient, options: Options = {}) {
     const isPublic = article.scope === 'library' && !draft;
     const version = viewVersion(article, draft), content = viewContent(article, draft);
     const audio = article.archivedAt ? null : await readyAudio(article.id, content);
+    const supplementCatalog = [...content.vocabList, ...content.grammarList].some(item => item.aiEvidence)
+      ? await readingSupplementCatalog(db, content) : undefined;
     return { ...content, id: article.id, version, visibility: isPublic ? 'public' : 'private',
+      ...(supplementCatalog ? { supplementCatalog, grammarList: content.grammarList.map((g, i) => g.aiEvidence ? { ...g, jlptLevel: supplementCatalog.grammar[i]?.level ?? '' } : g) } : {}),
       createdAt: article.createdAt.toISOString(), updatedAt: article.updatedAt.toISOString(), charCount: Array.from(content.text).length,
       sourceId: isPublic ? article.publishedSourceId : article.sourceId,
       audio: audio ? audioDto(audio, version, draft) : null,
@@ -127,9 +131,11 @@ export function readingRoutes(db: PrismaClient, options: Options = {}) {
   router.patch('/:id', async (req, res) => {
     const userId = account(req, res.locals.readingUser), id = articleId(req);
     const input = readingInput.extend(versionInput.shape).strict().parse(req.body);
-    const content = makeReadingContent({ title: input.title, subtitle: input.subtitle, text: input.text });
     const article = await readable(id, res.locals.readingUser);
     if (article.scope !== 'personal' || article.userId !== userId) throw missing();
+    const prior = viewContent(article);
+    const content = input.text === prior.text ? { ...prior, title: input.title, subtitle: input.subtitle }
+      : makeReadingContent({ title: input.title, subtitle: input.subtitle, text: input.text });
     const saved = await db.readingArticle.updateMany({ where: { id, userId, version: input.version, archivedAt: null }, data: { content, version: { increment: 1 } } });
     if (!saved.count) throw stale();
     res.json({ userId, article: await dto(await db.readingArticle.findUniqueOrThrow({ where: { id } })) });

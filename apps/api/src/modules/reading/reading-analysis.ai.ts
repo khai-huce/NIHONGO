@@ -36,19 +36,19 @@ export async function evaluateReadingAnalysis(db: PrismaClient, config: Config, 
     await lockGeminiQuota(tx);
     const old = await tx.readingAnalysisRequest.findUnique({ where: { id: input.id } });
     if (old) {
-      if (old.userId !== input.userId || old.requestHash !== requestHash) throw new HttpError(409, 'AI_REQUEST_REUSED', 'Mã lượt phân tích đã thuộc bài hoặc phiên bản khác. Hãy tạo lượt mới.');
+      if (old.userId !== input.userId || old.purpose !== 'annotations' || old.requestHash !== requestHash) throw new HttpError(409, 'AI_REQUEST_REUSED', 'Mã lượt phân tích đã thuộc bài hoặc phiên bản khác. Hãy tạo lượt mới.');
       if (old.status === 'ready') return validateReadingAnalysisResult(old.result, input.content, true);
       if (old.status === 'pending' && Date.now() - old.createdAt.getTime() < PENDING_TTL_MS) throw new HttpError(409, 'AI_BUSY', 'Gemini đang phân tích bài này. Đợi một lúc rồi thử lại.');
       throw new HttpError(503, 'AI_RETRY_NEW', 'Lượt phân tích trước chưa hoàn tất. Bấm thử lại để tạo lượt mới.');
     }
-    const ready = await tx.readingAnalysisRequest.findFirst({ where: { userId: input.userId, requestHash, status: 'ready' }, orderBy: { createdAt: 'desc' } });
+    const ready = await tx.readingAnalysisRequest.findFirst({ where: { userId: input.userId, purpose: 'annotations', requestHash, status: 'ready' }, orderBy: { createdAt: 'desc' } });
     if (ready) {
       const result = validateReadingAnalysisResult(ready.result, input.content, true);
       await tx.readingAnalysisRequest.create({ data: { id: input.id, userId: input.userId, articleId: input.articleId, baseVersion: input.version,
         baseHash, requestHash, model, status: 'ready', providerCalled: false, result } });
       return result;
     }
-    const pending = await tx.readingAnalysisRequest.findFirst({ where: { userId: input.userId, requestHash, status: 'pending',
+    const pending = await tx.readingAnalysisRequest.findFirst({ where: { userId: input.userId, purpose: 'annotations', requestHash, status: 'pending',
       createdAt: { gt: new Date(Date.now() - PENDING_TTL_MS) } } });
     if (pending) throw new HttpError(409, 'AI_BUSY', 'Gemini đang phân tích bài này ở lượt khác. Đợi một lúc rồi thử lại.');
     await assertGeminiQuota(tx, config, input.userId);

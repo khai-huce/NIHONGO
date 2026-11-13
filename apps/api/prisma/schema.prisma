@@ -191,6 +191,7 @@ model ReadingAnalysisRequest {
   baseHash String @map("base_hash") @db.VarChar(64)
   requestHash String @map("request_hash") @db.VarChar(64)
   model String @db.VarChar(100)
+  purpose String @default("annotations") @db.VarChar(16)
   status String @default("pending") @db.VarChar(16)
   providerCalled Boolean @default(true) @map("provider_called")
   result Json?

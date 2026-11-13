@@ -5,12 +5,13 @@ const requiredText = (maximum: number, label: string) => z.string().max(maximum,
   .refine(value => value.trim().length > 0, `${label} không được để trống.`);
 // Ruby text is an exact slice of the source sentence, including punctuation/spaces.
 const ruby = z.array(z.object({ text: z.string().min(1).max(3000), reading: requiredText(300, 'Cách đọc furigana').optional() }).strict()).max(500);
-const vocab = z.object({ word: requiredText(200, 'Từ vựng'), reading: z.string().max(200), hanViet: z.string().max(200), meaning: z.string().max(1000) }).strict();
-const grammar = z.object({ pattern: requiredText(200, 'Mẫu ngữ pháp'), jlptLevel: z.string().max(16), meaning: z.string().max(1000), exampleJp: z.string().max(1000), exampleVi: z.string().max(1000) }).strict();
+export const readingEvidenceSchema = z.array(z.object({ sentenceId: z.string().min(1).max(32), quote: requiredText(1000, 'Dẫn chứng') }).strict()).min(1).max(3);
+const vocab = z.object({ word: requiredText(200, 'Từ vựng'), reading: z.string().max(200), hanViet: z.string().max(200), meaning: z.string().max(1000), aiEvidence: readingEvidenceSchema.optional() }).strict();
+const grammar = z.object({ pattern: requiredText(200, 'Mẫu ngữ pháp'), jlptLevel: z.string().max(16), meaning: z.string().max(1000), exampleJp: z.string().max(1000), exampleVi: z.string().max(1000), aiEvidence: readingEvidenceSchema.optional() }).strict();
 const optionKey = (value: string) => value.normalize('NFC').trim().replace(/\s+/gu, ' ');
 const quiz = z.object({ id: z.number().int('ID câu hỏi phải là số nguyên an toàn.').positive('ID câu hỏi phải lớn hơn 0.'),
   question: requiredText(1000, 'Câu hỏi'), options: z.array(requiredText(500, 'Lựa chọn')).min(2, 'Câu hỏi cần ít nhất 2 lựa chọn.').max(6, 'Câu hỏi có tối đa 6 lựa chọn.'),
-  correctIndex: z.number().int('Vị trí đáp án phải là số nguyên.').min(0, 'Hãy chọn một đáp án đúng.'), explanation: z.string().max(2000) }).strict()
+  correctIndex: z.number().int('Vị trí đáp án phải là số nguyên.').min(0, 'Hãy chọn một đáp án đúng.'), explanation: z.string().max(2000), aiEvidence: readingEvidenceSchema.optional() }).strict()
   .refine(item => item.correctIndex < item.options.length, { path: ['correctIndex'], message: 'Đáp án bài tập không hợp lệ.' })
   .refine(item => new Set(item.options.map(optionKey)).size === item.options.length, { path: ['options'], message: 'Các lựa chọn trong cùng câu hỏi không được trùng nhau.' });
 export const readingInput = z.object({ title: z.string().trim().min(1).max(200), subtitle: z.string().trim().max(500).default(''), text }).strict();
@@ -52,6 +53,11 @@ export function makeReadingContent(raw: unknown, editorial = false): ReadingCont
   }
   if (new Set(additions.quizList.map(item => item.id)).size !== additions.quizList.length) {
     throw new z.ZodError([{ code: 'custom', path: ['quizList'], message: 'ID câu hỏi bị trùng.' }]);
+  }
+  for (const item of [...additions.vocabList, ...additions.grammarList, ...additions.quizList]) {
+    if (item.aiEvidence?.some(evidence => !paragraphs.flatMap(p => p.sentences).some(sentence => sentence.id === evidence.sentenceId && sentence.japanese.includes(evidence.quote)))) {
+      throw new z.ZodError([{ code: 'custom', path: ['aiEvidence'], message: 'Dẫn chứng nội dung bổ trợ phải thuộc đúng câu trong bài.' }]);
+    }
   }
   return { title: input.title, subtitle: input.subtitle, text: input.text, paragraphs,
     vocabList: additions.vocabList, grammarList: additions.grammarList, quizList: additions.quizList };

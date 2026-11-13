@@ -60,7 +60,7 @@ export function readingAnalysisRoutes(db: PrismaClient, config: Config) {
       const article = await tx.readingArticle.findUnique({ where: { id } });
       if (!article || article.scope !== 'personal' || article.userId !== userId || article.archivedAt) throw missing();
       const request = await tx.readingAnalysisRequest.findUnique({ where: { id: input.requestId } });
-      if (!request || request.userId !== userId || request.articleId !== id || request.baseVersion !== input.version || request.status !== 'ready') {
+      if (!request || request.userId !== userId || request.purpose !== 'annotations' || request.articleId !== id || request.baseVersion !== input.version || request.status !== 'ready') {
         throw new HttpError(409, 'ANALYSIS_NOT_READY', 'Không tìm thấy bản phân tích hợp lệ của bài này. Hãy phân tích lại.');
       }
       if (request.appliedVersion !== null) {

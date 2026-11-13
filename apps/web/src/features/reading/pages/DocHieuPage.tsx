@@ -29,6 +29,9 @@ import { useReadings } from '../hooks/useReadings';
 import { useReadingAudio } from '../hooks/useReadingAudio';
 import { useReadingAnalysis } from '../hooks/useReadingAnalysis';
 import { ReadingAnalysisDialog } from '../components/ReadingAnalysisDialog';
+import { useReadingSupplements } from '../hooks/useReadingSupplements';
+import { ReadingSupplementDialog } from '../components/ReadingSupplementDialog';
+import { ReadingEvidenceNote } from '../components/ReadingEvidenceNote';
 import { formatReadingTime as formatTime, readingLength, READING_LIMIT } from '@nihongo/client/reading';
 
 // ---------------------------------------------------------------------------
@@ -58,7 +61,7 @@ const READING_STEPS = [
   {
     step: 5,
     title: 'Làm bài kiểm tra đọc hiểu',
-    desc: 'Trả lời các câu hỏi trắc nghiệm chuẩn đề thi JLPT ở cuối bài để kiểm tra khả năng suy luận và mức độ hiểu sâu nội dung.'
+    desc: 'Trả lời các câu hỏi trắc nghiệm theo nội dung bài đọc ở cuối bài để kiểm tra khả năng suy luận và mức độ hiểu sâu nội dung.'
   },
   {
     step: 6,
@@ -73,6 +76,7 @@ export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }>
   const readings = useReadings(userId, authBusy, articleId);
   const currentArticle = readings.article;
   const analysis = useReadingAnalysis(userId, currentArticle, authBusy || readings.loading, readings.refresh);
+  const supplements = useReadingSupplements(userId, currentArticle, authBusy || readings.loading, readings.refresh);
   const userArticles = readings.articles.filter(article => article.visibility === 'private');
   const publicArticles = readings.articles.filter(article => article.visibility === 'public');
   const [inputText, setInputText] = useState('');
@@ -368,10 +372,17 @@ export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }>
 
         {currentArticle.visibility === 'private' && <button
           type="button" onClick={() => { void analysis.start(); }}
-          disabled={!userId || authBusy || readings.loading || readings.saving || analysis.busy || analysis.saving || !!analysis.eligibility}
+          disabled={!userId || authBusy || readings.loading || readings.saving || analysis.busy || analysis.saving || supplements.busy || supplements.saving || !!analysis.eligibility}
           title={analysis.eligibility || 'Tạo furigana và bản dịch cho phần còn thiếu; xem trước rồi mới lưu.'}
           className="px-3 py-1 rounded-lg border border-[#292524] bg-white hover:bg-stone-100 text-xs font-bold text-[#292524] flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         ><Sparkles className="w-3.5 h-3.5" /><span>{analysis.busy ? 'Đang phân tích…' : 'Phân tích bài đọc'}</span></button>}
+        {currentArticle.visibility === 'private' && (['study', 'quiz'] as const).map(kind => <button key={kind} type="button"
+          onClick={() => { void supplements.start(kind); }}
+          disabled={authBusy || readings.loading || readings.saving || analysis.busy || analysis.saving || supplements.busy || supplements.saving || !!supplements.eligibility(kind)}
+          title={supplements.eligibility(kind) || 'Tạo bản xem trước để rà soát, chỉnh sửa rồi áp dụng.'}
+          className="px-3 py-1 rounded-lg border border-[#292524] bg-white hover:bg-stone-100 text-xs font-bold text-[#292524] flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <Sparkles className="w-3.5 h-3.5" /><span>{kind === 'study' ? 'Tạo từ vựng/ngữ pháp' : 'Tạo câu hỏi'}</span>
+        </button>)}
 
         {currentArticle.visibility === 'public' && (
           <span className="px-3 py-1 rounded-full border border-[#0094ff] bg-blue-50/70 text-xs font-black text-[#0094ff] flex items-center gap-1.5 shadow-xs">
@@ -384,6 +395,9 @@ export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }>
       {status}
       {analysis.busy && <p role="status" className="text-xs font-bold text-[#78716c]">Gemini đang tạo furigana và bản dịch. Bài đã lưu vẫn giữ nguyên đến khi bạn xác nhận.</p>}
       {analysis.error && !analysis.draft && <p role="alert" className="text-xs font-bold text-red-700">{analysis.error}</p>}
+      {supplements.busy && <p role="status" className="text-xs font-bold text-[#78716c]">Gemini đang tạo nội dung theo bài đọc. Chưa lưu cho đến khi bạn xác nhận.</p>}
+      {supplements.error && !supplements.draft && <p role="alert" className="text-xs font-bold text-red-700">{supplements.error}</p>}
+      {supplements.draft && <ReadingSupplementDialog state={supplements} />}
       {currentArticle.visibility === 'private' && analysis.eligibility && <p className="text-xs font-bold text-[#78716c]">{analysis.eligibility}</p>}
       {analysis.draft && <ReadingAnalysisDialog title={analysis.draft.title} article={analysis.draft.article}
         rows={analysis.draft.rows} warnings={analysis.draft.warnings} saving={analysis.saving} uncertain={analysis.uncertain}
@@ -669,6 +683,7 @@ export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }>
                           <span>{isCorrect ? 'Chính xác! Giải thích:' : 'Chưa đúng. Giải thích:'}</span>
                         </div>
                         <p>{quiz.explanation}</p>
+                        <ReadingEvidenceNote evidence={quiz.aiEvidence} />
                       </div>
                     )}
                   </div>
@@ -715,6 +730,7 @@ export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }>
                   <p className="text-xs font-bold text-slate-600">
                     {v.meaning}
                   </p>
+                  <ReadingEvidenceNote evidence={v.aiEvidence} />
                 </RoughCard>
               ))}
             </div>
@@ -744,12 +760,12 @@ export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }>
                       <span className="text-sm font-black text-[#0094ff] font-kanji">
                         {g.pattern}
                       </span>
-                      <ExternalLink className="w-3.5 h-3.5 text-stone-400" />
+                      {g.aiEvidence && currentArticle.supplementCatalog?.grammar[idx] && <a href={currentArticle.supplementCatalog.grammar[idx]!.href} aria-label={`Mở mẫu ${g.pattern} trong kho`} className="text-[#0094ff]"><ExternalLink className="w-3.5 h-3.5" /></a>}
                     </div>
 
-                    <span className="px-1.5 py-0.5 rounded bg-blue-500 text-white text-[10px] font-black">
+                    {!!g.jlptLevel && <span className="px-1.5 py-0.5 rounded bg-blue-500 text-white text-[10px] font-black">
                       {g.jlptLevel}
-                    </span>
+                    </span>}
                   </div>
 
                   {/* Meaning */}
@@ -766,6 +782,8 @@ export const DocHieuPage: React.FC<{ userId: string | null; authBusy: boolean }>
                       {g.exampleVi}
                     </p>
                   </div>
+                  {g.aiEvidence && !currentArticle.supplementCatalog?.grammar[idx] && <p className="text-[11px] text-stone-500">Chưa có mẫu khớp duy nhất trong kho đã xuất bản.</p>}
+                  <ReadingEvidenceNote evidence={g.aiEvidence} />
                 </RoughCard>
               ))}
             </div>

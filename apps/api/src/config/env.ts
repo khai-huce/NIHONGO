@@ -15,6 +15,7 @@ const schema = z.object({
   GEMINI_API_KEY: z.string().trim().optional(),
   YOUTUBE_API_KEY: z.string().trim().optional(),
   GEMINI_MODEL: z.string().regex(/^gemini-[a-z0-9.-]+$/).optional(),
+  READING_QUIZ_GEMINI_MODEL: z.string().regex(/^gemini-[a-z0-9.-]+$/).optional(),
   SHADOWING_GEMINI_MODEL: z.string().regex(/^gemini-[a-z0-9.-]+$/).optional(),
   GEMINI_DAILY_LIMIT: z.coerce.number().int().min(1).max(1000).optional(),
   GEMINI_GLOBAL_DAILY_LIMIT: z.coerce.number().int().min(1).max(10000).optional(),

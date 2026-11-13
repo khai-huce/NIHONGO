@@ -1,3 +1,5 @@
+import type { ReadingEvidence, ReadingSupplementCatalog } from '@nihongo/shared/contracts/reading-supplements';
+
 export type ReadingSentence = { id: string; japanese: string; ruby?: { text: string; reading?: string }[]; translation?: string };
 export type ReadingAudio = {
   id: string; articleId: string; version: number; voice: string; totalSeconds: number;
@@ -7,9 +9,10 @@ export type ReadingArticle = {
   id: string; title: string; subtitle: string; text: string; version: number;
   visibility: 'private' | 'public'; createdAt: string; audio: ReadingAudio | null;
   paragraphs: { id: string; sentences: ReadingSentence[] }[];
-  vocabList: { word: string; reading: string; hanViet: string; meaning: string }[];
-  grammarList: { pattern: string; jlptLevel: string; meaning: string; exampleJp: string; exampleVi: string }[];
-  quizList: { id: number; question: string; options: string[]; correctIndex: number; explanation: string }[];
+  vocabList: { word: string; reading: string; hanViet: string; meaning: string; aiEvidence?: ReadingEvidence[] }[];
+  grammarList: { pattern: string; jlptLevel: string; meaning: string; exampleJp: string; exampleVi: string; aiEvidence?: ReadingEvidence[] }[];
+  quizList: { id: number; question: string; options: string[]; correctIndex: number; explanation: string; aiEvidence?: ReadingEvidence[] }[];
+  supplementCatalog?: ReadingSupplementCatalog;
 };
 export const READING_LIMIT = 3000;
 export const GUEST_READINGS_KEY = 'nhai_kanji_user_reading_articles';

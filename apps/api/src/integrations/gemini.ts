@@ -20,6 +20,7 @@ async function readGeminiBody(response: Response): Promise<{ candidates?: Array<
 /** Transport only: each feature owns its prompt, schema validation and persistence. */
 export async function requestGeminiJson(config: Config, input: {
   instruction: string; data: unknown; schema: object; maxOutputTokens: number; timeoutMs: number;
+  useDefaultSampling?: boolean;
   video?: { url: string; startMs: number; endMs: number };
 }): Promise<unknown> {
   if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL) {
@@ -41,7 +42,7 @@ export async function requestGeminiJson(config: Config, input: {
         contents: [{ role: 'user', parts: [
           { text: JSON.stringify(input.data) },
         ] }],
-        generationConfig: { temperature: 0, maxOutputTokens: input.maxOutputTokens,
+        generationConfig: { ...(input.useDefaultSampling ? {} : { temperature: 0 }), maxOutputTokens: input.maxOutputTokens,
           responseMimeType: 'application/json', responseJsonSchema: input.schema },
       }),
     });
