@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { AdminRequest, ContentSource } from '../../shared/types';
 import { AdminApiError } from '../../shared/api';
@@ -19,6 +20,7 @@ export function CurriculumEditor({course,sources,request,onSaved,onClose,onSourc
   const [saved,setSaved]=useState(course),[draft,setDraft]=useState(()=>curriculumDraftCopy(course)),[slug,setSlug]=useState(course?.slug??'');
   const [baseline,setBaseline]=useState(()=>JSON.stringify({draft:curriculumDraftCopy(course),slug:course?.slug??''}));
   const [pending,setPending]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[conflict,setConflict]=useState(false);
+  useToastFeedback({ success: notice, error });
   const [dialog,setDialog]=useState<'publish'|'archive'|'restore'|'reload'|'close'|'import'|'source'|'preview'|null>(null);
   const [selection,setSelection]=useState<{topicId:string;lessonId:string}|null>(null);
   const [removal,setRemoval]=useState<{title:string;apply:()=>void}|null>(null);

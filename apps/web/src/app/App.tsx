@@ -1,3 +1,4 @@
+import { ToastProvider, ToastFeedback, AccountToastFeedback } from '@nihongo/client/toast';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sidebar } from './layout/Sidebar';
 import { TopHeader } from './layout/TopHeader';
@@ -24,7 +25,8 @@ import { SettingsModal } from '../features/settings/components/SettingsModal';
 import { MascotAssistant } from '../features/assistant/components/MascotAssistant';
 import { AuthModal } from '../features/auth/components/AuthModal';
 import { LearningSettingsContext, useDeviceSettings } from '../features/settings/hooks/useLearningSettings';
-import { cancelJapaneseSpeech, subscribeSpeechErrors } from '../shared/audio/speech';
+import { cancelJapaneseSpeech } from '../shared/audio/speech';
+import { SpeechToastFeedback } from '../shared/audio/SpeechToastFeedback';
 import { useAuth } from '@nihongo/client/auth/useAuth';
 import { ContentCatalogProvider, CatalogGate } from '../features/content/hooks/useContentCatalog';
 import { ReviewProvider } from '../features/review/hooks/useReview';
@@ -49,10 +51,7 @@ export const App: React.FC = () => {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
   const { settings, setSettings, storageError } = useDeviceSettings();
-  const [speechError, setSpeechError] = useState<string | null>(null);
-  useEffect(() => subscribeSpeechErrors(setSpeechError), []);
   useEffect(() => {
-    setSpeechError(null);
     return () => cancelJapaneseSpeech();
   }, [location.pathname, auth.currentUser?.id]);
 
@@ -61,6 +60,10 @@ export const App: React.FC = () => {
   }
 
   return (
+    <ToastProvider variant="web" scope={auth.currentUser?.id ?? 'guest'}>
+    <AccountToastFeedback userId={auth.currentUser?.id ?? null} checking={auth.checking || auth.loggingOut} error={auth.error} />
+    <SpeechToastFeedback />
+    <ToastFeedback warning={storageError} />
     <LearningSettingsContext.Provider value={settings}>
     <ContentCatalogProvider>
     <ReviewProvider key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}>
@@ -82,10 +85,7 @@ export const App: React.FC = () => {
         <button type="button" onClick={() => { void auth.refresh(); }} disabled={auth.checking || auth.loggingOut} className="underline font-bold">Tải lại tài khoản</button>
       </div>}
 
-      {(speechError || storageError) && <div role="alert" className="fixed bottom-4 left-4 right-4 mx-auto max-w-xl z-[250] rounded-xl border border-amber-300 bg-amber-50 text-amber-950 px-4 py-3 text-sm shadow-lg flex items-center gap-3">
-        <span className="flex-1">{speechError || storageError}</span>
-        {speechError && <button type="button" onClick={() => setSpeechError(null)} className="underline font-bold">Đóng</button>}
-      </div>}
+
 
       {/* 2. Content Row: Left Sidebar + Main Content */}
       <div className="flex flex-1 h-[calc(100vh-48px)] overflow-hidden">
@@ -158,5 +158,6 @@ export const App: React.FC = () => {
     </ReviewProvider>
     </ContentCatalogProvider>
     </LearningSettingsContext.Provider>
+    </ToastProvider>
   );
 };

@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Link, Route, Routes, useBlocker, useLocation, useNavigate, useParams, useSearchParams, type BlockerFunction } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Check, ChevronDown, ChevronRight, FileText, Headphones, Layers, List, Search, Star, Target, Volume2, Zap } from 'lucide-react';
@@ -145,6 +146,7 @@ function CurriculumLessonPage({course,lessonId,userId,authBusy,completed,onSaved
   const store = useAccountResource<{lesson?:CurriculumLesson;reviewSet?:CurriculumReviewSet}>(canLoad?path:null,userId,authBusy,combined&&lessonId==='guest'?{lessonIds:guestIds}:undefined);
   const [wordLimit,setWordLimit]=useState(50);
   const [search,setSearch] = useState(''), [fullscreen,setFullscreen] = useState(false), [bulkBusy,setBulkBusy] = useState(false), [bulkError,setBulkError] = useState(''), [bulkNotice,setBulkNotice] = useState('');
+  useToastFeedback({ success: bulkNotice, error: bulkError });
   const [params,setParams] = useSearchParams();
   const mode:StudyMode = params.get('mode') === 'quiz' ? 'quiz' : params.get('mode') === 'cram' ? 'cram' : 'flashcard';
   const settings = useLearningSettings(), [furigana,setFurigana] = useState<boolean|null>(null);

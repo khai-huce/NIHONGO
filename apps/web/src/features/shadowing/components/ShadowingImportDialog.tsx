@@ -1,3 +1,4 @@
+import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { ShadowingAiRequest, ShadowingContent, ShadowingDetailResponse, ShadowingDraftInput, ShadowingVideo } from '@nihongo/shared/contracts/shadowing';
 import { parseShadowingSubtitles, validateShadowingCues } from '@nihongo/shared/study/shadowing-media';
@@ -15,6 +16,8 @@ export function ShadowingImportDialog({ userId, url, video, onClose, onSaved }: 
   const [metadata, setMetadata] = useState<ShadowingContent | null>(video?.content ?? null);
   const [text, setText] = useState(''), [preview, setPreview] = useState<Cues | null>(null), [reviewed, setReviewed] = useState(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [ai, setAi] = useState<ShadowingAiRequest | null>(null);
+  const toast = useToast();
+  useToastFeedback({ error });
   const [pollPaused, setPollPaused] = useState(false), [accountError, setAccountError] = useState(false), [fileBusy, setFileBusy] = useState(false);
   const live = useRef(0), locked = useRef(false), fileRevision = useRef(0), owner = useRef(userId), currentOwner = useRef(userId);
   const controllers = useRef(new Set<AbortController>()), createId = useRef(crypto.randomUUID()), aiAttempt = useRef<{ hash: string; id: string } | null>(null);
@@ -96,7 +99,7 @@ export function ShadowingImportDialog({ userId, url, video, onClose, onSaved }: 
       {error && <p role="alert" className="text-red-700 whitespace-pre-wrap">{error}</p>}
       <button disabled={blocked || !reviewed || !draft.sentences.length} onClick={() => void run(async () => {
         validateShadowingCues(draft.sentences.map((cue, index) => ({ ...cue, id: cue.id ?? String(index) })));
-        const result = await verified<ShadowingDetailResponse>(video ? `/videos/${video.id}` : '/videos', { ...draft, expectedUserId: userId, transcriptReviewed: true, ...(video ? { version: video.version } : { id: createId.current }) }, video ? 'PATCH' : 'POST'); onSaved(result);
+        const result = await verified<ShadowingDetailResponse>(video ? `/videos/${video.id}` : '/videos', { ...draft, expectedUserId: userId, transcriptReviewed: true, ...(video ? { version: video.version } : { id: createId.current }) }, video ? 'PATCH' : 'POST'); toast.success('Đã lưu video và phụ đề.'); onSaved(result);
       })} className="w-full bg-blue-600 text-white font-bold rounded-xl py-3 disabled:opacity-50">{busy ? 'Đang xử lý…' : 'Lưu video và bắt đầu học'}</button>
     </div>
   </ShadowingDialog>;

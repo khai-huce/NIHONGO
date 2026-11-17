@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { ShadowingAiRequest, ShadowingContent, ShadowingDetailResponse, ShadowingDraftInput, ShadowingVideo } from '@nihongo/shared/contracts/shadowing';
 import type { AdminRequest, ContentSource } from '../../shared/types';
@@ -17,6 +18,7 @@ export function ShadowingEditor({ video, sources, request, onSaved, onClose, onS
   const [saved, setSaved] = useState(video), [form, setForm] = useState(() => shadowingForm(video ?? undefined));
   const [baseline, setBaseline] = useState(() => fingerprint(shadowingForm(video ?? undefined)));
   const [pending, setPending] = useState(''), [error, setError] = useState(''), [notice, setNotice] = useState(''), [conflict, setConflict] = useState(false);
+  useToastFeedback({ success: notice, error });
   const [dialog, setDialog] = useState<Dialog>(null), [preview, setPreview] = useState<ShadowingContent | null>(video?.content ?? null), [page, setPage] = useState(1);
   const [ai, setAi] = useState<ShadowingAiRequest | null>(null), [aiError, setAiError] = useState(''), [aiRetry, setAiRetry] = useState(0), [aiChecked, setAiChecked] = useState(false);
   const id = useRef(video?.id ?? crypto.randomUUID()), aiId = useRef<{ url: string; id: string } | null>(null), mounted = useRef(false), locked = useRef(false);

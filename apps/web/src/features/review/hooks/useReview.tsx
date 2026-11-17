@@ -1,3 +1,4 @@
+import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { createContext, useContext, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { api } from '@nihongo/client/api';
 
@@ -13,6 +14,8 @@ const Context = createContext<Store | null>(null);
 export function ReviewProvider({ userId, authBusy, onLogin, children }: { userId: string | null; authBusy: boolean; onLogin: () => void; children: ReactNode }) {
   const [cards, setCards] = useState<ReviewCard[]>([]), [stats, setStats] = useState<Stats[]>([]);
   const [loading, setLoading] = useState(!!userId), [loaded, setLoaded] = useState(!userId), [saving, setSaving] = useState(false), [error, setError] = useState('');
+  const toast = useToast();
+  useToastFeedback({ error });
   const [clockOffset, setClockOffset] = useState(0);
   const active = useRef(false), pending = useRef(false), revision = useRef(0);
   const reload = useCallback(async () => {
@@ -42,7 +45,9 @@ export function ReviewProvider({ userId, authBusy, onLogin, children }: { userId
   }
   async function toggle(source: ReviewSource) {
     const existing = cards.find(card => card.category === source.category && card.sourceId === source.sourceId);
-    return mutate('/review/star', { ...source, active: !existing?.active, expectedUserId: userId });
+    const success = await mutate('/review/star', { ...source, active: !existing?.active, expectedUserId: userId });
+    if (success) toast.success(existing?.active ? 'Đã bỏ sao. Lịch ôn và lịch sử vẫn được giữ.' : 'Đã thêm vào Ôn tập.');
+    return success;
   }
   async function rate(card: ReviewCard, rating: Rating, elapsedMs: number) {
     const success = await mutate('/review/rate', { id: card.id, version: card.version, rating, elapsedMs: Math.min(3600000, Math.max(0, Math.round(elapsedMs))), expectedUserId: userId });
@@ -51,7 +56,7 @@ export function ReviewProvider({ userId, authBusy, onLogin, children }: { userId
   }
   async function reset(category: ReviewCategory, expectedCount: number) {
     const success = await mutate('/review/reset', { category, expectedCount, expectedUserId: userId });
-    if (success) await reload();
+    if (success) { toast.success('Đã đặt lại lịch ôn của các thẻ đang gắn sao.'); await reload(); }
     return success;
   }
   return <Context.Provider value={{ userId, cards, stats, loading, loaded, busy: authBusy || saving || loading || (!!userId && !loaded), error, clockOffset, reload, toggle, rate, reset, onLogin }}>

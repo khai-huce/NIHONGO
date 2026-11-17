@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useId, useRef, useState } from 'react';
 import { api } from '@nihongo/client/api';
 import type { UserProfile } from '@nihongo/shared/contracts/core';
@@ -6,6 +7,7 @@ export function AdminLogin({ onClose, onSuccess }: { onClose: () => void; onSucc
   const ref = useRef<HTMLDialogElement>(null), titleId = useId(), busy = useRef(false), mounted = useRef(true);
   const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [pending, setPending] = useState(false), [error, setError] = useState('');
   useEffect(() => { mounted.current = true; const previous = document.activeElement as HTMLElement | null, dialog = ref.current; dialog?.showModal(); return () => { mounted.current = false; dialog?.close(); previous?.focus(); }; }, []);
+  useToastFeedback({ error });
   const submit = async () => {
     if (busy.current) return;
     busy.current = true; setPending(true); setError('');

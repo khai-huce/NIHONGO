@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { AdminRequest, ContentSource } from '../../shared/types';
 import { AdminApiError } from '../../shared/api';
@@ -20,6 +21,7 @@ export function GrammarEditor({ course, sources, request, onSaved, onClose, onSo
   const [saved, setSaved] = useState(course), [draft, setDraft] = useState(() => grammarDraftCopy(course)), [slug, setSlug] = useState(course?.slug ?? '');
   const [baseline, setBaseline] = useState(() => JSON.stringify({ draft: grammarDraftCopy(course), slug: course?.slug ?? '' }));
   const [pending, setPending] = useState(''), [error, setError] = useState(''), [notice, setNotice] = useState(''), [conflict, setConflict] = useState(false);
+  useToastFeedback({ success: notice, error });
   const [dialog, setDialog] = useState<Dialog>(null), [selection, setSelection] = useState<{ lessonId: string; patternId: string } | null>(null);
   const [removal, setRemoval] = useState<{ title: string; apply: () => void } | null>(null);
   const [jsonText, setJsonText] = useState(''), [importDraft, setImportDraft] = useState<GrammarDraft | null>(null), [importError, setImportError] = useState('');

@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import React, { useRef, useState } from 'react';
 import { Mail, Lock, User, X, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { RoughCard } from '../../../shared/ui/RoughCard';
@@ -19,6 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  useToastFeedback({ error: errorMsg });
   const [isLoading, setIsLoading] = useState(false);
   const pending = useRef(false);
 

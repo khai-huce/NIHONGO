@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import type { AdminRequest, ContentSource, KanjiData, KanjiRecord } from '../../shared/types';
 import { kanjiEditorData, kanjiEditorForm, type KanjiEditorForm } from './kanji-editor-data';
@@ -58,6 +59,7 @@ export function KanjiEditor({ record, sources, request, onSaved, onClose, onSour
   const [baseline, setBaseline] = useState(() => JSON.stringify({ form: kanjiEditorForm(record?.draft), sourceId: record?.draftSourceId ?? '' }));
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  useToastFeedback({ success: notice, error });
   const [conflict, setConflict] = useState(false);
   const [pending, setPending] = useState(false);
   const [dialog, setDialog] = useState<'source' | 'preview' | 'archive' | 'reload' | 'close' | null>(null);

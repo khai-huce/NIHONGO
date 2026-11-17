@@ -1,3 +1,4 @@
+import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useContentCatalog } from '../../content/hooks/useContentCatalog';
 import { api, ApiError } from '@nihongo/client/api';
@@ -154,6 +155,8 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
   if (context.current.userId !== userId) { ++revision.current; pending.current = false; }
   context.current = { userId, authBusy };
   const [state, setState] = useState<State>(() => emptyState(userId));
+  const toast = useToast();
+  useToastFeedback({ error: state.owner === userId ? state.error : null });
   const current = useRef(state);
   const apply = useCallback((next: State) => { current.current = next; setState(next); }, []);
   const isCurrent = useCallback((request: number) => mounted.current && context.current.userId === userId &&
@@ -229,6 +232,9 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
       }
       if (!isCurrent(request) || !result) return null;
       apply({ ...current.current, roadmaps: result.roadmaps, saving: false });
+      if (path === '/roadmaps' || path === '/roadmaps/update' || path === '/roadmaps/delete') {
+        toast.success((path.endsWith('/delete') ? 'Đã xóa lộ trình.' : path.endsWith('/update') ? 'Đã cập nhật lộ trình.' : 'Đã tạo lộ trình.') + (!userId ? ' Đã lưu trên thiết bị này.' : ''));
+      }
       return result;
     } catch (err) {
       if (isCurrent(request)) apply({ ...current.current, saving: false,
@@ -241,7 +247,7 @@ export function usePersonalRoadmaps(userId: string | null, authBusy: boolean) {
         if (current.current.saving) apply({ ...current.current, saving: false });
       }
     }
-  }, [userId, apply, isCurrent, helpers]);
+  }, [userId, apply, isCurrent, helpers, toast]);
 
   const create = useCallback(async (id: string, name: string, rawKanji: string, perDay: number): Promise<PersonalRoadmap | null> => {
     const result = await change('/roadmaps', { id, name, rawKanji, perDay }, store => {

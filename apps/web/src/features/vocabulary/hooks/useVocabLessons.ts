@@ -1,3 +1,4 @@
+import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@nihongo/client/api';
 import { useReview } from '../../review/hooks/useReview';
@@ -27,6 +28,8 @@ export function useVocabLessons(userId: string | null, authBusy: boolean) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const toast = useToast();
+  useToastFeedback({ error });
   const mounted = useRef(false);
   const pending = useRef(false);
   const revision = useRef(0);
@@ -104,6 +107,9 @@ export function useVocabLessons(userId: string | null, authBusy: boolean) {
       currentLessons.current = next;
       setLessons(next);
       if (userId && Array.isArray(body.words)) void reloadReview();
+      const message = counts ? `Đã thêm ${counts.importedCount} từ, bỏ qua ${counts.duplicateCount} từ trùng.`
+        : path.endsWith('/delete') ? 'Đã xóa bài học.' : path.endsWith('/update') ? 'Đã cập nhật bài học.' : 'Đã tạo bài học.';
+      toast.success(message + (!userId ? ' Đã lưu trên thiết bị này.' : ''));
       return { lesson: saved, ...counts };
     } catch (err) {
       if (mounted.current && request === revision.current) setError(err instanceof Error ? err.message : 'Chưa lưu được bài học.');

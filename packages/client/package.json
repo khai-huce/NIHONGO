@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./api": "./src/api.ts",
+    "./toast": "./src/toast/ToastProvider.tsx",
     "./auth/*": "./src/auth/*.ts",
     "./reading": "./src/reading.ts",
     "./styles/*": "./styles/*"
@@ -13,6 +14,7 @@
     "@nihongo/shared": "*"
   },
   "peerDependencies": {
-    "react": "^18.3.1"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }

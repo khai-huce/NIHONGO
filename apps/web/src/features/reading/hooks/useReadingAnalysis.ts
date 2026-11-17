@@ -1,3 +1,4 @@
+import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import { ApiError } from '@nihongo/client/api';
 import type { ReadingArticle, ReadingSentence } from '@nihongo/client/reading';
@@ -28,6 +29,8 @@ export function useReadingAnalysis(userId: string | null, article: ReadingArticl
     setState(empty());
   }, [userId, article?.id, article?.version, article?.text, authBusy]);
 
+  const toast = useToast();
+  useToastFeedback({ error: sameReadingAnalysisContext(state.context, current.current) ? state.error : null });
   async function start() {
     if (active.current || authBusy) return;
     const context = { ...current.current };
@@ -70,6 +73,7 @@ export function useReadingAnalysis(userId: string | null, article: ReadingArticl
       if (!isCurrent()) return;
       validateReadingAnalysisApplyResponse(response, userId, draft.requestId, draft.article);
       setState(empty());
+      toast.success('Đã lưu bản dịch và furigana vào bài đọc.');
       onApplied();
     } catch (error) {
       if (!isCurrent()) return;

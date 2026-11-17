@@ -1,3 +1,4 @@
+import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError } from '@nihongo/client/api';
 import { GUEST_READINGS_KEY, guestReading, readGuestReadings, type ReadingArticle } from '@nihongo/client/reading';
@@ -26,6 +27,8 @@ export async function readingRequest<T>(path: string, options: { method?: string
 type State = { owner: string | null; target: string | undefined; articles: ReadingArticle[]; article: ReadingArticle | null; loading: boolean; saving: boolean; error: string };
 export function useReadings(userId: string | null, authBusy: boolean, articleId?: string) {
   const [state, setState] = useState<State>({ owner: userId, target: articleId, articles: [], article: null, loading: true, saving: false, error: '' });
+  const toast = useToast();
+  useToastFeedback({ error: state.owner === userId && state.target === articleId ? state.error : null });
   const [reload, setReload] = useState(0);
   const revision = useRef(0), busy = useRef(false), abort = useRef<AbortController | null>(null);
   const retryCreate = useRef<{ text: string; id: string } | null>(null);
@@ -84,6 +87,7 @@ export function useReadings(userId: string | null, authBusy: boolean, articleId?
       }
       if (request !== revision.current || controller.signal.aborted) return null;
       retryCreate.current = null;
+      toast.success(userId ? 'Đã lưu bài đọc vào tài khoản.' : 'Đã lưu bài đọc trên thiết bị này.');
       return result.id;
     } catch (error) {
       if (request === revision.current && !controller.signal.aborted) setState(s => ({ ...s,
@@ -102,7 +106,7 @@ export function useReadings(userId: string | null, authBusy: boolean, articleId?
         body: { expectedUserId: userId, version: article.version }, signal: controller.signal });
       else localStorage.setItem(GUEST_READINGS_KEY, JSON.stringify(readGuestReadings(localStorage.getItem(GUEST_READINGS_KEY)).filter(a => a.id !== article.id)));
       if (request !== revision.current || controller.signal.aborted) return false;
-      setState(s => ({ ...s, articles: s.articles.filter(a => a.id !== article.id) })); return true;
+      setState(s => ({ ...s, articles: s.articles.filter(a => a.id !== article.id) })); toast.success('Đã xóa bài đọc.'); return true;
     } catch (error) {
       if (request === revision.current && !controller.signal.aborted) setState(s => ({ ...s,
         error: error instanceof Error ? error.message : 'Chưa xóa được bài đọc.' }));

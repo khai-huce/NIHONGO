@@ -1,3 +1,4 @@
+import { useToast } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { AdminRequest, ContentSource, ImportPreview, KanjiImport } from '../../shared/types';
 import { createKanjiImportTemplate, importErrorDetails, importFieldPath, MAX_IMPORT_BYTES, parseKanjiImport } from './import-json';
@@ -27,6 +28,7 @@ const buttonClass = 'rounded-lg border border-slate-300 bg-white px-4 py-2 text-
 const primaryClass = 'rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50';
 
 export function KanjiImportPanel({ request, sources, onImported, onClose, onDirtyChange }: KanjiImportPanelProps) {
+  const toast = useToast();
   const [text, setText] = useState('');
   const [savedText, setSavedText] = useState('');
   const [sourceId, setSourceId] = useState('');
@@ -157,6 +159,7 @@ export function KanjiImportPanel({ request, sources, onImported, onClose, onDirt
       });
       if (!mounted.current || revision.current !== currentRevision) return;
       setSuccess(result);
+      toast.success('Đã nhập Kanji vào bản nháp. Rà soát trước khi xuất bản.');
       setPreview(null);
       setSavedText(currentText);
       onImported();

@@ -1,3 +1,4 @@
+import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import { ApiError } from '@nihongo/client/api';
 import type { ReadingArticle } from '@nihongo/client/reading';
@@ -17,6 +18,8 @@ export function useReadingSupplements(userId: string | null, article: ReadingArt
   const retry = useRef<{ id: string; kind: ReadingSupplementKind; context: ReadingAnalysisContext } | null>(null);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; active.current?.abort(); }; }, []);
   useEffect(() => { active.current?.abort(); active.current = null; retry.current = null; setState(empty()); }, [userId, article?.id, article?.version, article?.text, authBusy]);
+  const toast = useToast();
+  useToastFeedback({ error: sameReadingAnalysisContext(state.context, current.current) ? state.error : null });
   async function start(kind: ReadingSupplementKind) {
     if (active.current || authBusy) return;
     // Eligibility depends on which empty group is requested.
@@ -52,7 +55,7 @@ export function useReadingSupplements(userId: string | null, article: ReadingArt
       if (!isCurrent()) return;
       validateReadingAnalysisApplyResponse(raw, userId, draft.requestId, draft.article);
       if (!raw || typeof raw !== 'object' || !('kind' in raw) || raw.kind !== draft.kind) throw new Error('Phản hồi lưu không khớp nhóm nội dung.');
-      setState(empty()); onApplied();
+      setState(empty()); toast.success(draft.kind === 'quiz' ? 'Đã lưu câu hỏi vào bài đọc.' : 'Đã lưu từ vựng và ngữ pháp vào bài đọc.'); onApplied();
     } catch (error) {
       if (!isCurrent()) return;
       const uncertain = !(error instanceof ApiError) || uncertainReadingAnalysisApply(error.status);

@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { AdminJlptRoadmap, JlptDraft, JlptLevel, JlptPreview, JlptResourceOption, JlptSessionInput } from '@nihongo/shared/contracts/jlpt';
 import { AdminApiError } from '../../shared/api';
@@ -22,6 +23,7 @@ export function JlptEditor({ roadmap, availableLevels, sources, request, onSaved
   const [level, setLevel] = useState<JlptLevel>(roadmap?.level ?? availableLevels[0] ?? 'N5');
   const [baseline, setBaseline] = useState(() => JSON.stringify({ draft: copyJlptDraft(roadmap), level: roadmap?.level ?? availableLevels[0] ?? 'N5' }));
   const [pending, setPending] = useState(''), [error, setError] = useState(''), [notice, setNotice] = useState(''), [conflict, setConflict] = useState(false);
+  useToastFeedback({ success: notice, error });
   const [dialog, setDialog] = useState<Dialog>(null), [preview, setPreview] = useState<JlptPreview | null>(null), [pickerSession, setPickerSession] = useState<string | null>(null);
   const [labels, setLabels] = useState<Record<string, JlptResourceOption>>({}), [labelsError, setLabelsError] = useState(''), [labelsRetry, setLabelsRetry] = useState(0);
   const [removeSession, setRemoveSession] = useState<JlptSessionInput | null>(null);

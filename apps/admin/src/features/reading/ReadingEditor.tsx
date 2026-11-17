@@ -1,3 +1,4 @@
+import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import { SentenceRubyEditor, ReadingSupplementEditor } from './ReadingSupplementEditor';
 import { ReadingSupplementPreview } from './ReadingSupplementPreview';
@@ -45,6 +46,7 @@ export function ReadingEditor({ article, sources, request, onSaved, onClose, onS
   const [saved, setSaved] = useState(article), [form, setForm] = useState(() => readingEditorForm(article ?? undefined));
   const [baseline, setBaseline] = useState(() => JSON.stringify(readingEditorForm(article ?? undefined)));
   const [pending, setPending] = useState(''), [error, setError] = useState(''), [notice, setNotice] = useState(''), [conflict, setConflict] = useState(false);
+  useToastFeedback({ success: notice, error });
   const [dialog, setDialog] = useState<'preview' | 'segment' | 'archive' | 'restore' | 'reload' | 'close' | 'source' | null>(null);
   const [candidate, setCandidate] = useState<ReturnType<typeof reconcileReading> | null>(null), [checked, setChecked] = useState(false);
   const [sourceDraft, setSourceDraft] = useState<ContentSource>({ ...emptySource }), [sourceError, setSourceError] = useState('');
