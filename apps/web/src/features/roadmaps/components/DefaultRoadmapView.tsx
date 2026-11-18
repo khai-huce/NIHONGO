@@ -1,4 +1,4 @@
-import { Calendar, Target, Flame, Trophy, ChevronLeft, ChevronRight, Crown, Edit3 } from 'lucide-react';
+import { Calendar, Target, Flame, Trophy, ChevronLeft, ChevronRight, Volume2, Edit3 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { RoughCard, RoughButton } from '../../../shared/ui/RoughCard';
 import { useDefaultRoadmap } from '../hooks/useDefaultRoadmap';
@@ -8,7 +8,6 @@ import { useContentCatalog } from '../../content/hooks/useContentCatalog';
 import { roadmapDayKanji } from '@nihongo/shared/study/roadmap';
 import { speakJapanese } from '../../../shared/audio/speech';
 import type { KanjiItem } from '@nihongo/shared/contracts/core';
-import type { KeyboardEvent } from 'react';
 
 const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 type Props = { userId: string | null; authBusy: boolean; onLogin: () => void; onDetail: (item: KanjiItem) => void };
@@ -29,14 +28,12 @@ export function DefaultRoadmapView({ userId, authBusy, onLogin, onDetail }: Prop
     setSearch({level: selectedLevel, day: String(day)}, {replace: true});
   };
   const setSelectedLevel = (level: string) => { study.setNotice(''); setSearch({level}); };
-  const levelChoice = (level: string) => ({
-    role: 'button', tabIndex: 0, 'aria-label': `Chọn ${level}`, 'aria-pressed': selectedLevel === level,
-    onClick: () => setSelectedLevel(level),
-    onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedLevel(level); }
-    },
-  });
-  const defaultDayKanjiList = supported ? roadmapDayKanji(roadmap.kanjiList, roadmap.perDay, currentDay).map(char => catalog.get(char)!) : [];
+  const items = roadmapDayKanji(roadmap.kanjiList, roadmap.perDay, currentDay)
+    .map(char => catalog.get(char)).filter((item): item is KanjiItem => !!item);
+  const missingKanji = roadmap.kanjiList.some(char => !catalog.has(char));
+  const completed = roadmap.completedDays.includes(currentDay);
+  const started = items.some(item => Object.prototype.hasOwnProperty.call(roadmap.assessments, item.id));
+  const studyLabel = completed ? 'Học lại' : started ? 'Tiếp tục' : 'Học ngay';
   return <>
         <div className="space-y-5">
           
@@ -46,10 +43,11 @@ export function DefaultRoadmapView({ userId, authBusy, onLogin, onDetail }: Prop
               Lộ trình học Kanji
             </h1>
             <p className="text-xs md:text-sm font-bold text-[#78716c] dark:text-[#a8a29e]">
-              {roadmap.perDay} chữ mỗi ngày – Tổng cộng {roadmap.totalDays} ngày
+              {supported ? `${roadmap.perDay} chữ mỗi ngày – Tổng cộng ${roadmap.totalDays} ngày` : `Lộ trình ${selectedLevel}`}
             </p>
           </div>
 
+          {supported && <>
           <p className="text-xs font-bold text-[#78716c]">Đang học {roadmap.kanjiList.length} chữ N5 hiện có; chưa phải bộ N5 đầy đủ.</p>
           {!study.session && (plans.error || plans.loading || plans.saving) && <div role={plans.error ? 'alert' : 'status'} className="text-xs text-amber-900 bg-amber-50 rounded-lg px-3 py-2">
             {plans.error || (plans.loading ? 'Đang tải tiến độ…' : 'Đang lưu tiến độ…')}
@@ -104,78 +102,41 @@ export function DefaultRoadmapView({ userId, authBusy, onLogin, onDetail }: Prop
             </RoughCard>
           </div>
 
-          {/* Level Selection Row */}
+          </>}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            <div {...levelChoice('N5')} className="cursor-pointer">
-              <RoughCard 
-                fill="#86efac" 
-                stroke="#047857" 
-                borderRadius={10}
-                roughness={0.7} 
-                active={selectedLevel === 'N5'}
-                className="p-3 text-center shadow-sketch"
-              >
-                <div className="text-base font-black text-[#047857]">N5</div>
-                <div className="text-[11px] font-bold text-[#065f46]">{roadmap.kanjiList.length} chữ – {roadmap.totalDays} ngày</div>
-                <div className="text-[10px] font-bold text-[#047857] mt-0.5">{plans.loaded ? roadmap.completedDays.length : '—'}/{roadmap.totalDays} ngày</div>
-              </RoughCard>
-            </div>
-
-            <div {...levelChoice('N4')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N4</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
-
-            <div {...levelChoice('N3')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N3</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
-
-            <div {...levelChoice('N2')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N2</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
-
-            <div {...levelChoice('N1')} className="cursor-pointer">
-              <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-3 text-center hover:bg-slate-50 shadow-sketch">
-                <div className="flex items-center justify-center gap-1 text-base font-black text-[#292524]">
-                  <span>N1</span>
-                  <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                </div>
-                <div className="text-[11px] font-bold text-[#a8a29e]">Premium</div>
-              </RoughCard>
-            </div>
+            {levels.map(level => (
+              <RoughButton key={level} type="button" aria-pressed={selectedLevel === level}
+                aria-label={`Chọn ${level}`} disabled={plans.saving}
+                onClick={() => { if (level !== selectedLevel) setSelectedLevel(level); }}
+                fill={selectedLevel === level ? '#86efac' : '#ffffff'}
+                stroke={selectedLevel === level ? '#047857' : '#292524'}
+                borderRadius={10} roughness={0.7} className="p-3 text-center shadow-sketch disabled:opacity-50">
+                <span className="block text-base font-black">{level}</span>
+                <span className="block text-[11px] font-bold">{level === 'N5'
+                  ? `${roadmap.kanjiList.length} chữ – ${roadmap.totalDays} ngày` : 'Chưa có dữ liệu'}</span>
+                {level === 'N5' && <span className="block text-[10px]">{plans.loaded ? roadmap.completedDays.length : '—'}/{roadmap.totalDays} ngày</span>}
+              </RoughButton>
+            ))}
           </div>
-
+          {!supported ? <RoughCard className="p-5"><p role="status">Lộ trình {selectedLevel} chưa có dữ liệu. Vui lòng chọn N5 để học.</p></RoughCard> : <>
           {/* Day Selector Box */}
           <RoughCard fill="#ffffff" stroke="#292524" borderRadius={10} roughness={0.7} className="p-2.5 shadow-sketch">
             <div className="flex items-center justify-between">
               <button 
                 aria-label="Ngày trước" disabled={!supported || currentDay === 1 || plans.saving}
                 onClick={() => setCurrentDay(currentDay - 1)}
-                className="p-1 rounded-md hover:bg-[#eae3d5] text-[#57534e] cursor-pointer"
+                className="p-1 rounded-md hover:bg-[#eae3d5] text-[#57534e] cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
 
               <div className="flex items-center gap-2 font-bold text-sm text-[#292524] font-sketch">
                 <Calendar className="w-4 h-4 text-[#0094ff]" />
-                <span>Ngày {currentDay}</span>
+                <select aria-label="Chọn trực tiếp ngày học" value={currentDay} disabled={plans.saving}
+                  onChange={event => setCurrentDay(Number(event.target.value))} className="cursor-pointer bg-transparent">
+                  {Array.from({length: roadmap.totalDays}, (_, i) => i + 1).map(day =>
+                    <option key={day} value={day}>Ngày {day}{roadmap.completedDays.includes(day) ? ' · Đã hoàn thành' : ''}</option>)}
+                </select>
                 <span className="px-2.5 py-0.5 rounded-full bg-[#86efac] text-[#047857] border-sketch-subtle text-xs font-bold">
                   {selectedLevel}{supported ? ' - Cơ bản' : ''}
                 </span>
@@ -184,7 +145,7 @@ export function DefaultRoadmapView({ userId, authBusy, onLogin, onDetail }: Prop
               <button 
                 aria-label="Ngày tiếp theo" disabled={!supported || currentDay === roadmap.totalDays || plans.saving}
                 onClick={() => setCurrentDay(currentDay + 1)}
-                className="p-1 rounded-md hover:bg-[#eae3d5] text-[#57534e] cursor-pointer"
+                className="p-1 rounded-md hover:bg-[#eae3d5] text-[#57534e] cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -221,56 +182,44 @@ export function DefaultRoadmapView({ userId, authBusy, onLogin, onDetail }: Prop
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-[#78716c]">{defaultDayKanjiList.length} chữ</span>
+                <span className="text-xs font-bold text-[#78716c]">{items.length} chữ</span>
                 <RoughButton
-                  disabled={!supported || plans.busy}
+                  disabled={plans.busy || missingKanji || !items.length}
                   onClick={() => { setCurrentDay(currentDay); void study.start(); }}
                   fill="#0094ff"
                   stroke="#0369a1"
                   borderRadius={8}
                   roughness={0.7}
-                  className="text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer"
+                  className="text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <div className="flex items-center gap-1.5">
                     <Edit3 className="w-3.5 h-3.5" />
-                    <span>Học ngay</span>
+                    <span>{studyLabel}</span>
                   </div>
                 </RoughButton>
               </div>
             </div>
 
-            {!supported && <p role="status" className="text-xs text-[#78716c]">Lộ trình {selectedLevel} chưa có dữ liệu trong đợt này. Vui lòng chọn N5 để học.</p>}
-
-            {/* Kanji tiles grid in the lesson */}
+            {missingKanji && <p role="status">Kho Kanji đang thiếu chữ trong lộ trình này.</p>}
             <div className="grid grid-cols-5 sm:grid-cols-10 gap-2.5">
-              {defaultDayKanjiList.map((item, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => speakJapanese(item.kanji)}
-                  className="cursor-pointer group"
-                >
-                  <RoughCard 
-                    fill="#86efac" 
-                    stroke="#292524" 
-                    borderRadius={8}
-                    roughness={0.7} 
-                    className="p-2 text-center transition-transform group-hover:scale-105"
-                  >
-                    <div className="text-2xl font-kanji font-bold text-[#047857]">
-                      {item.kanji}
-                    </div>
-                    <div className="text-[10px] font-bold text-[#065f46] mt-0.5 truncate">
-                      {item.hanViet}
-                    </div>
-                    <div className="text-[9px] text-[#047857]/80 truncate">
-                      {item.meaning}
-                    </div>
-                  </RoughCard>
-                </div>
+              {items.map(item => (
+                <RoughCard key={item.id} fill="#86efac" stroke="#292524" borderRadius={8}
+                  roughness={0.7} className="text-center">
+                  <button type="button" aria-label={`Xem chi tiết ${item.kanji}`} onClick={() => onDetail(item)}
+                    className="block w-full px-1 pt-2 hover:underline">
+                    <span className="block text-2xl font-kanji font-bold text-[#047857]">{item.kanji}</span>
+                    <span className="block text-[10px] font-bold truncate">{item.hanViet}</span>
+                    <span className="block text-[9px] truncate">{item.meaning}</span>
+                  </button>
+                  <button type="button" aria-label={`Nghe ${item.kanji}`} title={`Nghe ${item.kanji}`}
+                    className="inline-flex p-1.5 text-[#065f46]" onClick={() => speakJapanese(item.kanji)}>
+                    <Volume2 size={14} />
+                  </button>
+                </RoughCard>
               ))}
             </div>
           </RoughCard>
-
+          </>}
           {/* Bottom Mascot */}
           <div className="flex items-center gap-2 text-xs font-bold text-[#78716c] pt-1">
             <div className="text-2xl">🐦</div>
@@ -278,6 +227,6 @@ export function DefaultRoadmapView({ userId, authBusy, onLogin, onDetail }: Prop
           </div>
 
         </div>
-    <RoadmapStudyOverlay study={study} userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={onDetail} />
+    {supported && <RoadmapStudyOverlay study={study} userId={userId} authBusy={authBusy} onLogin={onLogin} onDetail={onDetail} />}
   </>;
 }
