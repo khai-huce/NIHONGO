@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { stat, mkdir, rm } from 'node:fs/promises';
+import { stat, mkdir, rm, readFile, rename, writeFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { Router, json, type Request, type ErrorRequestHandler, type Response, type NextFunction } from 'express';
@@ -54,10 +54,29 @@ export function readingRoutes(db: PrismaClient, options: Options = {}) {
         total += segment.durationSec;
       }
       if (Math.abs(total - audio.durationSec) > 0.01) return false;
-      const files = await Promise.all(segments.map(item => stat(resolve(storagePath(audio), item.fileName))));
+      const files = await Promise.all(segments.map(item => ensureAudioFile(audio, item.fileName)));
       return files.every(file => file.isFile() && file.size > 0 && file.size <= 20_000_000);
     } catch { return false; }
   };
+  async function ensureAudioFile(audio: ReadingAudio, filename: string) {
+    const directory = storagePath(audio);
+    const path = resolve(directory, filename);
+    try { return await stat(path); } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+    const file = await db.readingAudioFile.findUnique({
+      where: { audioId_claimToken_filename: { audioId: audio.id, claimToken: audio.claimToken, filename } },
+      select: { data: true },
+    });
+    if (!file) throw missing();
+    await mkdir(directory, { recursive: true });
+    const temporary = path + '.' + randomUUID();
+    try {
+      await writeFile(temporary, file.data);
+      await rename(temporary, path);
+    } finally { await rm(temporary, { force: true }); }
+    return stat(path);
+  }
   const readyAudio = async (articleId: string, content: ReadingContent, client: PrismaClient | Prisma.TransactionClient = db) => {
     const candidates = await client.readingAudio.findMany({ where: { articleId, contentHash: contentHash(content), voice: READING_VOICE, status: 'ready' }, orderBy: { updatedAt: 'desc' } });
     for (const audio of candidates) if (await filesExist(audio, content)) return audio;
@@ -196,8 +215,14 @@ export function readingRoutes(db: PrismaClient, options: Options = {}) {
       if (Math.abs(offset - media.totalSeconds) > 0.01) throw new Error('TTS duration mismatch');
       const latest = await db.readingArticle.findUnique({ where: { id: article.id } });
       if (!latest || latest.archivedAt || viewVersion(latest, draft) !== version || contentHash(viewContent(latest, draft)) !== hash) throw stale();
-      const saved = await db.readingAudio.updateMany({ where: { id: claim.id, claimToken: claim.claimToken, status: 'generating' }, data: { status: 'ready', segments: media.segments, durationSec: media.totalSeconds } });
-      if (!saved.count) throw busy();
+      await db.$transaction(async tx => {
+        const saved = await tx.readingAudio.updateMany({ where: { id: claim.id, claimToken: claim.claimToken, status: 'generating' }, data: { status: 'ready', segments: media.segments, durationSec: media.totalSeconds } });
+        if (!saved.count) throw busy();
+        await tx.readingAudioFile.deleteMany({ where: { audioId: claim.id } });
+        for (const { fileName } of media.segments) {
+          await tx.readingAudioFile.create({ data: { audioId: claim.id, claimToken: claim.claimToken, filename: fileName, data: await readFile(resolve(directory, fileName)) } });
+        }
+      }, { timeout: 60000 });
       return await db.readingAudio.findUniqueOrThrow({ where: { id: claim.id } });
     } catch (error) {
       try {
@@ -239,6 +264,7 @@ export function readingRoutes(db: PrismaClient, options: Options = {}) {
       || audio.contentHash !== contentHash(viewContent(article, draft))) throw missing();
     const segments = readingMediaSchema.shape.segments.parse(audio.segments);
     if (!segments.some(segment => segment.fileName === filename)) throw missing();
+    await ensureAudioFile(audio, filename);
     res.type('audio/mpeg');
     res.sendFile(filename, { root: storagePath(audio), dotfiles: 'deny', cacheControl: false, acceptRanges: true }, error => {
       if (error) next('statusCode' in error && error.statusCode === 404 ? missing() : 'statusCode' in error && error.statusCode === 416 ? new HttpError(416, 'INVALID_RANGE', 'Vị trí audio không hợp lệ.') : error);

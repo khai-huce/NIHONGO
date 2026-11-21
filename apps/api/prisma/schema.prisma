@@ -209,6 +209,7 @@ model ReadingAnalysisRequest {
 }
 
 model ReadingAudio {
+  files ReadingAudioFile[]
   id String @id @db.Uuid
   articleId String @map("article_id") @db.Uuid
   articleVersion Int @map("article_version")
@@ -228,6 +229,16 @@ model ReadingAudio {
   @@index([articleId, contentHash, voice, status])
   @@index([createdAt, status])
   @@map("reading_audio")
+}
+
+model ReadingAudioFile {
+  audioId String @map("audio_id") @db.Uuid
+  claimToken String @map("claim_token") @db.Uuid
+  filename String
+  data Bytes
+  audio ReadingAudio @relation(fields: [audioId], references: [id], onDelete: Cascade)
+  @@id([audioId, claimToken, filename])
+  @@map("reading_audio_files")
 }
 
 model VocabLesson {
