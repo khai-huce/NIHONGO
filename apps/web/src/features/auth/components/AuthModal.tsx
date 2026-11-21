@@ -27,6 +27,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
   const authenticate = async (path: string, body: unknown) => {
     if (pending.current) return;
     pending.current = true;
+    setShowPassword(false);
     setIsLoading(true);
     setErrorMsg('');
     try {
@@ -42,12 +43,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
   };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowPassword(false);
     if (mode === 'register' && password !== confirmPassword) {
       setErrorMsg('Mật khẩu xác nhận không khớp.');
       return;
     }
     void authenticate(`/auth/${mode}`, { email, password, ...(mode === 'register' ? { name } : {}) });
   };
+  function resetForm() {
+    setShowPassword(false);
+    setPassword('');
+    setConfirmPassword('');
+    setEmail('');
+    setName('');
+    setErrorMsg('');
+  }
   const inputClass = 'w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-[#292524] bg-white text-sm text-[#292524] placeholder-[#a8a29e] focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sketch';
 
   return (
@@ -65,7 +75,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
             <div className="relative flex justify-center text-xs uppercase"><span className="bg-[#faf7ee] px-2 text-[#78716c] font-black tracking-wider">HOẶC</span></div>
           </div>
           {errorMsg && <div role="alert" className="mb-3 p-2 rounded-lg bg-red-50 border border-red-300 text-red-700 text-xs font-bold flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" /><span>{errorMsg}</span></div>}
-          <form onSubmit={handleSubmit}>
+          <form key={mode} onSubmit={handleSubmit}>
             <fieldset disabled={isLoading} className="space-y-3">
               {mode === 'register' && <div className="relative">
                 <User className="absolute left-3.5 top-3 w-4 h-4 text-[#78716c]" />
@@ -78,13 +88,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3 w-4 h-4 text-[#78716c]" />
                 <input type={showPassword ? 'text' : 'password'} name="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} aria-label="Mật khẩu" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mật khẩu" required minLength={mode === 'register' ? PASSWORD_MIN_LENGTH : 1} maxLength={PASSWORD_MAX_LENGTH} className={`${inputClass} pr-10`} />
-                <button type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} className="absolute inset-y-0 right-0 pr-3.5 text-[#78716c]">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+                <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} className="absolute inset-y-0 right-0 pr-3.5 text-[#78716c]">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
               </div>
               {mode === 'register' && <>
                 <p className="text-xs text-[#78716c]">Mật khẩu từ {PASSWORD_MIN_LENGTH} đến {PASSWORD_MAX_LENGTH} ký tự. Có thể dùng một cụm từ dễ nhớ.</p>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3 w-4 h-4 text-[#78716c]" />
-                  <input type={showPassword ? 'text' : 'password'} name="confirmPassword" autoComplete="new-password" aria-label="Xác nhận mật khẩu" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Xác nhận mật khẩu" required maxLength={PASSWORD_MAX_LENGTH} className={inputClass} />
+                  <input type="password" name="confirmPassword" autoComplete="new-password" aria-label="Xác nhận mật khẩu" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Xác nhận mật khẩu" required maxLength={PASSWORD_MAX_LENGTH} className={inputClass} />
                 </div>
               </>}
               <button type="submit" className="w-full py-2.5 rounded-xl bg-[#0091ff] hover:bg-[#007fd9] text-white font-black text-sm md:text-base border-2 border-[#292524] shadow-sketch transition-all disabled:opacity-50 cursor-pointer">{isLoading ? 'Đang xử lý...' : mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</button>
@@ -92,7 +102,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, initialMode = 'lo
           </form>
           <div className="mt-4 text-center text-xs text-[#57534e]">
             {mode === 'login' ? 'Nếu chưa có tài khoản thì ' : 'Đã có tài khoản? '}
-            <button type="button" disabled={isLoading} onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErrorMsg(''); setPassword(''); setConfirmPassword(''); }} className="font-bold text-[#0091ff] hover:underline">{mode === 'login' ? 'Đăng Ký' : 'Đăng nhập'}</button>
+            <button type="button" disabled={isLoading} onClick={() => { resetForm(); setMode(mode === 'login' ? 'register' : 'login'); }} className="font-bold text-[#0091ff] hover:underline">{mode === 'login' ? 'Đăng Ký' : 'Đăng nhập'}</button>
           </div>
           <p className="mt-4 pt-3 border-t border-[#d6d3d1]/80 text-[11px] text-[#78716c] text-center leading-relaxed">Đăng nhập để lưu bài học cá nhân, lịch ôn và tiến độ học được hỗ trợ theo tài khoản, dùng tiếp trên thiết bị khác. Dữ liệu khách và cài đặt trên thiết bị giữ riêng, không tự chuyển vào tài khoản.</p>
         </RoughCard>

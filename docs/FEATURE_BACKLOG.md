@@ -1,5 +1,7 @@
 # Kế hoạch hoàn thiện chức năng NIHONGO
 
+**21/11/2026 — Form đăng nhập.** Theo yêu cầu mới nhất, Google và form email cùng xuất hiện khi mở hộp thoại. Mật khẩu được che mặc định, nút mắt chỉ điều khiển ô mật khẩu chính. Đổi chế độ hoặc gửi form sẽ che lại mật khẩu.
+
 **18/11/2026 — Tương tác lộ trình Kanji mặc định.** Cấp đang xem quyết định màu chọn và nội dung. N4–N1 hiển thị trạng thái thiếu dữ liệu. N5 cho chọn ngày trực tiếp, đánh dấu ngày hoàn thành và tiếp tục/học lại theo đánh giá từng ngày. Ô chữ mở chi tiết, loa phát âm riêng. Build web và bốn kiểm thử lộ trình mặc định đạt. Chưa nghiệm thu trực tiếp trên trình duyệt.
 
 **Toast Notification hoàn thành local 17/11/2026:** dùng chung `@nihongo/client/toast` cho trang học/admin, giữ phong cách từng app; thành công/lỗi/cảnh báo/thông tin, tự đóng/tạm dừng, chống lặp, tối đa ba toast, tách theo tài khoản, hiển thị trên modal/fullscreen. Nối editor admin, tài khoản, bài Chủ động, lộ trình cá nhân, sao/reset Ôn tập, lưu bài đọc/nội dung phân tích và nhập Shadowing; giữ lỗi có ngữ cảnh tại form, không báo thành công cho mọi HTTP 200 hoặc mỗi lần lật/đánh giá thẻ. Không API/bảng/migration mới. 232 FE/admin/shared, boundaries 258 và build ba app đạt; UI lưu thật ở DB QA riêng, lỗi native modal, đăng nhập, đóng/tự đóng và desktop/mobile đạt; không gọi AI. Xem [phạm vi và nghiệm thu Toast](TOAST_NOTIFICATIONS.md).
