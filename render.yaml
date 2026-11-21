@@ -10,7 +10,7 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: APP_ORIGIN
-        sync: false
+        value: https://nihongo-learner-web.vercel.app
       - key: SESSION_SECRET
         generateValue: true
       - key: TRUST_PROXY_HOPS
