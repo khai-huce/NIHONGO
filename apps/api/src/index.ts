@@ -4,8 +4,9 @@ import { readConfig } from './config/env.js';
 try {
   const config = readConfig();
   const api = createApp(config);
-  const server = api.app.listen(config.PORT, '127.0.0.1', () => {
-    console.log(`NIHONGO API: http://localhost:${config.PORT}`);
+  const host = config.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+  const server = api.app.listen(config.PORT, host, () => {
+    console.log(`NIHONGO API listening on ${host}:${config.PORT}`);
     if (!config.GOOGLE_CLIENT_ID) console.log('Google sign-in is not configured; email sign-in is available.');
   });
   server.on('error', async error => {

@@ -1,0 +1,16 @@
+**
+!package.json
+!package-lock.json
+!apps/
+!apps/api/
+!apps/api/package.json
+!apps/api/requirements-tts.txt
+!apps/api/tsconfig.json
+!apps/api/prisma/**
+!apps/api/src/**
+!apps/api/content/handwriting/**
+!apps/api/scripts/edge_synthesize.py
+!packages/
+!packages/shared/
+!packages/shared/package.json
+!packages/shared/src/**

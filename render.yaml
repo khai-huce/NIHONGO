@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: nihongo-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_ORIGIN
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TRUST_PROXY_HOPS
+        value: "1"

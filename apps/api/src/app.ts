@@ -42,6 +42,7 @@ export function createApp(config: Config) {
   pool.on('error', () => console.error('PostgreSQL pool unavailable'));
   const { middleware, store } = createSession(config, pool);
   const app = express();
+  if (config.TRUST_PROXY_HOPS) app.set('trust proxy', config.TRUST_PROXY_HOPS);
   app.disable('x-powered-by');
   app.use(helmet());
   app.get('/api/health', async (_req, res) => {

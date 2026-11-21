@@ -5,6 +5,7 @@ import { z } from 'zod';
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(8).optional(),
   APP_ORIGIN: z.string().url().refine(value => new URL(value).origin === value, 'Use an origin without a trailing slash or path'),
   ADMIN_ORIGIN: z.string().url().refine(value => new URL(value).origin === value, 'Use an origin without a trailing slash or path').optional(),
   DATABASE_URL: z.string().url().refine(value => /^postgres(ql)?:/.test(value), 'PostgreSQL URL required'),
