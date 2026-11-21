@@ -1,5 +1,7 @@
 # Kế hoạch hoàn thiện chức năng NIHONGO
 
+**22/11/2026 — Chuẩn bị backend production.** Build Docker từ gốc repo với `docker build -f apps/api/Dockerfile .`. Image gồm API, migrations, Python Edge TTS và model viết tay. Backend lắng nghe trên mọi interface trong container production. Cấu hình `DATABASE_URL`, `SESSION_SECRET`, `APP_ORIGIN` và volume ghi được bởi UID 1000 tại `/data/reading`; thiết lập `TRUST_PROXY_HOPS` theo đường đi của proxy HTTPS đáng tin cậy. Đã chạy image và migrations trên PostgreSQL 17 thử nghiệm, gọi health thành công từ ngoài container. Đang chờ chọn hosting và ngân sách trước khi triển khai, nhập nội dung public và kiểm tra online.
+
 **21/11/2026 — Form đăng nhập.** Theo yêu cầu mới nhất, Google và form email cùng xuất hiện khi mở hộp thoại. Mật khẩu được che mặc định, nút mắt chỉ điều khiển ô mật khẩu chính. Đổi chế độ hoặc gửi form sẽ che lại mật khẩu.
 
 **18/11/2026 — Tương tác lộ trình Kanji mặc định.** Cấp đang xem quyết định màu chọn và nội dung. N4–N1 hiển thị trạng thái thiếu dữ liệu. N5 cho chọn ngày trực tiếp, đánh dấu ngày hoàn thành và tiếp tục/học lại theo đánh giá từng ngày. Ô chữ mở chi tiết, loa phát âm riêng. Build web và bốn kiểm thử lộ trình mặc định đạt. Chưa nghiệm thu trực tiếp trên trình duyệt.

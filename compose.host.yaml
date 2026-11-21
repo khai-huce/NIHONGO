@@ -1,0 +1,38 @@
+name: nihongo-host
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nihongo
+      POSTGRES_DB: nihongo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a random hex password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "nihongo", "-d", "nihongo"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3001
+      APP_ORIGIN: ${APP_ORIGIN:?Set the HTTPS origin of the frontend}
+      DATABASE_URL: postgresql://nihongo:${POSTGRES_PASSWORD}@db:5432/nihongo
+      SESSION_SECRET: ${SESSION_SECRET:?Set a separate random session secret}
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-0}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    ports:
+      - "127.0.0.1:3105:3001"
+    volumes:
+      - audio:/data/reading
+volumes:
+  pgdata:
+  audio:
