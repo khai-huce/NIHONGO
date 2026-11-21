@@ -15,3 +15,5 @@ services:
         generateValue: true
       - key: TRUST_PROXY_HOPS
         value: "1"
+      - key: GOOGLE_CLIENT_ID
+        value: 227532259055-b6gj3mgqu6nild4odmhm19491r0rksrf.apps.googleusercontent.com
