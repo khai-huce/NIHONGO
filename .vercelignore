@@ -1,0 +1,12 @@
+.env
+.env.*
+**/.env
+**/.env.*
+.artifacts/
+apps/api/
+apps/admin/
+output/
+tmp/
+docs/
+**/node_modules/
+**/dist/
