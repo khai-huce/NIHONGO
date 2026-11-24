@@ -245,3 +245,4 @@ A06 (24/11/2026): đề xuất ôn/học tiếp theo tiến độ, giải thích
 Shadowing 24/11/2026: hoàn lượt cá nhân nếu toàn bộ lần gọi Google trả 503, tính riêng mỗi đoạn vào ngân sách chung. API build và 47 ca kiểm thử khác nhau đạt trên DB test. Xem docs/SHADOWING.md.
 Shadowing: theo yêu cầu hoàn tác ngày 24/11/2026, trở lại tính một lượt cho mỗi yêu cầu video, kể cả khi Gemini trả 503. Migration kế tiếp gỡ bảng đếm lần gọi và cột đánh dấu hoàn lượt.
 25/11/2026: chuyển model chung, trợ lý, quiz đọc hiểu và Shadowing sang gemini-4-hydrogen. API build đạt; chưa nghiệm thu production.
+Shadowing: tô sáng từ theo đồng hồ YouTube trên câu và bản chép. Với dữ liệu chỉ có mốc câu, phân bổ thời gian ước lượng theo cách đọc. Build web và kiểm tra biên thời gian/tua đạt.
