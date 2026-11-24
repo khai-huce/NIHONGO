@@ -244,4 +244,3 @@ Sau mỗi task, thêm một dòng:
 A06 (24/11/2026): đề xuất ôn/học tiếp theo tiến độ, giải thích câu Nhật do người học nhập và tìm bài theo chủ đề tiếng Việt. API build và 36 kiểm thử A06 đạt; chưa nghiệm thu Gemini production cho thay đổi này.
 Shadowing 24/11/2026: hoàn lượt cá nhân nếu toàn bộ lần gọi Google trả 503, tính riêng mỗi đoạn vào ngân sách chung. API build và 47 ca kiểm thử khác nhau đạt trên DB test. Xem docs/SHADOWING.md.
 Shadowing: theo yêu cầu hoàn tác ngày 24/11/2026, trở lại tính một lượt cho mỗi yêu cầu video, kể cả khi Gemini trả 503. Migration kế tiếp gỡ bảng đếm lần gọi và cột đánh dấu hoàn lượt.
-Groq dự phòng: HTTP 429/502/503/504 của Gemini cho nguồn văn bản; trợ lý có lịch sử/tiến độ cần đồng ý. Shadowing cho phép đính kèm MP3 tối đa 1 MiB ở trang học/admin, Whisper timestamp + dịch khi Gemini gián đoạn. Không migration. Build ba app và 34 kiểm thử tích hợp giả lập/provider đạt; cần key mới trên Render để nghiệm thu thật.

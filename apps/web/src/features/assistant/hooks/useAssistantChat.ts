@@ -3,7 +3,7 @@ import { ApiError } from '@nihongo/client/api';
 import { requestAssistant } from '../lib/assistant-api';
 import { ASSISTANT_MESSAGE_LIMIT, ASSISTANT_VISIBLE_TURNS, assistantHistory, retainAssistantRequest, type AssistantRequest, type AssistantTurn } from '../lib/assistant-chat';
 
-export function useAssistantChat(userId: string | null, authBusy: boolean, currentRoute: string, onLogin: () => void, shareWithGroq = false) {
+export function useAssistantChat(userId: string | null, authBusy: boolean, currentRoute: string, onLogin: () => void) {
   const [turns, setTurns] = useState<AssistantTurn[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -49,7 +49,7 @@ export function useAssistantChat(userId: string | null, authBusy: boolean, curre
     if (!message) return;
     if (message.length > ASSISTANT_MESSAGE_LIMIT) { setInputError(`Mỗi câu hỏi tối đa ${ASSISTANT_MESSAGE_LIMIT} ký tự.`); return; }
     const id = crypto.randomUUID();
-    const request: AssistantRequest = { ...(shareWithGroq ? { shareWithGroq } : {}), id, expectedUserId: userId, message, currentRoute, history: assistantHistory(latestTurns.current) };
+    const request: AssistantRequest = { id, expectedUserId: userId, message, currentRoute, history: assistantHistory(latestTurns.current) };
     const turn: AssistantTurn = { id, request, state: 'pending' };
     const next = [...latestTurns.current, turn];
     if (next.length > ASSISTANT_VISIBLE_TURNS) setEarlierTurnsHidden(true);

@@ -25,7 +25,5 @@ services:
         value: gemini-3.5-flash-lite
       - key: SHADOWING_GEMINI_MODEL
         value: gemini-3.5-flash-lite
-      - key: GROQ_API_KEY
-        sync: false
       - key: GEMINI_API_KEY
         sync: false

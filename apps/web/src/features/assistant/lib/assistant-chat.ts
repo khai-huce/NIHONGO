@@ -3,7 +3,7 @@ export const ASSISTANT_VISIBLE_TURNS = 10;
 export type AssistantSource = { id: string; title: string; url: string };
 export type AssistantReply = { text: string; sources: AssistantSource[] };
 export type AssistantHistoryMessage = { role: 'user' | 'assistant'; content: string };
-export type AssistantRequest = { shareWithGroq?: boolean; id: string; expectedUserId: string; message: string; currentRoute: string; history: AssistantHistoryMessage[] };
+export type AssistantRequest = { id: string; expectedUserId: string; message: string; currentRoute: string; history: AssistantHistoryMessage[] };
 export type AssistantResponse = { userId: string; id: string; cached: boolean; reply: AssistantReply };
 export type AssistantTurn = {
   id: string;

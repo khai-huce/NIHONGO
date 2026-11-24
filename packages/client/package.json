@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "type": "module",
   "exports": {
-    "./shadowing-audio": "./src/shadowing-audio.ts",
     "./api": "./src/api.ts",
     "./toast": "./src/toast/ToastProvider.tsx",
     "./auth/*": "./src/auth/*.ts",

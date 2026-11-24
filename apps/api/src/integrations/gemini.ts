@@ -1,4 +1,3 @@
-import { groqJson } from './groq.js';
 import type { Config } from '../config/env.js';
 import { HttpError } from '../common/errors.js';
 
@@ -22,7 +21,6 @@ async function readGeminiBody(response: Response): Promise<{ candidates?: Array<
 export async function requestGeminiJson(config: Config, input: {
   instruction: string; data: unknown; schema: object; maxOutputTokens: number; timeoutMs: number;
   useDefaultSampling?: boolean;
-  allowGroq?: boolean;
   video?: { url: string; startMs: number; endMs: number };
 }): Promise<unknown> {
   if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL) {
@@ -52,9 +50,6 @@ export async function requestGeminiJson(config: Config, input: {
   if (!response.ok) {
     // Do not expose the provider body/key or mistake provider auth for the learner's session.
     await response.body?.cancel().catch(() => undefined);
-    if (!input.video && input.allowGroq !== false && config.GROQ_API_KEY && [429, 502, 503, 504].includes(response.status)) {
-      return groqJson(config.GROQ_API_KEY, input);
-    }
     if (response.status === 401 || response.status === 403) {
       throw new HttpError(503, 'AI_ACCESS_DENIED', 'Gemini từ chối quyền truy cập. Quản trị viên cần kiểm tra API key và quyền của dự án.');
     }
