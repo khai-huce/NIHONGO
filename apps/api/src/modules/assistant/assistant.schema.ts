@@ -7,6 +7,7 @@ const noControls = (text: string) => !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u
 const text = (limit: number) => z.string().trim().min(1).max(limit).refine(noControls, 'Nội dung có ký tự điều khiển không được hỗ trợ.');
 const inputSchema = z.object({
   id: uuid, expectedUserId: uuid, message: text(1000),
+  shareWithGroq: z.boolean().optional(),
   currentRoute: z.string().max(500).optional(),
   history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: text(4000) }).strict()).max(10),
 }).strict().refine(value => value.history.reduce((total, item) => total + item.content.length, 0) <= 16000,

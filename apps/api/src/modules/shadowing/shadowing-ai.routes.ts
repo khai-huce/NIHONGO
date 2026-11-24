@@ -1,7 +1,9 @@
+import { z } from 'zod';
+import { groqTranscript } from '../../integrations/groq.js';
 import { Prisma, type PrismaClient, type ShadowingAiRequest } from '@prisma/client';
 import type { Config } from '../../config/env.js';
 import { HttpError } from '../../common/errors.js';
-import { generateShadowingTranscript, inspectYouTube, parseYouTubeUrl, type YouTubeMetadata } from '../../integrations/shadowing-media.js';
+import { generateShadowingTranscript, validateShadowingClip, inspectYouTube, parseYouTubeUrl, type YouTubeMetadata } from '../../integrations/shadowing-media.js';
 import { assertShadowingQuota, lockGeminiQuota } from '../../integrations/gemini-quota.js';
 import { accountFields, confirmShadowingAccount, setupShadowingRouter, shadowingAccount, shadowingUser } from './shadowing.routes.js';
 import { hash, makeShadowingContent, shadowingDraftSchema, uuid } from './shadowing-content.js';
@@ -15,10 +17,13 @@ export function shadowingAiRoutes(db: PrismaClient, config: Config) {
     await db.shadowingAiRequest.updateMany({ where: { id, userId, status: 'pending', leaseUntil: { lt: new Date() } },
       data: { status: 'failed', error: 'Lượt tạo phụ đề bị gián đoạn. Bạn có thể tạo lại bằng một lượt mới.' } });
   }
-  async function generate(id: string, metadata: YouTubeMetadata, input: { level: 'N5' | 'N4' | 'N3' | 'N2' | 'N1' | null; description: string }) {
+  async function generate(id: string, metadata: YouTubeMetadata, input: { level: 'N5' | 'N4' | 'N3' | 'N2' | 'N1' | null; description: string; audio?: string }) {
     try {
-      const sentences = await generateShadowingTranscript(config, metadata);
-      const draft = shadowingDraftSchema.parse({ url: metadata.url, ...input, sentences });
+      const sentences = await generateShadowingTranscript(config, metadata).catch(async error => {
+        if (!(error instanceof HttpError) || !['AI_UNAVAILABLE', 'AI_QUOTA'].includes(error.code) || !config.GROQ_API_KEY || !input.audio) throw error;
+        return validateShadowingClip({ language: 'ja', cues: await groqTranscript(config.GROQ_API_KEY, input.audio) }, 0, metadata.durationMs);
+      });
+      const draft = shadowingDraftSchema.parse({ url: metadata.url, level: input.level, description: input.description, sentences });
       const content = await makeShadowingContent(draft, metadata);
       await db.shadowingAiRequest.updateMany({ where: { id, status: 'pending', leaseUntil: { gt: new Date() } }, data: { status: 'ready', content: content as unknown as Prisma.InputJsonValue, error: null } });
     } catch (error) {
@@ -28,8 +33,8 @@ export function shadowingAiRoutes(db: PrismaClient, config: Config) {
   }
   router.post('/', async (req, res) => {
     const userId = shadowingAccount(req, res);
-    const input = shadowingDraftSchema.pick({ url: true, level: true, description: true }).extend({ ...accountFields, id: uuid }).strict().parse(req.body);
-    const canonical = parseYouTubeUrl(input.url), requestHash = hash({ youtubeId: canonical.youtubeId, level: input.level, description: input.description });
+    const input = shadowingDraftSchema.pick({ url: true, level: true, description: true }).extend({ ...accountFields, id: uuid, audio: z.string().min(4).max(1398104).regex(/^[A-Za-z0-9+/]+={0,2}$/).optional() }).strict().parse(req.body);
+    const canonical = parseYouTubeUrl(input.url), requestHash = hash({ youtubeId: canonical.youtubeId, level: input.level, description: input.description, ...(input.audio ? { audioHash: hash(input.audio) } : {}) });
     // An exact retry never charges quota twice and remains readable if provider credentials later change.
     let prior = await db.shadowingAiRequest.findUnique({ where: { id: input.id } });
     if (prior) {

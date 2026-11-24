@@ -39,7 +39,7 @@ export function assistantRoutes(db: PrismaClient, config: Config) {
     // Private reading/video IDs are valid learner routes but not public source metadata.
     const providerRoute = currentRoute && !sources.some(source => source.url === currentRoute)
       ? currentRoute.replace(/^(\/kanji|\/ngu-phap|\/tu-vung\/giao-trinh|\/tron-doi\/(?:doc-hieu|shadowing))\/.*$/, '$1') : currentRoute;
-    const { reply, cached } = await ai.evaluate({ id: input.id, userId, message: input.message, history: input.history, currentRoute: providerRoute, sources });
+    const { reply, cached } = await ai.evaluate({ shareWithGroq: input.shareWithGroq, id: input.id, userId, message: input.message, history: input.history, currentRoute: providerRoute, sources });
     await new Promise<void>((resolve, reject) => req.session.reload(error => error
       ? reject(new HttpError(401, 'UNAUTHENTICATED', 'Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại.')) : resolve()));
     if (req.session.userId !== userId || !await currentUser(userId)) throw new HttpError(409, 'ACCOUNT_CHANGED', 'Tài khoản đã đổi. Vui lòng tải lại trang.');

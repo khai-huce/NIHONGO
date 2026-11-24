@@ -1,3 +1,4 @@
+import { readFallbackAudio } from '@nihongo/client/shadowing-audio';
 import { useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { ShadowingAiRequest, ShadowingContent, ShadowingDetailResponse, ShadowingDraftInput, ShadowingVideo } from '@nihongo/shared/contracts/shadowing';
@@ -15,6 +16,7 @@ type Props = { video: ShadowingVideo | null; sources: ContentSource[]; request: 
 type Dialog = 'preview' | 'import' | 'source' | 'publish' | 'archive' | 'restore' | 'reload' | 'close' | 'ai' | null;
 
 export function ShadowingEditor({ video, sources, request, onSaved, onClose, onSourceAdded, onDirtyChange }: Props) {
+  const [audio, setAudio] = useState<File | null>(null);
   const [saved, setSaved] = useState(video), [form, setForm] = useState(() => shadowingForm(video ?? undefined));
   const [baseline, setBaseline] = useState(() => fingerprint(shadowingForm(video ?? undefined)));
   const [pending, setPending] = useState(''), [error, setError] = useState(''), [notice, setNotice] = useState(''), [conflict, setConflict] = useState(false);
@@ -55,7 +57,8 @@ export function ShadowingEditor({ video, sources, request, onSaved, onClose, onS
   });
   const startAi = () => run('ai', async () => {
     if (!aiId.current || aiId.current.url !== form.url || ai?.status === 'ready' || ai?.status === 'failed') aiId.current = { url: form.url, id: crypto.randomUUID() };
-    const result = await request<{ request: ShadowingAiRequest }>('/shadowing/ai', { method: 'POST', body: { id: aiId.current.id, url: form.url } });
+    const fallbackAudio = await readFallbackAudio(audio);
+    const result = await request<{ request: ShadowingAiRequest }>('/shadowing/ai', { method: 'POST', body: { audio: fallbackAudio, id: aiId.current.id, url: form.url } });
     if (mounted.current) { setAi(result.request); setAiError(''); setAiChecked(false); setDialog('ai'); }
   });
   useEffect(() => {
@@ -80,6 +83,7 @@ export function ShadowingEditor({ video, sources, request, onSaved, onClose, onS
     <fieldset disabled={blocked} className="min-w-0 space-y-5">
       <section className="rounded-xl border border-slate-200 bg-white p-5"><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm sm:col-span-2">Link YouTube *<input className={input} value={form.url} maxLength={2048} placeholder="https://www.youtube.com/watch?v=…" onChange={event => edit({ url: event.target.value })} /></label><label className="text-sm">Cấp độ<select className={input} value={form.level ?? ''} onChange={event => edit({ level: event.target.value ? event.target.value as ShadowingForm['level'] : null })}><option value="">Chưa phân loại</option>{['N5', 'N4', 'N3', 'N2', 'N1'].map(level => <option key={level}>{level}</option>)}</select></label><label className="text-sm">Nguồn nội dung<select className={input} value={form.sourceId ?? ''} onChange={event => edit({ sourceId: event.target.value || null })}><option value="">Chưa chọn (chỉ lưu nháp)</option>{sources.map(row => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label><label className="text-sm sm:col-span-2">Mô tả<textarea className={`${input} h-24`} value={form.description} maxLength={2000} onChange={event => edit({ description: event.target.value })} /></label></div>
         {source && <p className="mt-3 text-xs leading-5 text-slate-500">{source.name} · {source.license}<br />{source.attribution}</p>}
+        <label>MP3 dự phòng gửi Groq (tối đa 1 MiB)<input type="file" accept=".mp3,audio/mpeg" onChange={event => { setAudio(event.target.files?.[0] ?? null); aiId.current = null; }} /></label>
         <div className="mt-4 flex flex-wrap gap-2"><button className={button} onClick={() => setDialog('source')}>Thêm nguồn</button><button className={button} disabled={!form.url.trim()} onClick={prepare}>Kiểm tra video / Xem trước</button><button className={button} disabled={!form.url.trim()} onClick={startAi}>Gemini tạo phụ đề + dịch</button></div>
         <p className="mt-3 text-xs text-slate-500">Tên, kênh và thời lượng được lấy từ YouTube. Gemini dùng hạn mức miễn phí đã cấu hình; kết quả cần xem lại trước khi lưu.</p>
         {preview && <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm"><p className="font-semibold">{preview.title}</p><p className="mt-1 text-slate-500">{preview.channel} · {formatShadowingTime(preview.durationMs)} · {preview.sentences.length} câu</p></div>}

@@ -24,7 +24,7 @@ export function assistantContextHash(sources: AssistantSource[]): string {
   return createHash('sha256').update(JSON.stringify(sources.map(({ id, title, url, content }) => [id, title, url, content]))).digest('hex');
 }
 
-type EvaluateInput = Pick<AssistantInput, 'id' | 'message' | 'history'> & { userId: string; currentRoute?: string; sources: AssistantSource[] };
+type EvaluateInput = Pick<AssistantInput, 'id' | 'message' | 'history' | 'shareWithGroq'> & { userId: string; currentRoute?: string; sources: AssistantSource[] };
 type CacheEntry = { userId: string; requestHash: string; reply: AssistantAiReply; expiresAt: number; timer: NodeJS.Timeout };
 
 /** One cache per app instance. Neither input nor output is stored in PostgreSQL. */
@@ -44,7 +44,7 @@ export function createAssistantAiService(db: PrismaClient, config: Config) {
   const evaluate = async (input: EvaluateInput) => {
     const model = config.ASSISTANT_GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
     if (!config.GEMINI_API_KEY) throw new HttpError(503, 'AI_NOT_CONFIGURED', 'Trợ lý Gemini chưa được cấu hình ở máy chủ.');
-    const requestHash = createHash('sha256').update(JSON.stringify([PROMPT_VERSION, model, input.message, input.history,
+    const requestHash = createHash('sha256').update(JSON.stringify([PROMPT_VERSION, model, input.shareWithGroq ?? false, input.message, input.history,
       input.currentRoute ?? '', assistantContextHash(input.sources)])).digest('hex');
     const cached = await db.$transaction(async tx => {
       await lockGeminiQuota(tx);
@@ -69,7 +69,7 @@ export function createAssistantAiService(db: PrismaClient, config: Config) {
     });
     if (cached) return { reply: cached, cached: true };
     try {
-      const output = await requestGeminiJson({ ...config, GEMINI_MODEL: model }, { useDefaultSampling: true, instruction, data: { message: input.message, history: input.history,
+      const output = await requestGeminiJson({ ...config, GEMINI_MODEL: model }, { allowGroq: input.shareWithGroq === true || !input.history.length && !input.sources.some(source => source.id.startsWith('personal:')), useDefaultSampling: true, instruction, data: { message: input.message, history: input.history,
         currentRoute: input.currentRoute ?? null, sources: input.sources }, schema: assistantJsonSchema, maxOutputTokens: 4096, timeoutMs: 45000 });
       const reply = validateAssistantReply(output, input.sources);
       await db.assistantRequest.update({ where: { id: input.id }, data: { status: 'ready' } });

@@ -9,7 +9,9 @@ type Props = { userId: string | null; authBusy: boolean; onLogin: () => void };
 export const MascotAssistant: React.FC<Props> = ({ userId, authBusy, onLogin }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const chat = useAssistantChat(userId, authBusy, location.pathname, onLogin);
+  const [groqOwner, setGroqOwner] = useState<string | null>(null);
+  useEffect(() => setGroqOwner(null), [userId]);
+  const chat = useAssistantChat(userId, authBusy, location.pathname, onLogin, !!userId && groqOwner === userId);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -106,6 +108,7 @@ export const MascotAssistant: React.FC<Props> = ({ userId, authBusy, onLogin }) 
 
           {/* Input field */}
           {chat.inputError && <p role="alert" className="text-xs text-rose-700 py-1">{chat.inputError}</p>}
+          {userId && <label className="text-xs text-slate-500"><input type="checkbox" checked={groqOwner === userId} disabled={chat.busy} onChange={event => setGroqOwner(event.target.checked ? userId : null)} /> Cho gửi lịch sử chat và tiến độ liên quan tới Groq khi Gemini quá tải</label>}
           <form onSubmit={event => { event.preventDefault(); chat.send(); }} className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 shrink-0">
             <input
               ref={inputRef}

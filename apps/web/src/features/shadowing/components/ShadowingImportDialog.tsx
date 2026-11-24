@@ -1,3 +1,4 @@
+import { readFallbackAudio } from '@nihongo/client/shadowing-audio';
 import { useToast, useToastFeedback } from '@nihongo/client/toast';
 import { useEffect, useRef, useState } from 'react';
 import type { ShadowingAiRequest, ShadowingContent, ShadowingDetailResponse, ShadowingDraftInput, ShadowingVideo } from '@nihongo/shared/contracts/shadowing';
@@ -15,6 +16,7 @@ export function ShadowingImportDialog({ userId, url, video, onClose, onSaved }: 
   const [draft, setDraft] = useState<ShadowingDraftInput>(() => video ? fromContent(video.content) : { url, level: null, description: '', sentences: [] });
   const [metadata, setMetadata] = useState<ShadowingContent | null>(video?.content ?? null);
   const [text, setText] = useState(''), [preview, setPreview] = useState<Cues | null>(null), [reviewed, setReviewed] = useState(false);
+  const [audio, setAudio] = useState<File | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [ai, setAi] = useState<ShadowingAiRequest | null>(null);
   const toast = useToast();
   useToastFeedback({ error });
@@ -67,7 +69,8 @@ export function ShadowingImportDialog({ userId, url, video, onClose, onSaved }: 
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Phụ đề chưa hợp lệ.'); }
   };
   const generate = () => run(async () => {
-    const body = { url: draft.url, level: draft.level, description: draft.description }, hash = JSON.stringify(body);
+    const fallbackAudio = await readFallbackAudio(audio);
+    const body = { audio: fallbackAudio, url: draft.url, level: draft.level, description: draft.description }, hash = JSON.stringify(body);
     if (!aiAttempt.current || aiAttempt.current.hash !== hash || ai?.status === 'failed') aiAttempt.current = { hash, id: crypto.randomUUID() };
     const result = await verified<{ userId: string; request: ShadowingAiRequest }>('/ai', { ...body, id: aiAttempt.current.id, expectedUserId: userId });
     setAi(result.request); setPollPaused(false);
@@ -80,6 +83,9 @@ export function ShadowingImportDialog({ userId, url, video, onClose, onSaved }: 
       <div className="flex gap-3 items-center flex-wrap"><label>Cấp độ <select value={draft.level ?? ''} disabled={blocked} onChange={event => change({ level: (event.target.value || null) as ShadowingDraftInput['level'] })} className="p-2 border rounded bg-white"><option value="">Chưa phân loại</option>{['N5', 'N4', 'N3', 'N2', 'N1'].map(level => <option key={level}>{level}</option>)}</select></label><button disabled={blocked} onClick={() => void run(async () => { const result = await verified<{ userId: string; content: ShadowingContent }>('/videos/prepare', { ...draft, expectedUserId: userId }); setMetadata(result.content); })} className="border border-stone-500 rounded-lg px-3 py-2 bg-white disabled:opacity-50">Kiểm tra video</button></div>
       {metadata && <p className="rounded border p-3 bg-white"><strong>{metadata.title}</strong><br />{metadata.channel} · {Math.floor(metadata.durationMs / 60000)} phút {Math.floor(metadata.durationMs / 1000) % 60} giây</p>}
       <label className="block">Mô tả<textarea value={draft.description} disabled={blocked} onChange={event => change({ description: event.target.value })} rows={2} className="w-full border rounded-lg p-2 bg-white" /></label>
+      <label className="block text-xs">MP3 của video để gửi Groq khi Gemini quá tải (tùy chọn, tối đa 1 MiB)
+        <input type="file" accept=".mp3,audio/mpeg" disabled={blocked} onChange={event => setAudio(event.target.files?.[0] ?? null)} />
+      </label>
       <div className="rounded-xl border border-stone-400 p-3 space-y-2"><p className="font-bold">Phụ đề và bản dịch</p><p className="text-xs text-stone-500">Gemini nhận đường dẫn video công khai, tạo bản nháp để bạn rà soát. Tối đa 3 video/tài khoản và 10 video/toàn hệ thống trong 24 giờ, trong hạn mức Gemini miễn phí.</p><button disabled={blocked} onClick={() => void generate()} className="px-3 py-2 border border-violet-500 text-violet-700 bg-white rounded-lg disabled:opacity-50">{ai?.status === 'pending' ? 'Gemini đang tạo phụ đề…' : 'AI tạo phụ đề + dịch'}</button>
         {ai?.status === 'ready' && ai.content && <div className="bg-violet-50 p-3 rounded"><p>Đã tạo {ai.content.sentences.length} câu. Chưa lưu video.</p><button onClick={() => { setPreview(fromContent(ai.content!).sentences); setMetadata(ai.content); }} className="underline font-bold">Xem trước kết quả AI</button></div>}
         {pollPaused && !accountError && <button className="underline text-blue-700" onClick={() => { setError(''); setPollPaused(false); }}>Thử lấy lại trạng thái AI</button>}

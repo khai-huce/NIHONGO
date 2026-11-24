@@ -13,6 +13,7 @@ const schema = z.object({
   GOOGLE_CLIENT_ID: z.string().trim().default('').refine(value => value === '' || value.endsWith('.apps.googleusercontent.com'), 'Invalid Google Web client ID'),
   TTS_PYTHON: z.string().min(1).optional(),
   TTS_STORAGE_DIR: z.string().min(1).optional(),
+  GROQ_API_KEY: z.string().trim().optional(),
   GEMINI_API_KEY: z.string().trim().optional(),
   YOUTUBE_API_KEY: z.string().trim().optional(),
   GEMINI_MODEL: z.string().regex(/^gemini-[a-z0-9.-]+$/).optional(),
