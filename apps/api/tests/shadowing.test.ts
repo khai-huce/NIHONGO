@@ -1,3 +1,4 @@
+import { GeminiProviderOverloaded } from '../src/integrations/gemini.js';
 import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import request from 'supertest';
@@ -220,6 +221,30 @@ describe('Shadowing AI durable preview requests', () => {
     await mutate(other, aiRoute, payload).expect(409);
     expect(await api.db.shadowingVideo.count()).toBe(0);
     expect(await api.db.shadowingAiRequest.count()).toBe(1);
+  });
+
+  it('refunds provider 503 personally while retaining one global call across replay', async () => {
+    const user = await register(), id = randomUUID();
+    const payload = { id, url: metadata.url, level: null, description: '' };
+    generate.mockRejectedValueOnce(new GeminiProviderOverloaded(503, 'AI_UNAVAILABLE', 'Gemini 503.'));
+    await mutate(user, aiRoute, payload).expect(202);
+    expect(await waitForAi(user, id)).toMatchObject({ status: 'failed' });
+    await mutate(user, aiRoute, payload).expect(200);
+    const row = await api.db.shadowingAiRequest.findUniqueOrThrow({ where: { id }, include: { calls: true } });
+    expect(row.personalCharged).toBe(false);
+    expect(row.calls).toHaveLength(1);
+  });
+
+  it('charges one personal job and two shared calls when a second clip is sent', async () => {
+    const user = await register(), id = randomUUID();
+    generate.mockImplementationOnce(async (_config, _metadata, reserveNextCall) => {
+      await reserveNextCall!();
+      return draft().sentences;
+    });
+    await mutate(user, aiRoute, { id, url: metadata.url, level: null, description: '' }).expect(202);
+    expect(await waitForAi(user, id)).toMatchObject({ status: 'ready' });
+    expect(await api.db.shadowingAiRequest.count({ where: { userId: user.id, personalCharged: true } })).toBe(1);
+    expect(await api.db.shadowingProviderCall.count({ where: { requestId: id } })).toBe(2);
   });
 
   it('records friendly failures without videos or grades and expires abandoned requests', async () => {

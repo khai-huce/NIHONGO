@@ -2,7 +2,8 @@ import { Prisma, type PrismaClient, type ShadowingAiRequest } from '@prisma/clie
 import type { Config } from '../../config/env.js';
 import { HttpError } from '../../common/errors.js';
 import { generateShadowingTranscript, inspectYouTube, parseYouTubeUrl, type YouTubeMetadata } from '../../integrations/shadowing-media.js';
-import { assertShadowingQuota, lockGeminiQuota } from '../../integrations/gemini-quota.js';
+import { GeminiProviderOverloaded } from '../../integrations/gemini.js';
+import { assertGeminiQuota, assertShadowingQuota, lockGeminiQuota } from '../../integrations/gemini-quota.js';
 import { accountFields, confirmShadowingAccount, setupShadowingRouter, shadowingAccount, shadowingUser } from './shadowing.routes.js';
 import { hash, makeShadowingContent, shadowingDraftSchema, uuid } from './shadowing-content.js';
 import { changed, missing } from './shadowing-store.js';
@@ -15,15 +16,24 @@ export function shadowingAiRoutes(db: PrismaClient, config: Config) {
     await db.shadowingAiRequest.updateMany({ where: { id, userId, status: 'pending', leaseUntil: { lt: new Date() } },
       data: { status: 'failed', error: 'Lượt tạo phụ đề bị gián đoạn. Bạn có thể tạo lại bằng một lượt mới.' } });
   }
-  async function generate(id: string, metadata: YouTubeMetadata, input: { level: 'N5' | 'N4' | 'N3' | 'N2' | 'N1' | null; description: string }) {
+  async function generate(id: string, userId: string, metadata: YouTubeMetadata, input: { level: 'N5' | 'N4' | 'N3' | 'N2' | 'N1' | null; description: string }) {
+    let calls = 1;
     try {
-      const sentences = await generateShadowingTranscript(config, metadata);
+      const sentences = await generateShadowingTranscript(config, metadata, async () => {
+        await db.$transaction(async tx => {
+          await lockGeminiQuota(tx);
+          await assertGeminiQuota(tx, config, userId, true);
+          await tx.shadowingProviderCall.create({ data: { requestId: id } });
+        });
+        calls++;
+      });
       const draft = shadowingDraftSchema.parse({ url: metadata.url, ...input, sentences });
       const content = await makeShadowingContent(draft, metadata);
       await db.shadowingAiRequest.updateMany({ where: { id, status: 'pending', leaseUntil: { gt: new Date() } }, data: { status: 'ready', content: content as unknown as Prisma.InputJsonValue, error: null } });
     } catch (error) {
-      const message = error instanceof HttpError ? error.message : 'Chưa tạo được phụ đề đầy đủ. Vui lòng thử lại bằng một lượt mới.';
-      await db.shadowingAiRequest.updateMany({ where: { id, status: 'pending' }, data: { status: 'failed', error: message.slice(0, 1000) } }).catch(() => undefined);
+      const refunded = calls === 1 && error instanceof GeminiProviderOverloaded;
+      const message = refunded ? error.message + ' Lượt cá nhân đã được hoàn lại.' : error instanceof HttpError ? error.message : 'Chưa tạo được phụ đề đầy đủ. Vui lòng thử lại bằng một lượt mới.';
+      await db.shadowingAiRequest.updateMany({ where: { id, status: 'pending' }, data: { status: 'failed', personalCharged: !refunded, error: message.slice(0, 1000) } }).catch(() => undefined);
     }
   }
   router.post('/', async (req, res) => {
@@ -51,11 +61,12 @@ export function shadowingAiRoutes(db: PrismaClient, config: Config) {
       }
       await assertShadowingQuota(tx, config, userId);
       const row = await tx.shadowingAiRequest.create({ data: { id: input.id, userId, requestHash, leaseUntil: new Date(Date.now() + 10 * 60_000) } });
+      await tx.shadowingProviderCall.create({ data: { requestId: row.id } });
       return { row, created: true };
     });
     res.status(reservation.row.status === 'pending' ? 202 : 200).json({ userId, request: dto(reservation.row) });
     if (reservation.created) {
-      const job = generate(input.id, metadata, input);
+      const job = generate(input.id, userId, metadata, input);
       running.add(job);
       void job.finally(() => running.delete(job));
     }

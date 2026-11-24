@@ -884,7 +884,19 @@ model ShadowingAttempt {
   @@map("shadowing_attempts")
 }
 
+model ShadowingProviderCall {
+  id BigInt @id @default(autoincrement())
+  requestId String @map("request_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  request ShadowingAiRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  @@index([createdAt])
+  @@index([requestId])
+  @@map("shadowing_provider_calls")
+}
+
 model ShadowingAiRequest {
+  calls ShadowingProviderCall[]
+  personalCharged Boolean @default(true) @map("personal_charged")
   id String @id @db.Uuid
   userId String @map("user_id") @db.Uuid
   requestHash String @map("request_hash") @db.VarChar(64)
