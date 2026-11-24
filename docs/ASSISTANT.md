@@ -1,5 +1,9 @@
 # A06 — Trợ lý hỗ trợ NIHONGO
 
+## Cập nhật 24/11/2026
+
+Trợ lý dùng riêng `ASSISTANT_GEMINI_MODEL` (mặc định `gemini-3.5-flash-lite`). Câu “Nay tôi nên học gì?” lấy số thẻ đến hạn và mốc JLPT để đề xuất bước tiếp theo. Người học có thể nêu thời gian, dán câu Nhật cần dịch/sửa hoặc tìm bài theo chủ đề, ví dụ “Tìm bài đọc N5 về gia đình”. Giải thích do AI biên soạn có thể cần đối chiếu. Các liên kết do máy chủ xác nhận.
+
 ## Quyết định ngày 30/10/2026
 
 - Giữ nút hoa và khung chat; đổi tên thành **Trợ lý NIHONGO**, bỏ chữ **Đang online** và chấm xanh.

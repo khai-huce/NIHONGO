@@ -14,6 +14,9 @@ export function assistantPersonalScopes(question: string): Scope[] {
   const dueQuestion = /\b(hom nay|bay gio)\b.*\b(can on|phai on|con.*the)\b|\b(can on|phai on)\b.*\b(hom nay|bay gio)\b/.test(q);
   // A how-to question is not a request to transmit lesson/progress data.
   if (/\b(cach|lam sao|huong dan|how (to|do)|tao.*nhu the nao)\b/.test(q) && !/\b(bao nhieu|hoc den dau|tom tat|thong ke|tong quan)\b/.test(q)) return [];
+  // A direct request for today's study plan needs only review and JLPT summaries.
+  const plan = /^(?:(?:hom nay|nay|bay gio) )?(?:toi|minh|em|to) (?:(?:chi )?co \d{1,3} phut[, ]+)?(?:nen hoc gi|nen on gi|hoc gi tiep|nen hoc bai nao|hoc tiep o dau)(?: (?:hom nay|bay gio|tiep theo|bay gio nhi|nhi|a))?[?!. ]*$/.test(q.trim());
+  if (plan) return ['review', 'jlpt'];
   if (!mine && !selfActivity && !dueQuestion) return [];
   const scopes: Scope[] = [];
   if (/\b(on tap|can on|phai on|the|srs|review|ghi nho)\b/.test(q)) scopes.push('review');

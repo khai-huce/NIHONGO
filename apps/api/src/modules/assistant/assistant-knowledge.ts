@@ -107,6 +107,11 @@ export async function resolveAssistantSources(db: PrismaClient, ids: readonly st
 function searchTerms(question: string): string[] {
   const terms = [...question.matchAll(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー々]{1,60}/gu)].map(match => match[0]);
   for (const match of question.matchAll(/["“「『]([^"”」』\r\n]{2,60})["”」』]/gu)) terms.push(match[1].trim());
+  if (!terms.length) {
+    const title = question.trim().match(/^(?:tìm(?: kiếm)?|gợi ý|đề xuất)\s+(?:bài đọc(?: hiểu)?|video|bài từ vựng|mẫu ngữ pháp|bài shadowing)\s+(.+)$/iu)?.[1];
+    const topic = title?.replace(/\bN[1-5]\b/gi, '').trim().replace(/^(?:về|chủ đề|tên là)\s+/iu, '').replace(/[?!.]+$/, '').trim();
+    if (topic && topic.length <= 60) terms.push(topic);
+  }
   return [...new Set(terms)].filter(Boolean).slice(0, 2);
 }
 function selectKinds(question: string, route: string | null): JlptResourceKind[] {

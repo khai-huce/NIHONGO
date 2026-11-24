@@ -40,6 +40,9 @@ describe('A06 source, input and personal intent boundaries', () => {
     expect(transaction).not.toHaveBeenCalled();
   });
   it('recognizes explicit own-data questions conservatively', () => {
+    expect(assistantPersonalScopes('Nay tôi nên học gì?')).toEqual(['review', 'jlpt']);
+    expect(assistantPersonalScopes('Mình chỉ có 15 phút, nên học gì?')).toEqual(['review', 'jlpt']);
+    expect(assistantPersonalScopes('Dịch câu “tôi nên học gì?”')).toEqual([]);
     expect(assistantPersonalScopes('Tôi cần ôn gì hôm nay?')).toEqual(['review']);
     expect(assistantPersonalScopes('XP của tôi bao nhiêu?')).toEqual(['xp']);
     expect(assistantPersonalScopes('Tiến độ JLPT N5 của tôi')).toEqual(['jlpt']);
