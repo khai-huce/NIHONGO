@@ -17,8 +17,6 @@ async function readGeminiBody(response: Response): Promise<{ candidates?: Array<
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-export class GeminiProviderOverloaded extends HttpError {}
-
 /** Transport only: each feature owns its prompt, schema validation and persistence. */
 export async function requestGeminiJson(config: Config, input: {
   instruction: string; data: unknown; schema: object; maxOutputTokens: number; timeoutMs: number;
@@ -65,7 +63,7 @@ export async function requestGeminiJson(config: Config, input: {
       throw new HttpError(502, 'AI_REQUEST_REJECTED', 'Gemini từ chối yêu cầu gửi từ máy chủ. Quản trị viên cần kiểm tra tham số và điều kiện sử dụng model.');
     }
     if (response.status === 503) {
-      throw new GeminiProviderOverloaded(503, 'AI_UNAVAILABLE', 'Gemini đang quá tải hoặc tạm ngừng phục vụ (503). Vui lòng thử lại sau.');
+      throw new HttpError(503, 'AI_UNAVAILABLE', 'Gemini đang quá tải hoặc tạm ngừng phục vụ (503). Vui lòng thử lại sau.');
     }
     throw new HttpError(response.status === 429 ? 429 : 503,
       response.status === 429 ? 'AI_QUOTA' : 'AI_UNAVAILABLE',

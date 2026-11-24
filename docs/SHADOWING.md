@@ -1,9 +1,5 @@
 # S01–S03 — Shadowing và chép chính tả
 
-## Hạn mức từ 24/11/2026
-
-Một yêu cầu tạo video giữ một lượt cá nhân khi đang xử lý. Khi hoàn tất, video nhiều đoạn vẫn tính một lượt. Nếu tất cả lần gọi đều nhận HTTP 503 từ Google, backend hoàn lượt cá nhân (cả hạn mức Shadowing và hạn mức Gemini cá nhân). Các lỗi khác và trường hợp đã nhận được một đoạn thành công giữ quy tắc cũ. Gửi lại cùng mã yêu cầu chỉ đọc trạng thái. Ngân sách Gemini toàn ứng dụng tính từng lần gửi đoạn, kể cả 503; giới hạn riêng 10 yêu cầu video/24 giờ vẫn áp dụng. Bản ghi trước migration giữ cách đếm lịch sử do thiếu kết quả từng đoạn.
-
 ## Trạng thái ngày 07/10/2026
 
 Đã triển khai database, API, trình phát YouTube thật, trang học, video cá nhân và kho quản trị. Ngày 07/10 đã nghiệm thu luồng Gemini thật: video YouTube 9 phút 12 giây → 32 câu tiếng Nhật kèm bản dịch → xem trước → chỉnh một bản dịch → lưu → F5 giữ nội dung, câu đang học và bookmark. Các ca kiểm thử dùng provider giả lập được ghi riêng bên dưới. Đây là nghiệm thu chức năng tạo/lưu, không phải chứng nhận độ chính xác mọi lời thoại, bản dịch và mốc nghe của AI.
