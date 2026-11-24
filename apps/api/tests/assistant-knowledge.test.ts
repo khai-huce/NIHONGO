@@ -51,7 +51,7 @@ describe('assistant public help and live catalog citations', () => {
     expect(transaction).not.toHaveBeenCalled();
   });
   it('identifies unavailable payment/file features instead of promising working checkout', async () => {
-    const sources = await getAssistantKnowledge(db, { question: 'Làm sao mua gói và tải file PDF?', currentRoute: '/nang-cap' });
+    const sources = await getAssistantKnowledge(db, { question: 'Làm sao mua gói?', currentRoute: '/nang-cap' });
     expect(sources.find(source => source.id === 'help:unavailable')?.content).toContain('chưa có luồng mua hàng/thanh toán');
   });
   it('resolves the current detail from public projection; missing/private content is not cited', async () => {

@@ -12,7 +12,6 @@ export const pagePaths: Record<string, string> = {
   'lifetime-jlpt': '/tron-doi/jlpt',
   'lifetime-doc-hieu': '/tron-doi/doc-hieu',
   'lifetime-shadowing': '/tron-doi/shadowing',
-  'lifetime-tao-file': '/tron-doi/tao-file',
   upgrade: '/nang-cap',
 };
 

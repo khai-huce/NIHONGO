@@ -9,7 +9,6 @@ import {
   Brain,
   Sparkles,
   Crown,
-  FileDown,
   Volume2,
   Mic
 } from 'lucide-react';
@@ -492,28 +491,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </RoughCard>
               </div>
 
-              {/* Option 4: Tạo File */}
-              <div 
-                onClick={() => {
-                  setActiveTab('lifetime-tao-file');
-                  setOpenSubmenu(null);
-                }}
-                className="cursor-pointer"
-              >
-                <RoughCard
-                  fill={activeTab === 'lifetime-tao-file' ? '#b3ab9e' : '#ffffff'}
-                  stroke="#292524"
-                  borderRadius={10}
-                  roughness={0.7}
-                  active={activeTab === 'lifetime-tao-file'}
-                  className="w-20 h-20 flex flex-col items-center justify-center gap-1.5 p-2 text-center hover:scale-105 transition-transform shadow-xs"
-                >
-                  <FileDown className="w-5 h-5 text-[#292524]" />
-                  <span className="text-[10px] font-black text-[#292524] leading-tight">
-                    Tạo File
-                  </span>
-                </RoughCard>
-              </div>
 
             </div>
           </RoughCard>

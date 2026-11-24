@@ -3,7 +3,6 @@ import {
   FileText, 
   Sparkles, 
   BookOpen, 
-  ExternalLink
 } from 'lucide-react';
 import { useContentCatalog } from '../../content/hooks/useContentCatalog';
 import { HandwritingLookup } from '../components/HandwritingLookup';
@@ -220,15 +219,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </RoughButton>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => alert('Đang tải file PDF luyện viết Kanji ' + activeLevel)}
-                  className="text-[#0094ff] inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Tải file luyện viết
-                </button>
-              </div>
             </div>
 
             {/* Dense Kanji Grid matching media_1787909185702.png */}

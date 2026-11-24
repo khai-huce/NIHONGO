@@ -5,7 +5,6 @@ import {
   RotateCcw, 
   Sparkles, 
   FileText, 
-  Download,
   Headphones
 } from 'lucide-react';
 import { cancelJapaneseSpeech, speakJapanese } from '../../../shared/audio/speech';
@@ -242,19 +241,6 @@ export const AlphabetPage: React.FC<AlphabetPageProps> = ({ userId, authBusy }) 
           </div>
         </RoughButton>
 
-        <RoughButton
-          onClick={() => alert('Đang tải file PDF luyện viết bảng chữ cái')}
-          fill="#0094ff"
-          stroke="#0369a1"
-          borderRadius={8}
-          roughness={0.7}
-          className="text-white px-3.5 py-1.5 text-xs font-bold"
-        >
-          <div className="flex items-center gap-1.5">
-            <Download className="w-3.5 h-3.5" />
-            <span>Tải file luyện viết</span>
-          </div>
-        </RoughButton>
       </div>
 
       {/* ============================================================ */}

@@ -126,7 +126,6 @@ export const App: React.FC = () => {
             <Route path={pagePaths['lifetime-doc-hieu']} element={<DocHieuPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={`${pagePaths['lifetime-doc-hieu']}/:articleId`} element={<DocHieuPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} />} />
             <Route path={`${pagePaths['lifetime-shadowing']}/*`} element={<ShadowingPage key={auth.currentUser?.id ?? 'guest'} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut || !!auth.error} onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }} />} />
-            <Route path={pagePaths['lifetime-tao-file']} element={<UpgradePage />} />
             <Route path={pagePaths.upgrade} element={<UpgradePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
