@@ -42,7 +42,7 @@ export function createAssistantAiService(db: PrismaClient, config: Config) {
   const retryNew = () => new HttpError(503, 'AI_RETRY_NEW', 'Câu trả lời tạm thời của lượt trước đã hết hạn hoặc chưa hoàn tất. Bấm thử lại để tạo lượt mới; trợ lý không lưu lịch sử hội thoại.');
 
   const evaluate = async (input: EvaluateInput) => {
-    const model = config.ASSISTANT_GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
+    const model = config.ASSISTANT_GEMINI_MODEL ?? 'gemini-4-hydrogen';
     if (!config.GEMINI_API_KEY) throw new HttpError(503, 'AI_NOT_CONFIGURED', 'Trợ lý Gemini chưa được cấu hình ở máy chủ.');
     const requestHash = createHash('sha256').update(JSON.stringify([PROMPT_VERSION, model, input.message, input.history,
       input.currentRoute ?? '', assistantContextHash(input.sources)])).digest('hex');

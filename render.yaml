@@ -18,12 +18,12 @@ services:
       - key: GOOGLE_CLIENT_ID
         value: 227532259055-b6gj3mgqu6nild4odmhm19491r0rksrf.apps.googleusercontent.com
       - key: GEMINI_MODEL
-        value: gemini-3.8-flash
+        value: gemini-4-hydrogen
       - key: ASSISTANT_GEMINI_MODEL
-        value: gemini-3.5-flash-lite
+        value: gemini-4-hydrogen
       - key: READING_QUIZ_GEMINI_MODEL
-        value: gemini-3.5-flash-lite
+        value: gemini-4-hydrogen
       - key: SHADOWING_GEMINI_MODEL
-        value: gemini-3.5-flash-lite
+        value: gemini-4-hydrogen
       - key: GEMINI_API_KEY
         sync: false
