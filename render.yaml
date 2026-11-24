@@ -19,6 +19,8 @@ services:
         value: 227532259055-b6gj3mgqu6nild4odmhm19491r0rksrf.apps.googleusercontent.com
       - key: GEMINI_MODEL
         value: gemini-3.8-flash
+      - key: ASSISTANT_GEMINI_MODEL
+        value: gemini-3.5-flash-lite
       - key: READING_QUIZ_GEMINI_MODEL
         value: gemini-3.5-flash-lite
       - key: SHADOWING_GEMINI_MODEL

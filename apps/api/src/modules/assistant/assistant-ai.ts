@@ -40,8 +40,8 @@ export function createAssistantAiService(db: PrismaClient, config: Config) {
   const retryNew = () => new HttpError(503, 'AI_RETRY_NEW', 'Câu trả lời tạm thời của lượt trước đã hết hạn hoặc chưa hoàn tất. Bấm thử lại để tạo lượt mới; trợ lý không lưu lịch sử hội thoại.');
 
   const evaluate = async (input: EvaluateInput) => {
-    if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL) throw new HttpError(503, 'AI_NOT_CONFIGURED', 'Trợ lý Gemini chưa được cấu hình ở máy chủ.');
-    const model = config.GEMINI_MODEL;
+    const model = config.ASSISTANT_GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
+    if (!config.GEMINI_API_KEY) throw new HttpError(503, 'AI_NOT_CONFIGURED', 'Trợ lý Gemini chưa được cấu hình ở máy chủ.');
     const requestHash = createHash('sha256').update(JSON.stringify([PROMPT_VERSION, model, input.message, input.history,
       input.currentRoute ?? '', assistantContextHash(input.sources)])).digest('hex');
     const cached = await db.$transaction(async tx => {
@@ -67,7 +67,7 @@ export function createAssistantAiService(db: PrismaClient, config: Config) {
     });
     if (cached) return { reply: cached, cached: true };
     try {
-      const output = await requestGeminiJson(config, { instruction, data: { message: input.message, history: input.history,
+      const output = await requestGeminiJson({ ...config, GEMINI_MODEL: model }, { useDefaultSampling: true, instruction, data: { message: input.message, history: input.history,
         currentRoute: input.currentRoute ?? null, sources: input.sources }, schema: assistantJsonSchema, maxOutputTokens: 4096, timeoutMs: 45000 });
       const reply = validateAssistantReply(output, input.sources);
       await db.assistantRequest.update({ where: { id: input.id }, data: { status: 'ready' } });
