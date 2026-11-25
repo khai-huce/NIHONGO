@@ -13,6 +13,7 @@ import { AccentPage } from '../features/pitch-accent/pages/AccentPage';
 import { WritePage } from '../features/writing/pages/WritePage';
 import { LeaderboardPage } from '../features/leaderboard/pages/LeaderboardPage';
 import { UpgradePage } from '../features/subscription/pages/UpgradePage';
+import { JlptSessionNavigation } from '../features/roadmaps/components/JlptSessionNavigation';
 import { JlptRoadmapPage } from '../features/roadmaps/pages/JlptRoadmapPage';
 import { DocHieuPage } from '../features/reading/pages/DocHieuPage';
 import { ShadowingPage } from '../features/shadowing/pages/ShadowingPage';
@@ -99,7 +100,8 @@ export const App: React.FC = () => {
 
         {/* Main Body */}
         <main ref={mainRef} className="flex-1 h-full overflow-y-auto">
-          <Routes>
+          <JlptSessionNavigation key={location.key + auth.currentUser?.id} userId={auth.currentUser?.id ?? null} authBusy={auth.checking || auth.loggingOut} />
+          <Routes key={location.state?.jlptFlow ? location.key : undefined}>
             <Route path="/" element={<Navigate to="/kanji" replace />} />
             <Route path={pagePaths.kanji} element={<CatalogGate><HomePage
               onSelectKanji={item => openDetail(kanjiPath(item.id))}

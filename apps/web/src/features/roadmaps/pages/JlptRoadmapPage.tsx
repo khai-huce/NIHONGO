@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { JlptRoadmapSummary, JlptRoadmapView, JlptStudy, JlptAttemptView } from '@nihongo/shared/contracts/jlpt';
 import { api } from '@nihongo/client/api';
+import { guidedSessionState } from '../components/JlptSessionNavigation';
 import { JlptTest } from '../components/JlptTest';
 import { RoughCard } from '../../../shared/ui/RoughCard';
 import { useAccountResource } from '../../../shared/hooks/useAccountResource';
@@ -48,7 +49,7 @@ export function JlptRoadmapPage({ userId, authBusy, onLogin }: { userId: string 
         const value = await api<JlptStudy>(`${base}/open`, { expectedUserId: userId, publishedVersion: roadmap.publishedVersion });
         if (!live.current || routeContext.current !== requestContext) return;
         if (value.userId !== userId) throw new Error('Tài khoản đã thay đổi.');
-        if (href) navigate(href); else setParams({ level: roadmap.level, session: id });
+        if (href) navigate(href, { state: guidedSessionState(roadmap, id, href, userId) }); else setParams({ level: roadmap.level, session: id });
       }
     } catch (err) { if (live.current && routeContext.current === requestContext) setWriteError(err instanceof Error ? err.message : 'Chưa mở được buổi.'); }
     finally { locked.current = false; if (live.current) { setBusy(false); void study.reload(); } }
